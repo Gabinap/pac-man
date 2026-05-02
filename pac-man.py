@@ -13,14 +13,21 @@ import sys
 import logging
 import traceback
 from pathlib import Path
+from ursina import application
 
 from src.parser import load_config
 
-# from src.visualization import run  # TODO: uncomment when visualization is ready
+from src.visualization import game_render
 
 
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
+
+
+def input(key):
+    print(f"Key pressed: {key}")
+    if key == 'escape' or key == 'q':
+        application.quit()
 
 
 def _setup_crash_logger() -> logging.Logger:
@@ -59,6 +66,7 @@ def main() -> None:
     # invalid JSON). Unknown keys are silently ignored.
     gcf = load_config(_parse_args())
 
+    visu = game_render(gcf)
     # --- 2. Visualization / game loop ---
     # TODO: call visualization.run(gcf) once the Ursina layer is implemented.
     #
