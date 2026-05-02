@@ -1,4 +1,4 @@
-RUN_ARGS ?="config.json"
+RUN_ARGS ?="data/config.json"
 
 install:
 	uv python install
