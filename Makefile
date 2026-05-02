@@ -1,8 +1,8 @@
 RUN_ARGS ?="config.json"
 
 install:
-	uv python install --python3.13
-	uv sync --python3.13
+	uv python install
+	uv sync
 
 
 ifeq (run, $(firstword $(MAKECMDGOALS)))

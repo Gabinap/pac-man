@@ -1,0 +1,43 @@
+# Pac-Man — main configuration file
+# Lines starting with '#' or '//' are comments and will be stripped before parsing.
+# Missing or invalid keys are clamped to safe defaults — no traceback, just a log message.
+
+{
+    // Path to the highscore save file (relative to the working directory)
+    "highscore_filename": "highscores.json",
+
+    # Number of lives the player starts with — must be between 1 and 9
+    "lives": 3,
+
+    // Points awarded for eating a regular pacgum (small dot)
+    "points_per_pacgum": 10,
+
+    # Eating a super-pacgum (power pellet) triggers frightened mode on all ghosts
+    "points_per_super_pacgum": 50,
+
+    // A frightened ghost eaten by the player rewards this many points
+    "points_per_ghost": 200,
+
+    # Fixed seed for the first level's maze — guarantees a reproducible starting layout
+    "seed": 42,
+
+    // Maximum time allowed per level in seconds; set to 0 to disable the timer
+    "level_max_time": 90,
+
+    # Level list — each entry is passed to the A-Maze-ing generator.
+    # The first level uses the fixed seed above; subsequent levels are randomly seeded.
+    # Dimensions must be odd numbers so the generator can produce valid corridors.
+    "levels": [
+        { "width": 21, "height": 21 },
+        { "width": 23, "height": 23 },
+        { "width": 25, "height": 23 },
+        { "width": 25, "height": 25 },
+        { "width": 27, "height": 25 },
+        // later levels progressively expand the maze to increase difficulty
+        { "width": 29, "height": 27 },
+        { "width": 31, "height": 27 },
+        { "width": 31, "height": 29 },
+        { "width": 33, "height": 31 },
+        { "width": 35, "height": 33 }
+    ]
+}
