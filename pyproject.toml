@@ -9,3 +9,11 @@ dependencies = [
     "mypy>=1.20.2",
     "ursina>=8.3.0",
 ]
+
+[[tool.mypy.overrides]]
+module = "ursina.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "src.visualization"
+disallow_subclassing_any = false
