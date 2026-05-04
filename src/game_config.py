@@ -31,4 +31,3 @@ class GameConfig:
     levels: list[LevelConfig] = field(
         default_factory=lambda: [LevelConfig()]
     )
-

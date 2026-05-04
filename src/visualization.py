@@ -9,9 +9,11 @@ Entry point for the Ursina event loop.
 
 from ursina import color, Entity, Ursina, camera, window, application
 
+from src.game_config import GameConfig
+
 
 class game_render(Entity):
-    def __init__(self, gcf):
+    def __init__(self, gcf: GameConfig) -> None:
         self.app = Ursina()
         super().__init__()
         self.gcf = gcf
@@ -24,9 +26,9 @@ class game_render(Entity):
         Entity(model='cube', color=color.green, position=(-5, 0, -1))
         self.app.run()
 
-    def update(self):
+    def update(self) -> None:
         pass
 
-    def input(self, key):
+    def input(self, key: str) -> None:
         if key == 'q':
             application.quit()
