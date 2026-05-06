@@ -23,12 +23,6 @@ _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
 
 
-def input(key):
-    print(f"Key pressed: {key}")
-    if key == "escape" or key == "q":
-        application.quit()
-
-
 def _setup_crash_logger() -> logging.Logger:
     """Return a logger that appends crash reports to data/crash.log."""
     try:
