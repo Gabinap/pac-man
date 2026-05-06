@@ -7,9 +7,17 @@ logic to game_behavior via the global update() callback.
 Entry point for the Ursina event loop.
 """
 
-from ursina import color, Entity, Ursina, camera, window, application
+from ursina import (
+    color, Entity, Ursina,
+    camera, window, mouse, scene,
+    held_keys, time
+)
+from ursina.prefabs.first_person_controller import FirstPersonController
+
+from typing import Any
 
 from src.game_config import GameConfig
+from src.entities import Wall, Floor
 
 
 class game_render(Entity):
@@ -17,18 +25,55 @@ class game_render(Entity):
         self.app = Ursina()
         super().__init__()
         self.gcf = gcf
+        self._fps_mode = False
+        self._fps_ctrl: Any = None
+
+        window.color = color.rgb(0, 0.2, 0)
         camera.position = (0, 7, -2)
         camera.fov = 90
         camera.rotation_x = 80
-        window.color = color.rgb(0, 0.2, 0)
-        Entity(model='cube', color=color.red, position=(0, 0, 0))
-        Entity(model='cube', color=color.blue, position=(2, 0, 3))
-        Entity(model='cube', color=color.green, position=(-5, 0, -1))
-        self.app.run()
+
+        level = gcf.levels[0]
+        Floor(width=level.width, height=level.height)
+        Wall(x=0, z=0)
+        Wall(x=2, z=3)
+        Wall(x=-5, z=-1)
+
+    def _set_topdown(self) -> None:
+        if self._fps_ctrl is not None:
+            self._fps_ctrl.enabled = False
+        camera.parent = scene
+        camera.position = (0, 7, -2)
+        camera.rotation_x = 80
+        camera.rotation_y = 0
+        camera.rotation_z = 0
+        camera.fov = 90
+        mouse.locked = False
+        mouse.visible = True
+
+    def _set_fps(self) -> None:
+        if self._fps_ctrl is None:
+            self._fps_ctrl = FirstPersonController(
+                position=(1, 2, 1),
+                gravity=0,
+            )
+        else:
+            self._fps_ctrl.enabled = True
+        mouse.locked = True
+        mouse.visible = False
+
+    def toggle_fps(self) -> None:
+        """Toggle between top-down and FPS camera modes."""
+        self._fps_mode = not self._fps_mode
+        if self._fps_mode:
+            self._set_fps()
+        else:
+            self._set_topdown()
 
     def update(self) -> None:
-        pass
-
-    def input(self, key: str) -> None:
-        if key == 'q':
-            application.quit()
+        if self._fps_mode and self._fps_ctrl is not None:
+            speed = 5
+            if held_keys['space']:
+                self._fps_ctrl.y += speed * time.dt
+            if held_keys['shift']:
+                self._fps_ctrl.y -= speed * time.dt
