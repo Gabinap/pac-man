@@ -2,8 +2,9 @@ RUN_ARGS ?="data/config.json"
 
 install:
 	uv python install
+	rm -f uv.lock
+	uv add mazegenerator-2.0.1-py3-none-any.whl
 	uv sync
-
 
 ifeq (run, $(firstword $(MAKECMDGOALS)))
   _EXTRA := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))

@@ -16,11 +16,19 @@ from pathlib import Path
 from ursina import application
 
 from src.parser import load_config
-
 from src.visualization import GameRender
 
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
+
+_renderer: "GameRender | None" = None
+
+
+def input(key: str) -> None:
+    if key == 'escape' or key == 'q':
+        application.quit()
+    if key == 'f' and _renderer is not None:
+        _renderer.toggle_fps()
 
 
 def _setup_crash_logger() -> logging.Logger:
@@ -29,7 +37,8 @@ def _setup_crash_logger() -> logging.Logger:
         _DATA_DIR.mkdir(exist_ok=True)
     except OSError as e:
         print(
-            f"Warning: could not create '{_DATA_DIR}': {e} — crash logging disabled"
+            f"Warning: could not create '{_DATA_DIR}': {e}"
+            " — crash logging disabled"
         )
         return logging.getLogger("pacman.crash.null")
 
@@ -55,37 +64,38 @@ def _parse_args() -> str:
 
 
 def main() -> None:
-    """Run the full game lifecycle: config → main menu → game loop → cleanup."""
+    """Run the full game lifecycle: config → menu → game loop → cleanup."""
 
     # --- 1. Configuration ---
-    # load_config strips # / // comments, validates every key, clamps bad values,
+    # load_config strips comments, validates every key, clamps bad values,
     # and calls sys.exit(1) with a clear message on fatal errors (missing file,
     # invalid JSON). Unknown keys are silently ignored.
+    global _renderer
     gcf = load_config(_parse_args())
+    _renderer = GameRender(gcf)  # app.run() is called inside __init__
 
-    visu = GameRender(gcf)
     # --- 2. Visualization / game loop ---
     # TODO: call visualization.run(gcf) once the Ursina layer is implemented.
     #
     # visualization.run(gcf) will:
     #
     #   a) Window setup
-    #      - Open an Ursina window (title "Pac-Man", configurable resolution).
-    #      - Set up the camera in top-down perspective (or toggle FPS with a key).
+    #      - Open an Ursina window (title "Pac-Man", resolution configurable).
+    #      - Set up the camera top-down (or toggle FPS with a key).
     #
     #   b) Asset loading
-    #      - Load wall, floor, pacgum, super-pacgum, ghost and player 3-D models.
+    #      - Load wall, floor, pacgum, super-pacgum, ghost and player models.
     #      - Load sound effects (waka, death, power-up, ghost eaten).
     #
     #   c) Main menu
     #      - Display: Start Game | View Highscores | Instructions | Exit.
-    #      - Load highscores from gcf.highscore_filename (robust to missing file).
+    #      - Load highscores from gcf.highscore_filename (missing = ok).
     #      - Show the top-10 scores on the highscores screen.
     #
     #   d) Level initialisation  (called once per level)
     #      - Generate the maze via the A-Maze-ing package:
     #            mazegenerator(width, height, seed, PERFECT=False)
-    #        The first level uses gcf.seed; subsequent levels use a random seed.
+    #        The first level uses gcf.seed; next levels use a random seed.
     #      - Spawn Player at the center of the maze.
     #      - Spawn 4 Ghosts, one in each corner.
     #      - Place Pacgums (small dots) in every open corridor.
@@ -99,14 +109,15 @@ def main() -> None:
     #            • Frightened state → flee player (triggered by super-pacgum).
     #            • Dead state    → respawn at home corner after a delay.
     #      - Collision detection:
-    #            • Player on Pacgum     → remove dot, score += gcf.points_per_pacgum.
-    #            • Player on SuperPacgum → remove pellet, score += gcf.points_per_super_pacgum,
-    #                                      all ghosts enter frightened state.
-    #            • Player on Ghost (frightened) → remove ghost, score += gcf.points_per_ghost.
-    #            • Player on Ghost (normal)     → lives -= 1, respawn player at center.
+    #            • Pacgum hit → remove dot, score += gcf.points_per_pacgum.
+    #            • SuperPacgum hit → remove pellet,
+    #                                score += gcf.points_per_super_pacgum,
+    #                                all ghosts enter frightened state.
+    #            • Ghost (frightened) → remove, score += gcf.points_per_ghost.
+    #            • Ghost (normal) → lives -= 1, respawn player at center.
     #      - HUD update every frame: score | lives | level | remaining time.
-    #      - Level clear   → all pacgums eaten → load next level (keep score + lives).
-    #      - Timeout       → gcf.level_max_time reached → restart level or game over
+    #      - Level clear → all pacgums eaten → next level (keep score + lives).
+    #      - Timeout → gcf.level_max_time reached → restart level or game over
     #                        (implementation choice, document in README).
     #      - Game over     → lives == 0 → show Game Over screen.
     #      - Victory       → all levels completed → show Victory screen.
@@ -126,7 +137,8 @@ def main() -> None:
 
     # TODO: replace with visualization.run(gcf)
     print(
-        f"Config OK — {len(gcf.levels)} level(s), lives={gcf.lives}, seed={gcf.seed}"
+        f"Config OK — {len(gcf.levels)} level(s),"
+        f" lives={gcf.lives}, seed={gcf.seed}"
     )
     print("Visualization not yet implemented.")
 
