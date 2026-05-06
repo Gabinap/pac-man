@@ -5,9 +5,9 @@ from typing import Callable
 class MainMenuView(Entity):
     def __init__(
         self,
-        start_game: Callable,
-        show_scores: Callable,
-        show_instructions: Callable,
+        start_game: Callable[[], None],
+        show_scores: Callable[[], None],
+        show_instructions: Callable[[], None],
     ) -> None:
         super().__init__(parent=camera.ui)
 
@@ -33,7 +33,7 @@ class MainMenuView(Entity):
         )
         self.btn_start = Button(
             text="Start Game",
-            color=color.azure,  # type: ignore
+            color=color.azure,
             scale=(0.4, 0.08),
             y=0.0,
             parent=self,
@@ -42,7 +42,7 @@ class MainMenuView(Entity):
 
         self.btn_scores = Button(
             text="View Highscores",
-            color=color.azure,  # type: ignore
+            color=color.azure,
             scale=(0.4, 0.08),
             y=-0.1,
             parent=self,
@@ -51,7 +51,7 @@ class MainMenuView(Entity):
 
         self.btn_instructions = Button(
             text="Instructions",
-            color=color.azure,  # type: ignore
+            color=color.azure,
             scale=(0.4, 0.08),
             y=-0.2,
             parent=self,
@@ -60,7 +60,7 @@ class MainMenuView(Entity):
 
         self.btn_exit = Button(
             text="Exit",
-            color=color.red,  # type: ignore
+            color=color.red,
             scale=(0.4, 0.08),
             y=-0.3,
             parent=self,
@@ -78,11 +78,11 @@ class MainMenuView(Entity):
 
         self.update_highlight()
 
-    def _action_start(self):
+    def _action_start(self) -> None:
         self.disable()
         self.start_game()
 
-    def update_highlight(self):
+    def update_highlight(self) -> None:
         for btn in self.buttons:
             btn.color = color.azure
         self.btn_exit.color = color.red
@@ -90,7 +90,7 @@ class MainMenuView(Entity):
         selected_btn = self.buttons[self.selected_index]
         selected_btn.color = color.orange
 
-    def input(self, key):
+    def input(self, key: str) -> None:
         if key == "space":
             self._action_start()
         elif key == "up arrow":
@@ -99,7 +99,6 @@ class MainMenuView(Entity):
         elif key == "down arrow":
             self.selected_index = (self.selected_index + 1) % len(self.buttons)
             self.update_highlight()
-
         elif key == "enter":
             action = self.buttons[self.selected_index].on_click
             if action:

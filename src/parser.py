@@ -95,7 +95,20 @@ def _parse_level(raw: Any, index: int) -> LevelConfig:
             f" — adjusted to {height}"
         )
 
-    return LevelConfig(width=width, height=height)
+    ambiance: str | None = None
+    raw_ambiance = raw.get("ambiance")
+    if raw_ambiance is not None:
+        if isinstance(raw_ambiance, str) and raw_ambiance in C.AMBIANCES:
+            ambiance = raw_ambiance
+        else:
+            known = ", ".join(C.AMBIANCES.keys())
+            print(
+                f"Warning: levels[{index}].ambiance"
+                f" '{raw_ambiance}' unknown"
+                f" — valid: {known} — using random"
+            )
+
+    return LevelConfig(width=width, height=height, ambiance=ambiance)
 
 
 def load_config(path: str) -> GameConfig:

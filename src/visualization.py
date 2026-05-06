@@ -17,6 +17,8 @@ from panda3d.core import Shader, Texture
 from enum import Enum
 from typing import Any
 
+import random
+from src.constants import AMBIANCES
 from src.game_config import GameConfig
 from src.maze import Maze
 from src.views.main_menu import MainMenuView
@@ -62,15 +64,21 @@ class GameRender(Entity):
         )
 
         self.switch_view(EGameView.MENU.value)
-        self.app.run()
 
     def _init_game(self) -> None:
-        """Build maze, camera, and barrel distortion (runs once on first Start)."""
+        """Build maze, camera, and barrel distortion
+        (runs once on first Start)."""
         if self._game_initialized:
             return
         self._game_initialized = True
         window.color = color.rgb(0, 0.2, 0)
-        Maze(level=self.gcf.levels[0], seed=self.gcf.seed)
+        level = self.gcf.levels[0]
+        ambiance = (
+            AMBIANCES[level.ambiance]
+            if level.ambiance is not None
+            else random.choice(list(AMBIANCES.values()))
+        )
+        Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
 
@@ -126,9 +134,7 @@ class GameRender(Entity):
         mouse.visible = False
 
     def toggle_fps(self) -> None:
-        """Toggle between top-down and FPS camera modes (game view only)."""
-        if not self._game_initialized:
-            return
+        """Toggle between top-down and FPS camera modes."""
         self._fps_mode = not self._fps_mode
         if self._fps_mode:
             self._set_fps()

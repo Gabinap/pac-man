@@ -72,7 +72,8 @@ def main() -> None:
     # invalid JSON). Unknown keys are silently ignored.
     global _renderer
     gcf = load_config(_parse_args())
-    _renderer = GameRender(gcf)  # app.run() is called inside __init__
+    _renderer = GameRender(gcf)
+    _renderer.app.run()
 
     # --- 2. Visualization / game loop ---
     # TODO: call visualization.run(gcf) once the Ursina layer is implemented.

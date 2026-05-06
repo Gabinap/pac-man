@@ -1,11 +1,13 @@
-from ursina import Entity, Text, Button, color, camera, destroy, application
+from ursina import Entity, Text, Button, color, camera, destroy
 from src.game_config import GameConfig
 from typing import Callable
 import json
 
 
 class HighscoresView(Entity):
-    def __init__(self, gcf: GameConfig, back_callback: Callable) -> None:
+    def __init__(
+        self, gcf: GameConfig, back_callback: Callable[[], None]
+    ) -> None:
         super().__init__(parent=camera.ui, enabled=False)
 
         self.gcf = gcf
@@ -21,7 +23,7 @@ class HighscoresView(Entity):
 
         self.btn_back = Button(
             text="Back",
-            color=color.gray,  # type: ignore
+            color=color.gray,
             scale=(0.2, 0.08),
             y=-0.4,
             parent=self,
@@ -65,12 +67,14 @@ class HighscoresView(Entity):
                     )
                 else:
                     print(
-                        "Error: The highscores file must be a JSON list of dictionaries."
+                        "Error: The highscores file must be"
+                        " a JSON list of dictionaries."
                     )
 
         except FileNotFoundError:
             print(
-                f"Info: '{self.gcf.highscore_filename}' not found. Starting fresh."
+                f"Info: '{self.gcf.highscore_filename}' not found. "
+                "Starting fresh."
             )
         except json.JSONDecodeError as e:
             print(f"Error loading scores: JSON is corrupted ({e})")

@@ -4,7 +4,7 @@
 
 {
     // Path to the highscore save file (relative to the working directory)
-    "highscore_filename": "highscores.json",
+    "highscore_filename": "data/highscores.json",
 
     # Number of lives the player starts with — must be between 1 and 9
     "lives": 3,
@@ -27,10 +27,12 @@
     # Level list — each entry is passed to the A-Maze-ing generator.
     # The first level uses the fixed seed above; subsequent levels are randomly seeded.
     # Dimensions must be odd numbers so the generator can produce valid corridors.
+    # Optional "ambiance" key sets the visual theme; omit for a random pick each run.
+    # Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
     "levels": [
-  {"width": 19,  "height": 19},
-  {"width": 11, "height": 11},
-  {"width": 15, "height": 15}
-]
+        {"width": 15, "height": 15, "ambiance": "beach"},
+        {"width": 11, "height": 11, "ambiance": "forest"},
+        {"width": 15, "height": 15}
+    ]
 
 }

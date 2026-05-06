@@ -1,6 +1,7 @@
-from ursina import color, Entity, Mesh
+from ursina import Entity, Mesh
 
 from mazegenerator.mazegenerator import MazeGenerator
+from src.constants import Ambiance
 from src.entities import Floor
 from src.game_config import LevelConfig
 
@@ -59,60 +60,66 @@ def _add_wall(
     ], s_z, 1.0)
 
 
-def _add_pattern(pv: list[_V3], pt: list[int], px: float, pz: float) -> None:
+def _add_pattern(
+    pv: list[_V3], pu: list[_V2], pt: list[int],
+    px: float, pz: float,
+) -> None:
     hx, hz = 0.5, 0.5
     y0, y1 = 0.0, 1.0
     # top
-    _face(pv, None, pt, [
+    _face(pv, pu, pt, [
         (px - hx, y1, pz - hz), (px + hx, y1, pz - hz),
         (px + hx, y1, pz + hz), (px - hx, y1, pz + hz),
     ])
     # north
-    _face(pv, None, pt, [
+    _face(pv, pu, pt, [
         (px - hx, y0, pz - hz), (px + hx, y0, pz - hz),
         (px + hx, y1, pz - hz), (px - hx, y1, pz - hz),
     ])
     # south
-    _face(pv, None, pt, [
+    _face(pv, pu, pt, [
         (px + hx, y0, pz + hz), (px - hx, y0, pz + hz),
         (px - hx, y1, pz + hz), (px + hx, y1, pz + hz),
     ])
     # west
-    _face(pv, None, pt, [
+    _face(pv, pu, pt, [
         (px - hx, y0, pz + hz), (px - hx, y0, pz - hz),
         (px - hx, y1, pz - hz), (px - hx, y1, pz + hz),
     ])
     # east
-    _face(pv, None, pt, [
+    _face(pv, pu, pt, [
         (px + hx, y0, pz - hz), (px + hx, y0, pz + hz),
         (px + hx, y1, pz + hz), (px + hx, y1, pz - hz),
     ])
 
 
 class Maze:
-    def __init__(self, level: LevelConfig, seed: int) -> None:
+    def __init__(
+        self, level: LevelConfig, seed: int, ambiance: Ambiance
+    ) -> None:
         gen = MazeGenerator(
             size=(level.width, level.height), perfect=False, seed=seed
         )
         self.grid = gen.maze
-        self._build()
+        self._build(ambiance)
 
-    def _build(self) -> None:
+    def _build(self, ambiance: Ambiance) -> None:
         grid = self.grid
         h, w = len(grid), len(grid[0])
-        Floor(width=w, height=h)
+        Floor(width=w, height=h, texture=ambiance.floor)
 
         wv: list[_V3] = []
         wu: list[_V2] = []
         wt: list[int] = []
         pv: list[_V3] = []
+        pu: list[_V2] = []
         pt: list[int] = []
 
         for z, row in enumerate(grid):
             for x, cell in enumerate(row):
                 if cell == 15:
                     cx, cz = float(x - w // 2), float(z - h // 2)
-                    _add_pattern(pv, pt, cx, cz)
+                    _add_pattern(pv, pu, pt, cx, cz)
 
         placed: set[tuple[float, float, str]] = set()
 
@@ -149,12 +156,12 @@ class Maze:
         if wv:
             Entity(
                 model=Mesh(vertices=wv, uvs=wu, triangles=wt, mode='triangle'),
-                texture='wall-brick.png',
+                texture=ambiance.wall,
                 double_sided=True,
             )
         if pv:
             Entity(
-                model=Mesh(vertices=pv, triangles=pt, mode='triangle'),
-                color=color.blue,
+                model=Mesh(vertices=pv, uvs=pu, triangles=pt, mode='triangle'),
+                texture=ambiance.pattern,
                 double_sided=True,
             )
