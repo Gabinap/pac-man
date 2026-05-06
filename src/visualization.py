@@ -1,46 +1,64 @@
-"""Ursina application and rendering layer.
-
-Initializes the Ursina app, loads 3D models and assets,
-manages the camera (top-down perspective and first-person),
-renders all entities each frame, and delegates all game
-logic to game_behavior via the global update() callback.
-Entry point for the Ursina event loop.
-"""
-
-from ursina import color, Entity, Ursina, camera, window, application
+from ursina import color, Entity, Ursina, window, application
 from src.game_config import GameConfig
-from src.main_menu import MainMenu
+from src.views.main_menu import MainMenuView
+from src.views.highscores import HighscoresView
+from src.views.instructions import InstructionsView
+from enum import Enum
+
+
+class EGameView(Enum):
+    MENU = "menu"
+    GAME = "game"
+    SCORES = "scores"
+    INSTRUCTIONS = "instructions"
 
 
 class GameRender(Entity):
     def __init__(self, gcf: GameConfig):
-        self.app = Ursina()
+        self.app = Ursina(development_mode=False)
         super().__init__()
         self.gcf = gcf
-        # camera.position = (0, 7, -2)
-        # camera.fov = 90
-        # camera.rotation_x = 80
-        window.color = color.rgb(0, 0, 0)
-        self.menu = MainMenu(
-            start_game=self.start_game,
-            show_scores=self.show_scores,
-            show_instructions=self.show_instructions,
+        window.color = color.black
+        window.exit_button.enabled = False
+        self.menu_view = MainMenuView(
+            start_game=lambda: self.switch_view(EGameView.GAME.value),
+            show_scores=lambda: self.switch_view(EGameView.SCORES.value),
+            show_instructions=lambda: self.switch_view(
+                EGameView.INSTRUCTIONS.value
+            ),
         )
 
-        self.app.run()
+        self.scores_view = HighscoresView(
+            gcf=self.gcf,
+            back_callback=lambda: self.switch_view(EGameView.MENU.value),
+        )
 
-    def start_game(self) -> None:
-        print("Started the game")
+        self.instructions_view = InstructionsView(
+            back_callback=lambda: self.switch_view(EGameView.MENU.value)
+        )
+        # TODO: self.game_view = GameView(...)
 
-    def show_scores(self) -> None:
-        print("Show scores")
+        self.current_view = None
 
-    def show_instructions(self) -> None:
-        print("Show instructions")
+        self.switch_view(EGameView.MENU.value)
 
-    def update(self):
-        pass
+        self.app.run()  # type: ignore
 
-    def input(self, key):
-        if key == "q":
-            application.quit()
+    def switch_view(self, view_name: str) -> None:
+        self.menu_view.disable()
+        self.scores_view.disable()
+        self.instructions_view.disable()
+        # self.game_view.disable()
+
+        if view_name == EGameView.MENU.value:
+            self.menu_view.enable()
+
+        elif view_name == EGameView.SCORES.value:
+            self.scores_view.load_and_display_scores()
+            self.scores_view.enable()
+        elif view_name == EGameView.INSTRUCTIONS.value:
+            self.instructions_view.enable()
+        elif view_name == EGameView.GAME.value:
+            print("Game started !")
+            # self.game_view.start_new_level()
+            # self.game_view.enable()
