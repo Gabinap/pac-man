@@ -2,6 +2,7 @@ RUN_ARGS ?="data/config.json"
 
 install:
 	uv python install
+	UV_SKIP_WHEEL_FILENAME_CHECK=1 uv add mazegenerator-00001-py3-none-any.whl
 	uv sync
 
 

@@ -17,7 +17,7 @@ from ursina.prefabs.first_person_controller import FirstPersonController
 from typing import Any
 
 from src.game_config import GameConfig
-from src.entities import Wall, Floor
+from src.maze import Maze
 
 
 class game_render(Entity):
@@ -33,11 +33,7 @@ class game_render(Entity):
         camera.fov = 90
         camera.rotation_x = 80
 
-        level = gcf.levels[0]
-        Floor(width=level.width, height=level.height)
-        Wall(x=0, z=0)
-        Wall(x=2, z=3)
-        Wall(x=-5, z=-1)
+        Maze(level=next(gcf.levels), seed=gcf.seed)
 
     def _set_topdown(self) -> None:
         if self._fps_ctrl is not None:
