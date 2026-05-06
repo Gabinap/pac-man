@@ -10,11 +10,14 @@ from ursina import Entity
 
 
 class Wall(Entity):
-    def __init__(self, x: int, z: int) -> None:
+    def __init__(self, coor: tuple[int, int], scale: tuple[bool, bool]) -> None:
+        x, z = coor
+        s_x, s_z = 1 if scale[0] else 0.1, 1 if scale[1] else 0.1
         super().__init__(
             model='cube',
             texture='wall-brick.png',
             position=(x, 0.5, z),
+            scale=(s_x, 1, s_z),
         )
 
 
