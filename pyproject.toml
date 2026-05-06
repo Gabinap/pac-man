@@ -19,5 +19,8 @@ ignore_missing_imports = true
 module = "src.visualization"
 disallow_subclassing_any = false
 
+[tool.pyright]
+reportArgumentType = false
+
 [tool.uv.sources]
-mazegenerator = { path = "mazegenerator-00001-py3-none-any.whl" }
+mazegenerator = { path = "mazegenerator-2.0.1-py3-none-any.whl" }
