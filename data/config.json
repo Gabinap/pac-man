@@ -28,16 +28,9 @@
     # The first level uses the fixed seed above; subsequent levels are randomly seeded.
     # Dimensions must be odd numbers so the generator can produce valid corridors.
     "levels": [
-        { "width": 21, "height": 21 },
-        { "width": 23, "height": 23 },
-        { "width": 25, "height": 23 },
-        { "width": 25, "height": 25 },
-        { "width": 27, "height": 25 },
-        // later levels progressively expand the maze to increase difficulty
-        { "width": 29, "height": 27 },
-        { "width": 31, "height": 27 },
-        { "width": 31, "height": 29 },
-        { "width": 33, "height": 31 },
-        { "width": 35, "height": 33 }
-    ]
+  {"width": 19,  "height": 19},
+  {"width": 11, "height": 11},
+  {"width": 15, "height": 15}
+]
+
 }

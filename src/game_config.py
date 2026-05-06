@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 class LevelConfig:
     """Single level parameters passed to the A-Maze-ing generator."""
 
-    width: int = 21
-    height: int = 21
+    width: int = 11
+    height: int = 11
 
 
 @dataclass

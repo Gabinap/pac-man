@@ -13,6 +13,7 @@ from ursina import (
     held_keys, time
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
+from panda3d.core import Shader, Texture
 
 from typing import Any
 
@@ -22,32 +23,61 @@ from src.maze import Maze
 
 class game_render(Entity):
     def __init__(self, gcf: GameConfig) -> None:
-        self.app = Ursina()
+        self.app: Any = Ursina()
         super().__init__()
         self.gcf = gcf
         self._fps_mode = False
         self._fps_ctrl: Any = None
+        self._barrel_quad: Any = None
+        self._manager: Any = None
+        self._barrel_strength: float = 0.4
 
         window.color = color.rgb(0, 0.2, 0)
-        camera.position = (0, 7, -2)
-        camera.fov = 90
-        camera.rotation_x = 80
+        Maze(level=gcf.levels[0], seed=gcf.seed)
+        self._setup_barrel(strength=0.2)
+        self._set_topdown()
 
-        Maze(level=next(gcf.levels), seed=gcf.seed)
+    def _setup_barrel(self, strength: float = 0.4) -> None:
+        from direct.filter.FilterManager import FilterManager
+        self._barrel_strength = strength
+        manager = FilterManager(self.app.win, self.app.cam)
+        tex = Texture()
+        self._barrel_quad = manager.renderSceneInto(colortex=tex)
+        self._barrel_quad.setShader(Shader.load(
+            Shader.SL_GLSL,
+            vertex="shaders/barrel.vert",
+            fragment="shaders/barrel.frag",
+        ))
+        self._barrel_quad.setShaderInput("tex", tex)
+        self._barrel_quad.setShaderInput("strength", 0.0)
+        self._manager = manager
+
+    def _enable_barrel(self) -> None:
+        if self._barrel_quad is not None:
+            self._barrel_quad.setShaderInput(
+                "strength", self._barrel_strength
+            )
+
+    def _disable_barrel(self) -> None:
+        if self._barrel_quad is not None:
+            self._barrel_quad.setShaderInput("strength", 0.0)
 
     def _set_topdown(self) -> None:
         if self._fps_ctrl is not None:
             self._fps_ctrl.enabled = False
         camera.parent = scene
-        camera.position = (0, 7, -2)
+        y = max(self.gcf.levels[0].width, self.gcf.levels[0].height) * 0.6
+        camera.position = (0, y * 1.25, -y * 0.30)
         camera.rotation_x = 80
         camera.rotation_y = 0
         camera.rotation_z = 0
-        camera.fov = 90
+        camera.fov = 110
         mouse.locked = False
         mouse.visible = True
+        self._enable_barrel()
 
     def _set_fps(self) -> None:
+        self._disable_barrel()
         if self._fps_ctrl is None:
             self._fps_ctrl = FirstPersonController(
                 position=(1, 2, 1),
