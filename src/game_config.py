@@ -15,13 +15,14 @@ class LevelConfig:
 
     width: int = 11
     height: int = 11
+    ambiance: str | None = None
 
 
 @dataclass
 class GameConfig:
     """All tunable game parameters loaded from the JSON config file."""
 
-    highscore_filename: str = "highscores.json"
+    highscore_filename: str = "data/highscores.json"
     lives: int = 3
     points_per_pacgum: int = 10
     points_per_super_pacgum: int = 50

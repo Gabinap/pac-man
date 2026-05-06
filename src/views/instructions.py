@@ -3,7 +3,7 @@ from typing import Callable
 
 
 class InstructionsView(Entity):
-    def __init__(self, back_callback: Callable) -> None:
+    def __init__(self, back_callback: Callable[[], None]) -> None:
         super().__init__(parent=camera.ui, enabled=False)
 
         self.back_callback = back_callback

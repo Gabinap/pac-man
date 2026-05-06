@@ -12,11 +12,17 @@ dependencies = [
 ]
 
 [[tool.mypy.overrides]]
-module = "ursina.*"
+module = ["ursina.*", "panda3d.*", "direct.*", "mazegenerator.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "src.visualization"
+module = [
+    "src.visualization",
+    "src.entities",
+    "src.views.main_menu",
+    "src.views.highscores",
+    "src.views.instructions",
+]
 disallow_subclassing_any = false
 
 [tool.pyright]
