@@ -3,9 +3,11 @@ from typing import Callable
 
 
 class MainMenu(Entity):
-    def __init__(self, start_callback: Callable) -> None:
+    def __init__(self, start_game: Callable, show_scores: Callable, show_instructions: Callable) -> None:
         super().__init__(parent=camera.ui)
-        self.start_callback = start_callback
+        self.start_game = start_game
+        self.show_scores = show_scores
+        self.show_instructions = show_instructions
         self.title = Text(
             "PAC-MAN",
             origin=(0, 0),

@@ -11,6 +11,7 @@ from ursina import color, Entity, Ursina, camera, window, application
 from src.game_config import GameConfig
 from src.main_menu import MainMenu
 
+
 class GameRender(Entity):
     def __init__(self, gcf: GameConfig):
         self.app = Ursina()
@@ -19,16 +20,23 @@ class GameRender(Entity):
         # camera.position = (0, 7, -2)
         # camera.fov = 90
         # camera.rotation_x = 80
-        window.color = color.rgb(0, 0.2, 0)
-        self.menu = MainMenu(start_callback=self.start_game)
+        window.color = color.rgb(0, 0, 0)
+        self.menu = MainMenu(
+            start_game=self.start_game,
+            show_scores=self.show_scores,
+            show_instructions=self.show_instructions,
+        )
+
         self.app.run()
 
     def start_game(self) -> None:
-        print("Generation of the level with the seed:", self.gcf.seed)
-        Entity(model='cube', color=color.yellow, position=(0, 0, 0))
-    
+        print("Started the game")
+
     def show_scores(self) -> None:
-        
+        print("Show scores")
+
+    def show_instructions(self) -> None:
+        print("Show instructions")
 
     def update(self):
         pass
