@@ -17,8 +17,7 @@ from ursina import application
 
 from src.parser import load_config
 
-from src.visualization import game_render
-
+from src.visualization import GameRender
 
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
@@ -26,7 +25,7 @@ _LOG_FILE = _DATA_DIR / "crash.log"
 
 def input(key):
     print(f"Key pressed: {key}")
-    if key == 'escape' or key == 'q':
+    if key == "escape" or key == "q":
         application.quit()
 
 
@@ -35,7 +34,9 @@ def _setup_crash_logger() -> logging.Logger:
     try:
         _DATA_DIR.mkdir(exist_ok=True)
     except OSError as e:
-        print(f"Warning: could not create '{_DATA_DIR}': {e} — crash logging disabled")
+        print(
+            f"Warning: could not create '{_DATA_DIR}': {e} — crash logging disabled"
+        )
         return logging.getLogger("pacman.crash.null")
 
     logger = logging.getLogger("pacman.crash")
@@ -43,7 +44,9 @@ def _setup_crash_logger() -> logging.Logger:
     if not logger.handlers:
         handler = logging.FileHandler(_LOG_FILE, encoding="utf-8")
         handler.setFormatter(
-            logging.Formatter("%(asctime)s  %(levelname)s\n%(message)s\n" + "-" * 60)
+            logging.Formatter(
+                "%(asctime)s  %(levelname)s\n%(message)s\n" + "-" * 60
+            )
         )
         logger.addHandler(handler)
     return logger
@@ -66,7 +69,7 @@ def main() -> None:
     # invalid JSON). Unknown keys are silently ignored.
     gcf = load_config(_parse_args())
 
-    visu = game_render(gcf)
+    visu = GameRender(gcf)
     # --- 2. Visualization / game loop ---
     # TODO: call visualization.run(gcf) once the Ursina layer is implemented.
     #
@@ -128,7 +131,9 @@ def main() -> None:
     #      - Speed boost    : player moves faster.
 
     # TODO: replace with visualization.run(gcf)
-    print(f"Config OK — {len(gcf.levels)} level(s), lives={gcf.lives}, seed={gcf.seed}")
+    print(
+        f"Config OK — {len(gcf.levels)} level(s), lives={gcf.lives}, seed={gcf.seed}"
+    )
     print("Visualization not yet implemented.")
 
 
@@ -140,7 +145,9 @@ if __name__ == "__main__":
         print("\nGame interrupted.")
         sys.exit(0)
     except Exception as exc:
-        _crash_log.error("%s: %s\n%s", type(exc).__name__, exc, traceback.format_exc())
+        _crash_log.error(
+            "%s: %s\n%s", type(exc).__name__, exc, traceback.format_exc()
+        )
         print(
             f"Unexpected error: {type(exc).__name__}: {exc}\n"
             f"Details logged to {_LOG_FILE}"

@@ -38,7 +38,6 @@ lint-strict:
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .mypy_cache
-	rm -rf .venv
 	rm -rf .vscode
 	find . -type d -name output -exec rm -rf {} + 2>/dev/null || true
 
