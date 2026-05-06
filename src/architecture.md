@@ -58,7 +58,7 @@ parser.py ──── valide et construit ───► GameConfig
 | `entities.py` | `constants` | `game_behavior`, `visualization` |
 | `game_config.py` | `constants` | `game_behavior`, `visualization` |
 | `parser.py` | `game_config`, `constants` | `game_behavior`, `visualization` |
-| `game_behavior.py` | `entities`, `game_config`, `constants` | `visualization` |
+| `game_beh avior.py` | `entities`, `game_config`, `constants` | `visualization` |
 | `visualization.py` | tout | — |
 | `pac-man.py` | `parser`, `visualization` | — |
  
