@@ -23,11 +23,14 @@ from src.visualization import game_render
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
 
+_renderer: "game_render | None" = None
+
 
 def input(key: str) -> None:
-    print(f"Key pressed: {key}")
     if key == 'escape' or key == 'q':
         application.quit()
+    if key == 'f' and _renderer is not None:
+        _renderer.toggle_fps()
 
 
 def _setup_crash_logger() -> logging.Logger:
@@ -69,9 +72,10 @@ def main() -> None:
     # load_config strips comments, validates every key, clamps bad values,
     # and calls sys.exit(1) with a clear message on fatal errors (missing file,
     # invalid JSON). Unknown keys are silently ignored.
+    global _renderer
     gcf = load_config(_parse_args())
-
-    game_render(gcf)
+    _renderer = game_render(gcf)
+    _renderer.app.run()
     # --- 2. Visualization / game loop ---
     # TODO: call visualization.run(gcf) once the Ursina layer is implemented.
     #
