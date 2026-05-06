@@ -33,16 +33,25 @@ def _clamp_int(
     min_val: int | None = 0,
     max_val: int | None = None,
 ) -> int:
-    """Return raw as int, clamped to [min_val, max_val], or default on type error."""
+    """Return int, clamped to [min_val, max_val], or default on type error."""
     if not isinstance(raw, int) or isinstance(raw, bool):
-        print(f"Warning: '{key}' must be an integer — using default {default}")
+        print(
+            f"Warning: '{key}' must be an integer"
+            f" — using default {default}"
+        )
         return default
     value = raw
     if min_val is not None and value < min_val:
-        print(f"Warning: '{key}' = {value} is below minimum {min_val} — clamping")
+        print(
+            f"Warning: '{key}' = {value} is below"
+            f" minimum {min_val} — clamping"
+        )
         value = min_val
     if max_val is not None and value > max_val:
-        print(f"Warning: '{key}' = {value} is above maximum {max_val} — clamping")
+        print(
+            f"Warning: '{key}' = {value} is above"
+            f" maximum {max_val} — clamping"
+        )
         value = max_val
     return value
 
@@ -75,10 +84,16 @@ def _parse_level(raw: Any, index: int) -> LevelConfig:
     # A-Maze-ing requires odd dimensions to produce valid corridors
     if width % 2 == 0:
         width += 1
-        print(f"Warning: levels[{index}].width must be odd — adjusted to {width}")
+        print(
+            f"Warning: levels[{index}].width must be odd"
+            f" — adjusted to {width}"
+        )
     if height % 2 == 0:
         height += 1
-        print(f"Warning: levels[{index}].height must be odd — adjusted to {height}")
+        print(
+            f"Warning: levels[{index}].height must be odd"
+            f" — adjusted to {height}"
+        )
 
     return LevelConfig(width=width, height=height)
 
@@ -127,7 +142,8 @@ def load_config(path: str) -> GameConfig:
             )
 
     gcf.lives = _clamp_int(
-        data.get("lives", gcf.lives), "lives", gcf.lives, C.MIN_LIVES, C.MAX_LIVES
+        data.get("lives", gcf.lives),
+        "lives", gcf.lives, C.MIN_LIVES, C.MAX_LIVES
     )
     gcf.points_per_pacgum = _clamp_int(
         data.get("points_per_pacgum", gcf.points_per_pacgum),
@@ -156,8 +172,13 @@ def load_config(path: str) -> GameConfig:
     if "levels" in data:
         raw_levels = data["levels"]
         if not isinstance(raw_levels, list) or len(raw_levels) < C.MIN_LEVELS:
-            print("Warning: 'levels' must be a non-empty list — using default single level")
+            print(
+                "Warning: 'levels' must be a non-empty list"
+                " — using default single level"
+            )
         else:
-            gcf.levels = [_parse_level(lvl, i) for i, lvl in enumerate(raw_levels)]
+            gcf.levels = [
+                _parse_level(lvl, i) for i, lvl in enumerate(raw_levels)
+            ]
 
     return gcf
