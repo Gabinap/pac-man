@@ -13,13 +13,13 @@
     "points_per_pacgum": 10,
 
     # Eating a super-pacgum (power pellet) triggers frightened mode on all ghosts
-    "points_per_super_pacgum": 50,
+    "points_per_super_pacgum": 100,
 
     // A frightened ghost eaten by the player rewards this many points
     "points_per_ghost": 200,
 
     # Fixed seed for the first level's maze — guarantees a reproducible starting layout
-    "seed": 42,
+    "seed": 4,
 
     // Maximum time allowed per level in seconds; set to 0 to disable the timer
     "level_max_time": 90,
@@ -30,7 +30,7 @@
     # Optional "ambiance" key sets the visual theme; omit for a random pick each run.
     # Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
     "levels": [
-        {"width": 15, "height": 15, "ambiance": "beach"},
+        {"width": 15, "height": 15, "ambiance": "forest"},
         {"width": 11, "height": 11, "ambiance": "forest"},
         {"width": 15, "height": 15}
     ]

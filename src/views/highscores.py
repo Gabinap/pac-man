@@ -1,14 +1,16 @@
-from ursina import Entity, Text, Button, color, camera, destroy
-from src.game_config import GameConfig
+from ursina import Entity, Text, Button, color, destroy
 from typing import Callable
 import json
 
+from src.game_config import GameConfig
+from src.views.base import BaseView
 
-class HighscoresView(Entity):
+
+class HighscoresView(BaseView):
     def __init__(
         self, gcf: GameConfig, back_callback: Callable[[], None]
     ) -> None:
-        super().__init__(parent=camera.ui, enabled=False)
+        super().__init__()
 
         self.gcf = gcf
         self.back_callback = back_callback
@@ -31,6 +33,9 @@ class HighscoresView(Entity):
         self.btn_back.on_click = self.back_callback
 
         self.scores_container = Entity(parent=self)
+
+    def on_enter(self) -> None:
+        self.load_and_display_scores()
 
     def load_and_display_scores(self) -> None:
         for child in self.scores_container.children:

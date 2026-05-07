@@ -1,15 +1,17 @@
-from ursina import Entity, Button, Text, color, application, camera
+from ursina import Button, Text, color, application
 from typing import Callable
 
+from src.views.base import BaseView
 
-class MainMenuView(Entity):
+
+class MainMenuView(BaseView):
     def __init__(
         self,
         start_game: Callable[[], None],
         show_scores: Callable[[], None],
         show_instructions: Callable[[], None],
     ) -> None:
-        super().__init__(parent=camera.ui)
+        super().__init__()
 
         self.start_game = start_game
         self.show_scores = show_scores
@@ -75,22 +77,20 @@ class MainMenuView(Entity):
         ]
 
         self.selected_index = 0
-
         self.update_highlight()
 
     def _action_start(self) -> None:
-        self.disable()
         self.start_game()
 
     def update_highlight(self) -> None:
         for btn in self.buttons:
             btn.color = color.azure
         self.btn_exit.color = color.red
-
-        selected_btn = self.buttons[self.selected_index]
-        selected_btn.color = color.orange
+        self.buttons[self.selected_index].color = color.orange
 
     def input(self, key: str) -> None:
+        if not self.enabled:
+            return
         if key == "space":
             self._action_start()
         elif key == "up arrow":

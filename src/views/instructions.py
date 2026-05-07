@@ -1,10 +1,12 @@
-from ursina import Entity, Text, Button, color, camera
+from ursina import Text, Button, color
 from typing import Callable
 
+from src.views.base import BaseView
 
-class InstructionsView(Entity):
+
+class InstructionsView(BaseView):
     def __init__(self, back_callback: Callable[[], None]) -> None:
-        super().__init__(parent=camera.ui, enabled=False)
+        super().__init__()
 
         self.back_callback = back_callback
         Text(

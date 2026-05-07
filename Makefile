@@ -1,10 +1,16 @@
 RUN_ARGS ?="data/config.json"
 
+CONVERTER := .venv/lib/python3.13/site-packages/gltf/_converter.py
+
 install:
 	uv python install
 	rm -f uv.lock
 	uv add mazegenerator-2.0.1-py3-none-any.whl
 	uv sync
+	@$(MAKE) patch
+
+patch:
+	@python3 scripts/apply_patches.py
 
 ifeq (run, $(firstword $(MAKECMDGOALS)))
   _EXTRA := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
@@ -42,4 +48,4 @@ clean:
 	rm -rf .vscode
 	find . -type d -name output -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: install  run debug lint lint-strict clean
+.PHONY: install patch run debug lint lint-strict clean

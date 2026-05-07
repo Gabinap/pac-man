@@ -1,3 +1,5 @@
+#version 110
+
 uniform sampler2D tex;
 uniform float strength;
 varying vec2 texcoord;
