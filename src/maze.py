@@ -118,7 +118,7 @@ class Maze:
         for z, row in enumerate(grid):
             for x, cell in enumerate(row):
                 if cell == 15:
-                    cx, cz = float(x - w // 2), float(z - h // 2)
+                    cx, cz = float(x - w // 2), float(h // 2 - z)
                     _add_pattern(pv, pu, pt, cx, cz)
 
         placed: set[tuple[float, float, str]] = set()
@@ -127,13 +127,13 @@ class Maze:
             for x, cell in enumerate(row):
                 if cell == 15:
                     continue
-                cx, cz = float(x - w // 2), float(z - h // 2)
+                cx, cz = float(x - w // 2), float(h // 2 - z)
 
                 if cell & NORTH and (z == 0 or grid[z - 1][x] != 15):
-                    key = (cx, cz - 0.5, 'h')
+                    key = (cx, cz + 0.5, 'h')
                     if key not in placed:
                         placed.add(key)
-                        _add_wall(wv, wu, wt, cx, cz - 0.5, 1.0, 0.1)
+                        _add_wall(wv, wu, wt, cx, cz + 0.5, 1.0, 0.1)
 
                 if cell & EAST and (x == w - 1 or grid[z][x + 1] != 15):
                     key = (cx + 0.5, cz, 'v')
@@ -142,10 +142,10 @@ class Maze:
                         _add_wall(wv, wu, wt, cx + 0.5, cz, 0.1, 1.0)
 
                 if cell & SOUTH and (z == h - 1 or grid[z + 1][x] != 15):
-                    key = (cx, cz + 0.5, 'h')
+                    key = (cx, cz - 0.5, 'h')
                     if key not in placed:
                         placed.add(key)
-                        _add_wall(wv, wu, wt, cx, cz + 0.5, 1.0, 0.1)
+                        _add_wall(wv, wu, wt, cx, cz - 0.5, 1.0, 0.1)
 
                 if cell & WEST and (x == 0 or grid[z][x - 1] != 15):
                     key = (cx - 0.5, cz, 'v')

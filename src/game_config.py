@@ -25,7 +25,7 @@ class GameConfig:
     highscore_filename: str = "data/highscores.json"
     lives: int = 3
     points_per_pacgum: int = 10
-    points_per_super_pacgum: int = 50
+    points_per_super_pacgum: int = 100
     points_per_ghost: int = 200
     seed: int = 42
     level_max_time: int = 90

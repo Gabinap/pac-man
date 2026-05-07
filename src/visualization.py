@@ -21,6 +21,8 @@ import random
 from src.constants import AMBIANCES
 from src.game_config import GameConfig
 from src.maze import Maze
+from src.entities import Player
+from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
 from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
@@ -35,7 +37,7 @@ class EGameView(Enum):
 
 class GameRender(Entity):
     def __init__(self, gcf: GameConfig) -> None:
-        self.app: Any = Ursina(development_mode=False)
+        self.app: Any = Ursina(development_mode=True)
         super().__init__()
         self.gcf = gcf
         self._fps_mode = False
@@ -44,26 +46,33 @@ class GameRender(Entity):
         self._manager: Any = None
         self._barrel_strength: float = 0.2
         self._game_initialized = False
+        self._player: Player | None = None
+
+        self._views: dict[EGameView, BaseView] = {}
+        self._current: EGameView | None = None
 
         window.color = color.black
         window.exit_button.enabled = False
 
-        self.menu_view = MainMenuView(
-            start_game=lambda: self.switch_view(EGameView.GAME.value),
-            show_scores=lambda: self.switch_view(EGameView.SCORES.value),
+        self._register(EGameView.MENU, MainMenuView(
+            start_game=lambda: self.switch_view(EGameView.GAME),
+            show_scores=lambda: self.switch_view(EGameView.SCORES),
             show_instructions=lambda: self.switch_view(
-                EGameView.INSTRUCTIONS.value
+                EGameView.INSTRUCTIONS
             ),
-        )
-        self.scores_view = HighscoresView(
+        ))
+        self._register(EGameView.SCORES, HighscoresView(
             gcf=self.gcf,
-            back_callback=lambda: self.switch_view(EGameView.MENU.value),
-        )
-        self.instructions_view = InstructionsView(
-            back_callback=lambda: self.switch_view(EGameView.MENU.value),
-        )
+            back_callback=lambda: self.switch_view(EGameView.MENU),
+        ))
+        self._register(EGameView.INSTRUCTIONS, InstructionsView(
+            back_callback=lambda: self.switch_view(EGameView.MENU),
+        ))
 
-        self.switch_view(EGameView.MENU.value)
+        self.switch_view(EGameView.MENU)
+
+    def _register(self, name: EGameView, view: BaseView) -> None:
+        self._views[name] = view
 
     def _init_game(self) -> None:
         """Build maze, camera, and barrel distortion
@@ -81,6 +90,13 @@ class GameRender(Entity):
         Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
+        self._spawn_entities()
+
+    def _spawn_entities(self) -> None:
+        self._player = Player(
+            glb="player/calibur_final.glb",
+            position=(0, 0.4, 0),
+        )
 
     def _setup_barrel(self, strength: float = 0.2) -> None:
         from direct.filter.FilterManager import FilterManager
@@ -141,20 +157,21 @@ class GameRender(Entity):
         else:
             self._set_topdown()
 
-    def switch_view(self, view_name: str) -> None:
-        self.menu_view.disable()
-        self.scores_view.disable()
-        self.instructions_view.disable()
+    def switch_view(self, target: EGameView) -> None:
+        if self._current is not None and self._current in self._views:
+            old = self._views[self._current]
+            old.on_exit()
+            old.disable()
 
-        if view_name == EGameView.MENU.value:
-            self.menu_view.enable()
-        elif view_name == EGameView.SCORES.value:
-            self.scores_view.load_and_display_scores()
-            self.scores_view.enable()
-        elif view_name == EGameView.INSTRUCTIONS.value:
-            self.instructions_view.enable()
-        elif view_name == EGameView.GAME.value:
+        self._current = target
+
+        if target == EGameView.GAME:
             self._init_game()
+            return
+
+        view = self._views[target]
+        view.enable()
+        view.on_enter()
 
     def update(self) -> None:
         if self._fps_mode and self._fps_ctrl is not None:

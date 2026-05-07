@@ -42,7 +42,7 @@ PLAYER_RESPAWN_DELAY: float = 2.0   # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
 
 # --- Assets ---
-PLAYER_MODEL: str = "player/calibur_vgdc.glb"
+PLAYER_MODEL: str = "player/calibur_fixed.glb"
 GHOST_MODELS: list[str] = [
     "ghosts/crockie_vgdc.glb",
     "ghosts/crocodile.glb",
@@ -55,38 +55,38 @@ GHOST_MODELS: list[str] = [
 # Usage: AMBIANCES["forest"] or random.choice(list(AMBIANCES.values())).
 AMBIANCES: dict[str, Ambiance] = {
     "classic": Ambiance(
-        wall="textures/wall_brick.png",
-        floor="textures/floor_marble.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_brick.jpg",
+        floor="textures/floor_marble.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "dungeon": Ambiance(
-        wall="textures/wall_plywood.png",
-        floor="textures/floor_rubble.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_plywood.jpg",
+        floor="textures/floor_rubble.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "manor": Ambiance(
-        wall="textures/wall_fabric.png",
-        floor="textures/floor_parquet.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_fabric.jpg",
+        floor="textures/floor_parquet.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "forest": Ambiance(
-        wall="textures/wall_wood.png",
-        floor="textures/floor_forest.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_wood.jpg",
+        floor="textures/floor_forest.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "ruins": Ambiance(
-        wall="textures/wall_brick.png",
-        floor="textures/floor_moss.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_brick.jpg",
+        floor="textures/floor_moss.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "beach": Ambiance(
-        wall="textures/wall_wood.png",
-        floor="textures/floor_sand.png",
-        pattern="textures/pattern_bathroom.png",
+        wall="textures/wall_wood.jpg",
+        floor="textures/floor_sand.jpg",
+        pattern="textures/pattern_bathroom.jpg",
     ),
     "meme": Ambiance(
-        wall="textures/wall_meme.png",
+        wall="textures/wall_meme.jpg",
         floor="textures/floor_brick.png",
-        pattern="textures/pattern_bathroom.png",
+        pattern="textures/pattern_bathroom.jpg",
     ),
 }
