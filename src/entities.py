@@ -6,10 +6,15 @@ No game logic or rendering — only structured state.
 These classes are consumed by game_behavior and visualization.
 """
 
-from ursina import Entity, invoke
+from ursina import Entity, invoke, held_keys, time
 from direct.actor.Actor import Actor
 from panda3d.core import MaterialAttrib
 import src.constants as C
+from src.utils import world_to_grid, grid_to_world
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.maze import Maze
 
 
 class AnimatedEntity(Entity):
@@ -25,7 +30,7 @@ class AnimatedEntity(Entity):
         self.idle()
 
     def _fix_metallic(self) -> None:
-        for np in self.actor.find_all_matches('**/+GeomNode'):
+        for np in self.actor.find_all_matches("**/+GeomNode"):
             for i in range(np.node().get_num_geoms()):
                 ma = np.node().get_geom_state(i).get_attrib(MaterialAttrib)
                 if ma and ma.get_material():
@@ -56,23 +61,62 @@ class AnimatedEntity(Entity):
 
 
 class Player(AnimatedEntity):
-    def __init__(self) -> None:
-        super().__init__(C.GHOST_SPECS[2])
+    def __init__(self, maze: "Maze") -> None:
+        super().__init__(C.GHOST_SPECS[0])
+        self.speed = C.PLAYER_SPEED
+        self.maze = maze
 
+    def update(self) -> None:
+        pos_x, pos_y = world_to_grid(
+            self.x,
+            self.z,
+            self.maze.width,
+            self.maze.height,
+        )
+        center_x, center_z = grid_to_world(
+            pos_x, pos_y, self.maze.width, self.maze.height
+        )
+        cell_value = self.maze.grid[pos_y][pos_x]
+        align_speed = 15.0
+        if held_keys["w"] or held_keys["up arrow"]:
+            self.x += (center_x - self.x) * align_speed * time.dt
+            self.z += self.speed * time.dt
+            if cell_value & 1:
+                self.z = min(self.z, center_z)
+
+        elif held_keys["s"] or held_keys["down arrow"]:
+            self.x += (center_x - self.x) * align_speed * time.dt
+            self.z -= self.speed * time.dt
+            if cell_value & 4:
+                self.z = max(self.z, center_z)
+
+        elif held_keys["a"] or held_keys["left arrow"]:
+            self.z += (center_z - self.z) * align_speed * time.dt
+            self.x -= self.speed * time.dt
+            if cell_value & 8:
+                self.x = max(self.x, center_x)
+
+        elif held_keys["d"] or held_keys["right arrow"]:
+            self.z += (center_z - self.z) * align_speed * time.dt
+            self.x += self.speed * time.dt
+            if cell_value & 2:
+                self.x = min(self.x, center_x)
 
 
 class Ghost(AnimatedEntity):
-    def __init__(self, index: int = 0) -> None:
+    def __init__(self, index: int = 0, position=tuple[float, float]) -> None:
         spec = C.GHOST_SPECS[index % len(C.GHOST_SPECS)]
         if not spec.supported:
-            raise ValueError(f"Ghost model at index {index} is not supported by Actor")
+            raise ValueError(
+                f"Ghost model at index {index} is not supported by Actor"
+            )
         super().__init__(spec)
 
 
 class Floor(Entity):
     def __init__(self, width: int, height: int, texture: str) -> None:
         super().__init__(
-            model='plane',
+            model="plane",
             texture=texture,
             texture_scale=(width, height),
             scale=(width, 1, height),
