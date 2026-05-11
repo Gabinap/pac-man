@@ -19,9 +19,9 @@ from typing import Any
 
 import random
 from src.constants import AMBIANCES
+from src.entities import Player
 from src.game_config import GameConfig
 from src.maze import Maze
-from src.entities import Player
 from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
 from src.views.highscores import HighscoresView
@@ -46,7 +46,6 @@ class GameRender(Entity):
         self._manager: Any = None
         self._barrel_strength: float = 0.2
         self._game_initialized = False
-        self._player: Player | None = None
 
         self._views: dict[EGameView, BaseView] = {}
         self._current: EGameView | None = None
@@ -90,13 +89,8 @@ class GameRender(Entity):
         Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
-        self._spawn_entities()
+        self._player = Player()
 
-    def _spawn_entities(self) -> None:
-        self._player = Player(
-            glb="player/calibur_final.glb",
-            position=(0, 0.4, 0),
-        )
 
     def _setup_barrel(self, strength: float = 0.2) -> None:
         from direct.filter.FilterManager import FilterManager
