@@ -6,43 +6,67 @@ No game logic or rendering — only structured state.
 These classes are consumed by game_behavior and visualization.
 """
 
-from ursina import Entity, application
+from ursina import Entity, invoke
 from direct.actor.Actor import Actor
+from panda3d.core import MaterialAttrib
 import src.constants as C
 
 
-class Player(Entity):
-    def __init__(
-        self,
-        glb: str = C.PLAYER_MODEL,
-        position: tuple[float, float, float] = (0, 0.4, 0),
-        scale: float = 0.25,
-    ) -> None:
-        super().__init__(position=position, scale=scale)
-        model_path = str(application.asset_folder / 'assets' / glb)
-        self._actor = Actor(model_path)
-        self._actor.reparent_to(self)
-        self._actor.loop("Idle")
+class AnimatedEntity(Entity):
+    def __init__(self, spec: C.ModelSpec) -> None:
+        super().__init__()
+        self.spec = spec
+        self.actor = Actor(f"assets/{spec.path}")
+        self.actor.reparent_to(self)
+        self._fix_metallic()
+        self.scale = spec.scale
+        self.rotation_x = spec.rotation_x
+        self._anims = self.actor.get_anim_names()
+        self.idle()
 
-    def play(self, name: str, loop: bool = True) -> None:
-        if loop:
-            self._actor.loop(name)
-        else:
-            self._actor.play(name)
+    def _fix_metallic(self) -> None:
+        for np in self.actor.find_all_matches('**/+GeomNode'):
+            for i in range(np.node().get_num_geoms()):
+                ma = np.node().get_geom_state(i).get_attrib(MaterialAttrib)
+                if ma and ma.get_material():
+                    ma.get_material().set_metallic(0.0)
 
-    def stop(self) -> None:
-        self._actor.stop()
+    def idle(self) -> None:
+        anim = self._anims[self.spec.anim_idle]
+        self.actor.set_play_rate(self.spec.anim_idle_rate, anim)
+        self.actor.loop(anim)
+
+    def walk(self) -> None:
+        anim = self._anims[self.spec.anim_walk]
+        self.actor.set_play_rate(self.spec.anim_walk_rate, anim)
+        self.actor.loop(anim)
+
+    def attack(self) -> None:
+        anim = self._anims[self.spec.anim_attack]
+        frames = self.actor.get_num_frames(anim) or 24
+        duration = frames / 24.0 / self.spec.anim_attack_rate
+        self.actor.set_play_rate(self.spec.anim_attack_rate, anim)
+        self.actor.play(anim)
+        self.animate_scale(self.spec.attack_scale, 0.15)
+        invoke(lambda: self.animate_scale(self.spec.scale, 0.15), delay=0.15)
+        invoke(self.idle, delay=duration)
 
     def update(self) -> None:
         pass
 
 
-class Ghost(Entity):
+class Player(AnimatedEntity):
+    def __init__(self) -> None:
+        super().__init__(C.GHOST_SPECS[2])
+
+
+
+class Ghost(AnimatedEntity):
     def __init__(self, index: int = 0) -> None:
-        super().__init__(model=C.GHOST_MODELS[index % len(C.GHOST_MODELS)])
-
-    def update(self) -> None:
-        pass
+        spec = C.GHOST_SPECS[index % len(C.GHOST_SPECS)]
+        if not spec.supported:
+            raise ValueError(f"Ghost model at index {index} is not supported by Actor")
+        super().__init__(spec)
 
 
 class Floor(Entity):

@@ -42,14 +42,49 @@ PLAYER_RESPAWN_DELAY: float = 2.0   # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
 
 # --- Assets ---
-PLAYER_MODEL: str = "player/calibur_fixed.glb"
-GHOST_MODELS: list[str] = [
-    "ghosts/crockie_vgdc.glb",
-    "ghosts/crocodile.glb",
-    "ghosts/grobbo_alien_hatchling.glb",
-    "ghosts/skull_crawler.glb",
-    "ghosts/volcano_inferno.glb",
+class ModelSpec(NamedTuple):
+    path: str
+    scale: float
+    rotation_x: float
+    anim_idle: int
+    anim_idle_rate: float
+    anim_walk: int
+    anim_walk_rate: float
+    anim_attack: int
+    anim_attack_rate: float
+    attack_scale: float
+    supported: bool = True
+
+
+# Animations: ['Idle_g', 'Run1_g', 'Run2_g', 'Lunge_g', 'Default_g']
+_CROCKIE = ModelSpec(
+    path="ghosts/crockie_vgdc.glb",
+    scale=1.0, rotation_x=0,
+    anim_idle=0, anim_idle_rate=1.0,
+    anim_walk=1, anim_walk_rate=1.0,
+    anim_attack=3, anim_attack_rate=1.0,
+    attack_scale=0.9,
+)
+
+# Animations: ['Moving Idle', 'Tail Swipe']
+_GROBBO = ModelSpec(
+    path="ghosts/grobbo_alien_hatchling.glb",
+    scale=0.00175, rotation_x=-90,
+    anim_idle=0, anim_idle_rate=0.05,
+    anim_walk=0, anim_walk_rate=0.2,
+    anim_attack=1, anim_attack_rate=1.0,
+    attack_scale=0.001,
+)
+
+GHOST_SPECS: list[ModelSpec] = [
+    _CROCKIE,                                                  # 0
+    ModelSpec("ghosts/crocodile.glb",          1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 1
+    _GROBBO,                                                   # 2
+    ModelSpec("ghosts/skull_crawler.glb",      1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 3
+    ModelSpec("ghosts/volcano_inferno.glb",    1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 4
 ]
+
+PLAYER_SPEC: ModelSpec = _CROCKIE
 
 # Textures loaded relative to assets/ (Ursina default search path).
 # Usage: AMBIANCES["forest"] or random.choice(list(AMBIANCES.values())).
