@@ -8,9 +8,15 @@ Entry point for the Ursina event loop.
 """
 
 from ursina import (
-    color, Entity, Ursina,
-    camera, window, mouse, scene,
-    held_keys, time,
+    color,
+    Entity,
+    Ursina,
+    camera,
+    window,
+    mouse,
+    scene,
+    held_keys,
+    time,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
@@ -26,6 +32,7 @@ from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
 from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
+from src.game_behavior.ghost_controller import GhostController, GhostState
 
 
 class EGameView(Enum):
@@ -53,20 +60,29 @@ class GameRender(Entity):
         window.color = color.black
         window.exit_button.enabled = False
 
-        self._register(EGameView.MENU, MainMenuView(
-            start_game=lambda: self.switch_view(EGameView.GAME),
-            show_scores=lambda: self.switch_view(EGameView.SCORES),
-            show_instructions=lambda: self.switch_view(
-                EGameView.INSTRUCTIONS
+        self._register(
+            EGameView.MENU,
+            MainMenuView(
+                start_game=lambda: self.switch_view(EGameView.GAME),
+                show_scores=lambda: self.switch_view(EGameView.SCORES),
+                show_instructions=lambda: self.switch_view(
+                    EGameView.INSTRUCTIONS
+                ),
             ),
-        ))
-        self._register(EGameView.SCORES, HighscoresView(
-            gcf=self.gcf,
-            back_callback=lambda: self.switch_view(EGameView.MENU),
-        ))
-        self._register(EGameView.INSTRUCTIONS, InstructionsView(
-            back_callback=lambda: self.switch_view(EGameView.MENU),
-        ))
+        )
+        self._register(
+            EGameView.SCORES,
+            HighscoresView(
+                gcf=self.gcf,
+                back_callback=lambda: self.switch_view(EGameView.MENU),
+            ),
+        )
+        self._register(
+            EGameView.INSTRUCTIONS,
+            InstructionsView(
+                back_callback=lambda: self.switch_view(EGameView.MENU),
+            ),
+        )
 
         self.switch_view(EGameView.MENU)
 
@@ -86,32 +102,34 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(AMBIANCES.values()))
         )
-        Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
+        self.maze = Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
-        self._player = Player()
 
+        self._player = Player(self.maze)
+        self._ghost_controller = GhostController(level.width, level.height)
 
     def _setup_barrel(self, strength: float = 0.2) -> None:
         from direct.filter.FilterManager import FilterManager
+
         self._barrel_strength = strength
         manager = FilterManager(self.app.win, self.app.cam)
         tex = Texture()
         self._barrel_quad = manager.renderSceneInto(colortex=tex)
-        self._barrel_quad.setShader(Shader.load(
-            Shader.SL_GLSL,
-            vertex="shaders/barrel.vert",
-            fragment="shaders/barrel.frag",
-        ))
+        self._barrel_quad.setShader(
+            Shader.load(
+                Shader.SL_GLSL,
+                vertex="shaders/barrel.vert",
+                fragment="shaders/barrel.frag",
+            )
+        )
         self._barrel_quad.setShaderInput("tex", tex)
         self._barrel_quad.setShaderInput("strength", 0.0)
         self._manager = manager
 
     def _enable_barrel(self) -> None:
         if self._barrel_quad is not None:
-            self._barrel_quad.setShaderInput(
-                "strength", self._barrel_strength
-            )
+            self._barrel_quad.setShaderInput("strength", self._barrel_strength)
 
     def _disable_barrel(self) -> None:
         if self._barrel_quad is not None:
@@ -170,7 +188,7 @@ class GameRender(Entity):
     def update(self) -> None:
         if self._fps_mode and self._fps_ctrl is not None:
             speed = 5
-            if held_keys['space']:
+            if held_keys["space"]:
                 self._fps_ctrl.y += speed * time.dt
-            if held_keys['shift']:
+            if held_keys["shift"]:
                 self._fps_ctrl.y -= speed * time.dt

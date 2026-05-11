@@ -6,3 +6,4 @@ transitions, input buffering, and the highscore system.
 Receives a GameConfig on initialization and exposes an
 update() method called every frame by visualization.
 """
+

@@ -33,13 +33,14 @@ GHOST_COUNT: int = 4
 PLAYER_SPEED: float = 4.0
 GHOST_SPEED_NORMAL: float = 3.5
 GHOST_SPEED_FRIGHTENED: float = 2.0
-GHOST_SPEED_DEAD: float = 6.0       # returning to spawn after being eaten
+GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 
 # Durations in seconds
-FRIGHTENED_DURATION: float = 8.0    # frightened state after a super-pacgum
-GHOST_RESPAWN_DELAY: float = 3.0    # pause at spawn before re-entering maze
-PLAYER_RESPAWN_DELAY: float = 2.0   # freeze after death before respawn
+FRIGHTENED_DURATION: float = 8.0  # frightened state after a super-pacgum
+GHOST_RESPAWN_DELAY: float = 3.0  # pause at spawn before re-entering maze
+PLAYER_RESPAWN_DELAY: float = 2.0  # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
+
 
 # --- Assets ---
 class ModelSpec(NamedTuple):
@@ -59,29 +60,53 @@ class ModelSpec(NamedTuple):
 # Animations: ['Idle_g', 'Run1_g', 'Run2_g', 'Lunge_g', 'Default_g']
 _CROCKIE = ModelSpec(
     path="ghosts/crockie_vgdc.glb",
-    scale=1.0, rotation_x=0,
-    anim_idle=0, anim_idle_rate=1.0,
-    anim_walk=1, anim_walk_rate=1.0,
-    anim_attack=3, anim_attack_rate=1.0,
+    scale=1.0,
+    rotation_x=0,
+    anim_idle=0,
+    anim_idle_rate=1.0,
+    anim_walk=1,
+    anim_walk_rate=1.0,
+    anim_attack=3,
+    anim_attack_rate=1.0,
     attack_scale=0.9,
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
     path="ghosts/grobbo_alien_hatchling.glb",
-    scale=0.00175, rotation_x=-90,
-    anim_idle=0, anim_idle_rate=0.05,
-    anim_walk=0, anim_walk_rate=0.2,
-    anim_attack=1, anim_attack_rate=1.0,
+    scale=0.00175,
+    rotation_x=-90,
+    anim_idle=0,
+    anim_idle_rate=0.05,
+    anim_walk=0,
+    anim_walk_rate=0.2,
+    anim_attack=1,
+    anim_attack_rate=1.0,
     attack_scale=0.001,
 )
 
 GHOST_SPECS: list[ModelSpec] = [
-    _CROCKIE,                                                  # 0
-    ModelSpec("ghosts/crocodile.glb",          1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 1
-    _GROBBO,                                                   # 2
-    ModelSpec("ghosts/skull_crawler.glb",      1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 3
-    ModelSpec("ghosts/volcano_inferno.glb",    1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 4
+    _GROBBO,  # 0
+    ModelSpec(
+        "ghosts/crocodile.glb", 1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False
+    ),  # 1
+    _GROBBO,  # 2
+    ModelSpec(
+        "ghosts/skull_crawler.glb", 1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False
+    ),  # 3
+    ModelSpec(
+        "ghosts/volcano_inferno.glb",
+        1.0,
+        0,
+        0,
+        1.0,
+        0,
+        1.0,
+        0,
+        1.0,
+        0.9,
+        False,
+    ),  # 4
 ]
 
 PLAYER_SPEC: ModelSpec = _CROCKIE
