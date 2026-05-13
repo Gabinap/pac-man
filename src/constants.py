@@ -94,7 +94,7 @@ _GROBBO = ModelSpec(
     anim_attack=1,
     attack_scale=0.0011,
     anim_idle_rate=0.05,
-    anim_walk_rate=0.2,
+    anim_walk_rate=0.6,
     anim_attack_rate=1.0,
 )
 
