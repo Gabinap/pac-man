@@ -52,20 +52,20 @@ class AnimatedEntity(Entity):
         frames = self.actor.get_num_frames(anim) or 24
         duration = frames / 24.0 / self.spec.anim_attack_rate
         self.actor.set_play_rate(self.spec.anim_attack_rate, anim)
-        self.actor.play(anim)
+        self.actor.loop(anim)
         self.animate_scale(self.spec.attack_scale, 0.15)
-        invoke(lambda: self.animate_scale(self.spec.scale, 0.15), delay=0.15)
-        invoke(self.idle, delay=duration)
+        
 
     def update(self) -> None:
         pass
 
 # crash 1 7
-# in progress
-# are perfect 0 2
+# in progress 4 5 6
+# are perfect 0 2 3
 class Player(AnimatedEntity):
     def __init__(self) -> None:
         super().__init__(C.GHOST_SPECS[2])
+        self.walk()
 
 
 class Ghost(AnimatedEntity):
