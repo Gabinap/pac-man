@@ -1,0 +1,141 @@
+"""Apply patches to third-party packages after uv sync.
+
+Run via `make patch` (called automatically by `make install`).
+Idempotent: re-running is a no-op if patches are already applied.
+"""
+
+from pathlib import Path
+import sys
+
+
+def _find_converter() -> Path | None:
+    for base in (".venv/lib", "venv/lib"):
+        root = Path(base)
+        if not root.exists():
+            continue
+        for py in root.iterdir():
+            candidate = py / "site-packages/gltf/_converter.py"
+            if candidate.exists():
+                return candidate
+    return None
+
+
+PATCHES: list[tuple[str, str]] = [
+    # Bug 1: multiple skins sharing the same skeleton root → previous skinid is
+    # overwritten in self.skeletons, losing characters. Fix: store a list.
+    (
+        "        self.skeletons[root_nodeid] = skinid",
+        "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
+    ),
+    (
+        "            if nodeid in self.skeletons:\n"
+        "                skinid = self.skeletons[nodeid]\n"
+        "                charinfo = CharInfo(node_name)\n"
+        "                charinfo.character.set_transform("
+        "get_node_transform(gltf_node))\n"
+        "                self.build_character("
+        "charinfo, nodeid, gltf_data, recurse=True)\n"
+        "                self.characters[skinid] = charinfo",
+        "            if nodeid in self.skeletons:\n"
+        "                for skinid in self.skeletons[nodeid]:\n"
+        "                    charinfo = CharInfo(node_name)\n"
+        "                    charinfo.character.set_transform("
+        "get_node_transform(gltf_node))\n"
+        "                    self.build_character("
+        "charinfo, nodeid, gltf_data, recurse=True)\n"
+        "                    self.characters[skinid] = charinfo",
+    ),
+    (
+        "            skinid = self.skeletons.get(nodeid, None)\n"
+        "            charinfo = self.characters.get(skinid, None)",
+        "            skinids = self.skeletons.get(nodeid, None)\n"
+        "            skinid = skinids[0] if skinids is not None else None\n"
+        "            charinfo = self.characters.get(skinid, None)",
+    ),
+    (
+        "        if nodeid in self.skeletons:\n"
+        "            skinid = self.skeletons[nodeid]\n"
+        "            gltf_skin = gltf_data['skins'][skinid]",
+        "        if nodeid in self.skeletons:\n"
+        "            skinid = self.skeletons[nodeid][0]\n"
+        "            gltf_skin = gltf_data['skins'][skinid]",
+    ),
+    # Bug 2: accessors without bufferView crash the sort by KeyError.
+    (
+        "        accessors = sorted(accessors, key=lambda x: x['bufferView'])",
+        "        accessors = [a for a in accessors if 'bufferView' in a]\n"
+        "        accessors = sorted(accessors, key=lambda x: x['bufferView'])",
+    ),
+    # Bug 3: GLBs with multiple disconnected joint roots (no single common
+    # joint ancestor) fall into the heuristic branch of build_character that
+    # treats each disconnected root as a sibling under <skeleton>. Force the
+    # explicit skeleton path using the LCA already computed by load_skin so a
+    # single recursive create_joint traversal builds the full tree.
+    (
+        "        root_nodeid = common_path[-1]\n"
+        "\n"
+        "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
+        "        root_nodeid = common_path[-1]\n"
+        "        gltf_skin['skeleton'] = root_nodeid\n"
+        "\n"
+        "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
+    ),
+    # Bug 4: animation deforms the mesh when the skinned mesh node sits under
+    # parent transforms with non-uniform scale (e.g. FBX → GLTF exports with
+    # scale=100 on the armature/mesh node). The original code pre-multiplies
+    # vertices by inverse(W_mesh) then relies on the scene graph to reapply
+    # W_mesh at render. At bind pose this cancels out, but during animation
+    # the skin transform `joint_world_now * inverse(joint_world_bind)` ends up
+    # conjugated by W_mesh, scaling its translation component by W_mesh's
+    # scale factor. With scale=100 in the chain, joint translations are
+    # amplified 100x, blowing the mesh up and collapsing faces. Per GLTF spec
+    # the mesh node's world transform must NOT be applied to skinned vertices
+    # — reparent the geom under the Character instead so the scale chain
+    # never reaches it, and drop the now-incorrect vertex pre-multiplication.
+    (
+        "            # Set the transform of the skinned node to the inverse of the parent's\n"
+        "            # transform.  This allows skinning to happen in global space.\n"
+        "            net_xform = NodePath(geom_node.get_parent(0)).get_net_transform()\n"
+        "            inverse = net_xform.get_inverse()\n"
+        "            gvd.transform_vertices(inverse.get_mat())",
+        "            # Bypass the mesh node's parent transform chain (which often\n"
+        "            # contains scale=100 on FBX → GLTF armatures); the GLTF spec\n"
+        "            # says the mesh node's world transform must not be applied to\n"
+        "            # skinned vertices.\n"
+        "            NodePath(geom_node).reparent_to(charinfo.nodepath)",
+    ),
+]
+
+
+def main() -> int:
+    converter = _find_converter()
+    if converter is None:
+        print("Skipping patches: gltf/_converter.py not found in any venv")
+        return 0
+
+    text = converter.read_text()
+    applied = 0
+    missing = 0
+
+    for old, new in PATCHES:
+        if new in text:
+            pass
+        elif old in text:
+            text = text.replace(old, new, 1)
+            applied += 1
+        else:
+            hint = old[:60].replace("\n", "\\n")
+            print(f"WARNING: patch not found (may need update): {hint!r}")
+            missing += 1
+
+    converter.write_text(text)
+    print(
+        f"panda3d-gltf patches: {applied} applied, "
+        f"{len(PATCHES) - applied - missing} already present, "
+        f"{missing} missing"
+    )
+    return 1 if missing else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
