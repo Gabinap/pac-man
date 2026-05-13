@@ -46,12 +46,12 @@ PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
 # random one is picked at each transition into that state).
 class ModelSpec(NamedTuple):
     path: str
-    scale: float
-    rotation_x: float
     anim_idle: int | tuple[int, ...]
     anim_walk: int | tuple[int, ...]
     anim_attack: int | tuple[int, ...]
-    attack_scale: float
+    rotation_x: float = 0.0
+    scale: float = 1
+    attack_scale: float = scale
     spawn_y: float = 0.0
     anim_idle_rate: float = 1.0
     anim_walk_rate: float = 1.0
@@ -66,7 +66,7 @@ _CROCKIE = ModelSpec(
     anim_idle=0,
     anim_walk=(1, 2),    # Run1_g, Run2_g
     anim_attack=3,       # Lunge_g
-    attack_scale=0.9,
+    attack_scale=0.4
 )
 
 # Animations: ['005_attack', 'monster_hit', 'monster_death', '002_crit',
@@ -88,11 +88,11 @@ _CROCODILE = ModelSpec(
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
     path="ghosts/grobbo_alien_hatchling.glb",
-    scale=0.00175, rotation_x=-90,
+    scale=0.00175, rotation_x=90,
     anim_idle=0,
     anim_walk=0,
     anim_attack=1,
-    attack_scale=0.001,
+    attack_scale=0.0011,
     anim_idle_rate=0.05,
     anim_walk_rate=0.2,
     anim_attack_rate=1.0,
@@ -101,15 +101,15 @@ _GROBBO = ModelSpec(
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
 _HALLOWEEN_BAT = ModelSpec(
     path="ghosts/halloween_bat.glb",
-    scale=0.1, rotation_x=90,
-    spawn_y=1.0,
+    scale=0.15, rotation_x=-90,
+    spawn_y=0.9,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
-    attack_scale=0.9,
+    attack_scale=0.30,
     anim_idle_rate=0.5,
     anim_walk_rate=1,
-    anim_attack_rate=1.0,
+    anim_attack_rate=2.0,
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -125,7 +125,7 @@ _OPHANIM_ANGEL = ModelSpec(
 # Animations: ['ArmatureArmatureAction']
 _SKULL_CRAWLER = ModelSpec(
     path="ghosts/skull_crawler.glb",
-    scale=0.1, rotation_x=0,
+    scale=0.1, rotation_x=180,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
@@ -135,7 +135,7 @@ _SKULL_CRAWLER = ModelSpec(
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
     path="ghosts/tuna_fish.glb",
-    scale=0.15, rotation_x=0, spawn_y=0.5,
+    scale=0.2, rotation_x=180, spawn_y=0.5,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
@@ -158,11 +158,10 @@ _VOLCANO_INFERNO = ModelSpec(
 # 'Stun_Super', 'Death']
 _CALIBUR = ModelSpec(
     path="player/calibur_vgdc.glb",
-    scale=1.0, rotation_x=0,
+    scale=0.5, rotation_x=180,
     anim_idle=0,                  # Idle
     anim_walk=1,                  # Walk
     anim_attack=(3, 4, 5, 6, 7),  # Attack1/Stabs/TripleCombo/Jump/Stomp
-    attack_scale=0.9,
 )
 
 GHOST_SPECS: list[ModelSpec] = [
