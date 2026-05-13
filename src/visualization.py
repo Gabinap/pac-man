@@ -186,6 +186,8 @@ class GameRender(Entity):
         view.on_enter()
 
     def update(self) -> None:
+        if self._game_initialized and self._current == EGameView.GAME:
+            self._ghost_controller.update()
         if self._fps_mode and self._fps_ctrl is not None:
             speed = 5
             if held_keys["space"]:
