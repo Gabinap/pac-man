@@ -1,7 +1,9 @@
 from enum import Enum, auto
 import src.constants as C
 from ursina import Entity, color
-from src.utils import grid_to_world
+from src.utils import grid_to_world, world_to_grid
+from src.entities import Ghost, Player
+from src.maze import Maze
 
 
 class GhostState(Enum):
@@ -10,33 +12,53 @@ class GhostState(Enum):
 
 
 class GhostController:
-    def __init__(self, maze_width: int = 11, maze_height: int = 11) -> None:
-        self.ghosts: list[Entity] = self._init_ghosts(maze_width, maze_height)
+    def __init__(self, t_player: Player, maze: Maze) -> None:
+        self.t_player = t_player
+        self.maze = maze
+        self.ghosts: list[Ghost] = self._init_ghosts()
+        self.p_grid_x, self.p_grid_y = world_to_grid(
+            self.t_player.x, self.t_player.z, self.maze.width, self.maze.height
+        )
 
-    def _init_ghosts(self, maze_width: int, maze_height: int) -> list[Entity]:
-        ghosts = []
+    def _init_ghosts(self) -> list[Ghost]:
+        ghosts: list[Ghost] = []
         ghost_colors = [color.red, color.pink, color.cyan, color.orange]
 
         start_grid_indices = [
             (0, 0),
-            (maze_width - 1, 0),
-            (0, maze_height - 1),
-            (maze_width - 1, maze_height - 1),
+            (self.maze.width - 1, 0),
+            (0, self.maze.height - 1),
+            (self.maze.width - 1, self.maze.height - 1),
         ]
 
         for i in range(C.GHOST_COUNT):
             grid_x, grid_y = start_grid_indices[i % len(start_grid_indices)]
             world_x, world_z = grid_to_world(
-                grid_x, grid_y, maze_width, maze_height
+                grid_x, grid_y, self.maze.width, self.maze.height
             )
-            ghost_entity = Entity(
-                model="sphere",
-                color=ghost_colors[i % len(ghost_colors)],
-                scale=0.8,
-                x=world_x,
-                y=0.5,
-                z=world_z,
-            )
+
+            ghost_entity = Ghost(i, position=(world_x, 0.5, world_z))
             ghosts.append(ghost_entity)
 
         return ghosts
+
+    def update_ghosts(self) -> None:
+        for ghost in self.ghosts:
+            target_x, target_z = 0.0, 0.0
+            if ghost.ghost_index == 0:
+                target_x, target_z = self.t_player.x, self.t_player.Z
+            elif ghost.ghost_index == 1:
+                target_x, target_z = self._calculate_pinky_target()
+
+    def _calculate_pinky_target(self) -> tuple[int, int]:
+        p_grid_x, p_grid_y = world_to_grid(
+            self.t_player.x, self.t_player.z, self.maze.width, self.maze.height
+        )
+        raw_x = p_grid_x + (4 * self.t_player.grid_direction[0])
+        raw_y = p_grid_y + (4 * self.t_player.grid_direction[1])
+        target_x = max(0, min(raw_x, self.maze.width - 1))
+        target_y = max(0, min(raw_y, self.maze.height - 1))
+        return (target_x, target_y)
+
+    # def _calculate_inky_target(self) -> tuple[int, int]:
+        

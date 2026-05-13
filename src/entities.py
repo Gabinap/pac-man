@@ -6,7 +6,7 @@ No game logic or rendering — only structured state.
 These classes are consumed by game_behavior and visualization.
 """
 
-from ursina import Entity, invoke, held_keys, time
+from ursina import Entity, invoke, held_keys, time, color
 from direct.actor.Actor import Actor
 from panda3d.core import MaterialAttrib
 import src.constants as C
@@ -27,7 +27,7 @@ class AnimatedEntity(Entity):
         self.scale = spec.scale
         self.rotation_x = spec.rotation_x
         self._anims = self.actor.get_anim_names()
-        self.idle()
+        self.attack()
 
     def _fix_metallic(self) -> None:
         for np in self.actor.find_all_matches("**/+GeomNode"):
@@ -65,52 +65,82 @@ class Player(AnimatedEntity):
         super().__init__(C.GHOST_SPECS[0])
         self.speed = C.PLAYER_SPEED
         self.maze = maze
+        self.grid_direction: tuple[int, int] = (0, -1)
+        self.pos_gridx: int
+        self.pos_gridy: int
+        self.animate
 
     def update(self) -> None:
-        pos_x, pos_y = world_to_grid(
+        self.pos_gridx, self.pos_gridy = world_to_grid(
             self.x,
             self.z,
             self.maze.width,
             self.maze.height,
         )
         center_x, center_z = grid_to_world(
-            pos_x, pos_y, self.maze.width, self.maze.height
+            self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
         )
-        cell_value = self.maze.grid[pos_y][pos_x]
+        cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
         align_speed = 15.0
         if held_keys["w"] or held_keys["up arrow"]:
+            self.grid_direction = (0, -1)
             self.x += (center_x - self.x) * align_speed * time.dt
             self.z += self.speed * time.dt
             if cell_value & 1:
                 self.z = min(self.z, center_z)
 
         elif held_keys["s"] or held_keys["down arrow"]:
+            self.grid_direction = (0, 1)
             self.x += (center_x - self.x) * align_speed * time.dt
             self.z -= self.speed * time.dt
             if cell_value & 4:
                 self.z = max(self.z, center_z)
 
         elif held_keys["a"] or held_keys["left arrow"]:
+            self.grid_direction = (-1, 0)
+
             self.z += (center_z - self.z) * align_speed * time.dt
             self.x -= self.speed * time.dt
             if cell_value & 8:
                 self.x = max(self.x, center_x)
 
         elif held_keys["d"] or held_keys["right arrow"]:
+            self.grid_direction = (1, 0)
             self.z += (center_z - self.z) * align_speed * time.dt
             self.x += self.speed * time.dt
             if cell_value & 2:
                 self.x = min(self.x, center_x)
 
 
-class Ghost(AnimatedEntity):
-    def __init__(self, index: int = 0, position=tuple[float, float]) -> None:
-        spec = C.GHOST_SPECS[index % len(C.GHOST_SPECS)]
-        if not spec.supported:
-            raise ValueError(
-                f"Ghost model at index {index} is not supported by Actor"
-            )
-        super().__init__(spec)
+class Ghost(Entity):
+    def __init__(
+        self,
+        index: int = 0,
+        position: tuple[float, float, float] = (0.0, 0.5, 0.0),
+    ) -> None:
+        ghost_colors = [color.red, color.pink, color.cyan, color.orange]
+        my_color = ghost_colors[index % len(ghost_colors)]
+
+        super().__init__(
+            model="sphere", color=my_color, scale=0.8, position=position
+        )
+
+        self.ghost_index = index
+        # self.pos_gridx, self.pos_gridy = world_to_grid(
+        #     self.x,
+        #     self.z,
+        #     self.maze.width,
+        #     self.maze.height,
+        # )
+
+        # ANIMATED A REVENIR DESSUS
+        # spec = C.GHOST_SPECS[index % len(C.GHOST_SPECS)]
+
+        # if not spec.supported:
+        #     raise ValueError(
+        #         f"Ghost model at index {index} is not supported by Actor"
+        #     )
+        # super().__init__(spec)
 
 
 class Floor(Entity):
