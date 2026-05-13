@@ -42,27 +42,46 @@ PLAYER_RESPAWN_DELAY: float = 2.0   # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
 
 # --- Assets ---
+# anim_idle/walk/attack: an int (single animation) or a tuple of ints (a
+# random one is picked at each transition into that state).
 class ModelSpec(NamedTuple):
     path: str
     scale: float
     rotation_x: float
-    anim_idle: int
-    anim_idle_rate: float
-    anim_walk: int
-    anim_walk_rate: float
-    anim_attack: int
-    anim_attack_rate: float
+    anim_idle: int | tuple[int, ...]
+    anim_walk: int | tuple[int, ...]
+    anim_attack: int | tuple[int, ...]
     attack_scale: float
+    spawn_y: float = 0.0
+    anim_idle_rate: float = 1.0
+    anim_walk_rate: float = 1.0
+    anim_attack_rate: float = 1.0
     supported: bool = True
 
 
 # Animations: ['Idle_g', 'Run1_g', 'Run2_g', 'Lunge_g', 'Default_g']
 _CROCKIE = ModelSpec(
     path="ghosts/crockie_vgdc.glb",
+    scale=0.5, rotation_x=90,
+    anim_idle=0,
+    anim_walk=(1, 2),    # Run1_g, Run2_g
+    anim_attack=3,       # Lunge_g
+    attack_scale=0.9,
+)
+
+# Animations: ['005_attack', 'monster_hit', 'monster_death', '002_crit',
+# '002_attack', '001_attack', '001_AOE_twohanded', '004_attack', '002_AOE_all',
+# '003_crit', '003_attack', '001_victory_all', '009_attack_x3_ogre_01',
+# '009_attack_x3_ogre_02', '009_attack_x3_ogre_03', '008_attack_heavyweapon',
+# '007_attack_x3_01', '007_attack_x3_02', '005_buff_ogre', 'monster_idle',
+# 'monster_run', '001_stun_sleep', 'monster_idle_HeroScene',
+# 'idle_interruption2', 'idle_interruption1']
+_CROCODILE = ModelSpec(
+    path="ghosts/crocodile.glb",
     scale=1.0, rotation_x=0,
-    anim_idle=0, anim_idle_rate=1.0,
-    anim_walk=1, anim_walk_rate=1.0,
-    anim_attack=3, anim_attack_rate=1.0,
+    anim_idle=19,                          # monster_idle
+    anim_walk=20,                          # monster_run
+    anim_attack=(0, 4, 5, 7, 10, 15),      # 005/002/001/004/003_attack + heavy
     attack_scale=0.9,
 )
 
@@ -70,21 +89,94 @@ _CROCKIE = ModelSpec(
 _GROBBO = ModelSpec(
     path="ghosts/grobbo_alien_hatchling.glb",
     scale=0.00175, rotation_x=-90,
-    anim_idle=0, anim_idle_rate=0.05,
-    anim_walk=0, anim_walk_rate=0.2,
-    anim_attack=1, anim_attack_rate=1.0,
+    anim_idle=0,
+    anim_walk=0,
+    anim_attack=1,
     attack_scale=0.001,
+    anim_idle_rate=0.05,
+    anim_walk_rate=0.2,
+    anim_attack_rate=1.0,
+)
+
+# Animations: ['BatFlying', 'BatSleeping', 'BatRest']
+_HALLOWEEN_BAT = ModelSpec(
+    path="ghosts/halloween_bat.glb",
+    scale=0.1, rotation_x=90,
+    spawn_y=1.0,
+    anim_idle=0,
+    anim_walk=0,
+    anim_attack=0,
+    attack_scale=0.9,
+    anim_idle_rate=0.5,
+    anim_walk_rate=1,
+    anim_attack_rate=1.0,
+)
+
+# Animations: ['Armature.001Armature.002Action.002']
+_OPHANIM_ANGEL = ModelSpec(
+    path="ghosts/ophanim_angel.glb",
+    scale=0.1, rotation_x=0, spawn_y=0.75,
+    anim_idle=0,
+    anim_walk=0,
+    anim_attack=0,
+    attack_scale=0.9,
+)
+
+# Animations: ['ArmatureArmatureAction']
+_SKULL_CRAWLER = ModelSpec(
+    path="ghosts/skull_crawler.glb",
+    scale=0.1, rotation_x=0,
+    anim_idle=0,
+    anim_walk=0,
+    anim_attack=0,
+    attack_scale=0.9,
+)
+
+# Animations: ['Swim']
+_TUNA_FISH = ModelSpec(
+    path="ghosts/tuna_fish.glb",
+    scale=0.15, rotation_x=0, spawn_y=0.5,
+    anim_idle=0,
+    anim_walk=0,
+    anim_attack=0,
+    attack_scale=0.9,
+)
+
+# Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
+# 'walkSpellEarthquake', 'spellWalkSheild', 'death']
+_VOLCANO_INFERNO = ModelSpec(
+    path="ghosts/volcano_inferno.glb",
+    scale=1.0, rotation_x=0,
+    anim_idle=0,                  # idle
+    anim_walk=(1, 2, 3, 4),       # run, runVariation, walk, walkVariation
+    anim_attack=(5, 6),           # walkSpellEarthquake, spellWalkSheild
+    attack_scale=0.9,
+)
+
+# Animations: ['Idle', 'Walk', 'Taunt', 'Attack1', 'Attack_Stabs',
+# 'Attack_TripleCombo', 'Attack_Jump', 'Attack_Stomp', 'Backstep', 'Stun',
+# 'Stun_Super', 'Death']
+_CALIBUR = ModelSpec(
+    path="player/calibur_vgdc.glb",
+    scale=1.0, rotation_x=0,
+    anim_idle=0,                  # Idle
+    anim_walk=1,                  # Walk
+    anim_attack=(3, 4, 5, 6, 7),  # Attack1/Stabs/TripleCombo/Jump/Stomp
+    attack_scale=0.9,
 )
 
 GHOST_SPECS: list[ModelSpec] = [
-    _CROCKIE,                                                  # 0
-    ModelSpec("ghosts/crocodile.glb",          1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 1
-    _GROBBO,                                                   # 2
-    ModelSpec("ghosts/skull_crawler.glb",      1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 3
-    ModelSpec("ghosts/volcano_inferno.glb",    1.0, 0, 0, 1.0, 0, 1.0, 0, 1.0, 0.9, False),  # 4
+    _CROCKIE,           # 0
+    _CROCODILE,         # 1
+    _GROBBO,            # 2
+    _HALLOWEEN_BAT,     # 3
+    _OPHANIM_ANGEL,     # 4
+    _SKULL_CRAWLER,     # 5
+    _TUNA_FISH,         # 6
+    _VOLCANO_INFERNO,   # 7
 ]
 
-PLAYER_SPEC: ModelSpec = _CROCKIE
+PLAYER_SPEC: ModelSpec = _CALIBUR
 
 # Textures loaded relative to assets/ (Ursina default search path).
 # Usage: AMBIANCES["forest"] or random.choice(list(AMBIANCES.values())).
