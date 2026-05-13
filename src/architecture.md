@@ -1,5 +1,5 @@
 ## Dépendances entre modules
- 
+
 ```
 pac-man.py
     │
@@ -11,17 +11,25 @@ pac-man.py
              │
              ├──► constants.py
              ├──► entities.py
-             └──► game_behavior.py
-                      │
-                      ├──► constants.py
-                      ├──► entities.py
-                      └──► game_config.py
+             │        └──► constants.py
+             ├──► game_config.py
+             ├──► maze.py
+             │        ├──► constants.py
+             │        ├──► entities.py
+             │        └──► game_config.py
+             └──► views/
+                      ├──► base.py
+                      ├──► main_menu.py        ──► base.py
+                      ├──► instructions.py     ──► base.py
+                      └──► highscores.py       ──► base.py, game_config.py
 ```
- 
+
+Note : `game_behavior.py` n'est pas encore implémenté (fichier stub avec docstring uniquement). La logique de jeu est actuellement portée par `visualization.GameRender`.
+
 ---
- 
+
 ## Flux de données
- 
+
 ```
 config.json
     │
@@ -29,36 +37,31 @@ config.json
 parser.py ──── valide et construit ───► GameConfig
                                             │
                                             ▼
-                                     game_behavior.py
-                                     ┌───────────────┐
-                                     │ - Player       │
-                                     │ - Ghost x4     │◄── entities.py
-                                     │ - Pacgums      │
-                                     │ - Score        │◄── constants.py
-                                     │ - Highscores   │
-                                     └───────┬────────┘
-                                             │ update()
-                                             ▼
-                                     visualization.py
-                                     ┌───────────────┐
-                                     │ - Ursina App  │
-                                     │ - Camera POV  │
-                                     │ - 3D Models   │
-                                     │ - Rendu HUD   │
-                                     └───────────────┘
+                                     visualization.GameRender
+                                     ┌──────────────────────┐
+                                     │ - Ursina App         │
+                                     │ - EGameView (FSM)    │
+                                     │ - Camera top-down/FPS│◄── views/*
+                                     │ - Barrel distortion  │
+                                     │ - Player             │◄── entities.py
+                                     │ - Maze (sol + murs)  │◄── maze.py
+                                     │ - Ambiance (textures)│◄── constants.py
+                                     └──────────────────────┘
 ```
- 
+
 ---
- 
+
 ## Règles d'import
- 
+
 | Module | Peut importer | Ne doit PAS importer |
 |---|---|---|
-| `constants.py` | rien | tout le reste |
-| `entities.py` | `constants` | `game_behavior`, `visualization` |
-| `game_config.py` | `constants` | `game_behavior`, `visualization` |
-| `parser.py` | `game_config`, `constants` | `game_behavior`, `visualization` |
-| `game_beh avior.py` | `entities`, `game_config`, `constants` | `visualization` |
+| `constants.py` | rien (interne) | tout le reste |
+| `game_config.py` | rien (interne) | tout le reste |
+| `entities.py` | `constants` | `visualization`, `views`, `maze` |
+| `parser.py` | `constants`, `game_config` | `visualization`, `views`, `maze`, `entities` |
+| `maze.py` | `constants`, `entities`, `game_config` | `visualization`, `views` |
+| `views/base.py` | rien (interne) | tout le reste |
+| `views/*.py` | `views/base`, `game_config` | `visualization`, `maze`, `entities` |
 | `visualization.py` | tout | — |
 | `pac-man.py` | `parser`, `visualization` | — |
 
