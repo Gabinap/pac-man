@@ -65,7 +65,7 @@ class AnimatedEntity(Entity):
 # are perfect 0 2
 class Player(AnimatedEntity):
     def __init__(self) -> None:
-        super().__init__(C.GHOST_SPECS[1])
+        super().__init__(C.GHOST_SPECS[2])
 
 
 class Ghost(AnimatedEntity):
