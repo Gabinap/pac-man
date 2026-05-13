@@ -40,25 +40,49 @@ class GhostController:
         return ghosts
 
     def update_ghosts(self) -> None:
+        collided: bool = False
         for ghost in self.ghosts:
             target_x, target_z = 0, 0
 
             if ghost.ghost_index == 0:
                 target_x = self.t_player.pos_gridx
                 target_z = self.t_player.pos_gridy
-
+                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 1:
                 target_x, target_z = self._calculate_pinky_target()
+                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 2:
                 target_x, target_z = self._calculate_inky_target(
                     self.ghosts[0]
                 )
+                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 3:
-                target_x, target_z = self._calculate_clyde_target(
-                    self.ghosts[3]
-                )
+                target_x, target_z = self._calculate_clyde_target(ghost)
+                collided = self.check_collision_with_player(ghost)
 
+            if collided:
+                print("Collided")
             ghost.update_ai(target_x, target_z)
+
+    def check_collision_with_player(self, ghost: Ghost) -> bool:
+        p_centerx, p_centerz = grid_to_world(
+            self.t_player.pos_gridx,
+            self.t_player.pos_gridy,
+            self.maze.width,
+            self.maze.height,
+        )
+        g_centerx, g_centerz = grid_to_world(
+            ghost.pos_gridx,
+            ghost.pos_gridy,
+            self.maze.width,
+            self.maze.height,
+        )
+        distance_player_ghost = abs(p_centerx - g_centerx) + abs(
+            p_centerz - g_centerz
+        )
+        if distance_player_ghost < 0.5:
+            return True
+        return False
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(

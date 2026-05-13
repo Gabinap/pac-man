@@ -34,8 +34,9 @@ class AnimatedEntity(Entity):
         self.maze = maze
         self.speed = speed
         self.grid_direction: tuple[int, int] = (0, 0)
-        self.pos_gridx: int = 0
-        self.pos_gridy: int = 0
+        self.pos_gridx: int
+        self.pos_gridy: int
+        self.update_grid_position()
 
     def update_grid_position(self) -> None:
         self.pos_gridx, self.pos_gridy = world_to_grid(
