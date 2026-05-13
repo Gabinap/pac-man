@@ -16,14 +16,9 @@ class GhostController:
         self.t_player = t_player
         self.maze = maze
         self.ghosts: list[Ghost] = self._init_ghosts()
-        self.p_grid_x, self.p_grid_y = world_to_grid(
-            self.t_player.x, self.t_player.z, self.maze.width, self.maze.height
-        )
 
     def _init_ghosts(self) -> list[Ghost]:
         ghosts: list[Ghost] = []
-        ghost_colors = [color.red, color.pink, color.cyan, color.orange]
-
         start_grid_indices = [
             (0, 0),
             (self.maze.width - 1, 0),
@@ -54,6 +49,14 @@ class GhostController:
 
             elif ghost.ghost_index == 1:
                 target_x, target_z = self._calculate_pinky_target()
+            elif ghost.ghost_index == 2:
+                target_x, target_z = self._calculate_inky_target(
+                    self.ghosts[0]
+                )
+            elif ghost.ghost_index == 3:
+                target_x, target_z = self._calculate_clyde_target(
+                    self.ghosts[3]
+                )
 
             ghost.update_ai(target_x, target_z)
 
@@ -67,7 +70,45 @@ class GhostController:
         target_y = max(0, min(raw_y, self.maze.height - 1))
         return (target_x, target_y)
 
-    # def _calculate_inky_target(self) -> tuple[int, int]:
+    def _calculate_inky_target(self, blinky: Ghost) -> tuple[int, int]:
+        p_grid_x, p_grid_y = world_to_grid(
+            self.t_player.x, self.t_player.z, self.maze.width, self.maze.height
+        )
+        b_grid_x, b_grid_y = world_to_grid(
+            blinky.x, blinky.z, self.maze.width, self.maze.height
+        )
 
-    def update(self) -> None:
-        self.update_ghosts()
+        pivot_x = p_grid_x + (2 * self.t_player.grid_direction[0])
+        pivot_y = p_grid_y + (2 * self.t_player.grid_direction[1])
+
+        vecteur_x = pivot_x - b_grid_x
+        vecteur_y = pivot_y - b_grid_y
+
+        raw_x = b_grid_x + (2 * vecteur_x)
+        raw_y = b_grid_y + (2 * vecteur_y)
+
+        target_x = max(0, min(raw_x, self.maze.width - 1))
+        target_y = max(0, min(raw_y, self.maze.height - 1))
+
+        return (target_x, target_y)
+
+    def _calculate_clyde_target(self, clyde: Ghost) -> tuple[int, int]:
+        p_grid_x, p_grid_y = world_to_grid(
+            self.t_player.x, self.t_player.z, self.maze.width, self.maze.height
+        )
+        c_grid_x, c_grid_y = world_to_grid(
+            clyde.x, clyde.z, self.maze.width, self.maze.height
+        )
+
+        square_distance = (p_grid_x - c_grid_x) ** 2 + (
+            p_grid_y - c_grid_y
+        ) ** 2
+
+        if square_distance > 64:
+            raw_x, raw_y = p_grid_x, p_grid_y
+        else:
+            raw_x, raw_y = 0, self.maze.height - 1
+        target_x = max(0, min(raw_x, self.maze.width - 1))
+        target_y = max(0, min(raw_y, self.maze.height - 1))
+
+        return (target_x, target_y)
