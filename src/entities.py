@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 
 
 class AnimatedEntity(Entity):
-    def __init__(self, spec: C.ModelSpec) -> None:
+    def __init__(
+        self, spec: C.ModelSpec, maze: "Maze", speed: float = 0.0
+    ) -> None:
         super().__init__()
         self.spec = spec
         self.actor = Actor(f"assets/{spec.path}")
@@ -27,7 +29,45 @@ class AnimatedEntity(Entity):
         self.scale = spec.scale
         self.rotation_x = spec.rotation_x
         self._anims = self.actor.get_anim_names()
-        self.attack()
+        self.idle()
+
+        self.maze = maze
+        self.speed = speed
+        self.grid_direction: tuple[int, int] = (0, 0)
+        self.pos_gridx: int = 0
+        self.pos_gridy: int = 0
+
+    def update_grid_position(self) -> None:
+        self.pos_gridx, self.pos_gridy = world_to_grid(
+            self.x, self.z, self.maze.width, self.maze.height
+        )
+
+    def move_in_direction(self, dir_x: int, dir_y: int) -> None:
+        if dir_x == 0 and dir_y == 0:
+            return
+
+        self.grid_direction = (dir_x, dir_y)
+        center_x, center_z = grid_to_world(
+            self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
+        )
+        cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
+        align_speed = 15.0
+
+        if dir_x != 0:
+            self.z += (center_z - self.z) * align_speed * time.dt
+            self.x += dir_x * self.speed * time.dt
+            if dir_x == 1 and (cell_value & 2):
+                self.x = min(self.x, center_x)
+            elif dir_x == -1 and (cell_value & 8):
+                self.x = max(self.x, center_x)
+
+        elif dir_y != 0:
+            self.x += (center_x - self.x) * align_speed * time.dt
+            self.z -= dir_y * self.speed * time.dt
+            if dir_y == -1 and (cell_value & 1):
+                self.z = min(self.z, center_z)
+            elif dir_y == 1 and (cell_value & 4):
+                self.z = max(self.z, center_z)
 
     def _fix_metallic(self) -> None:
         for np in self.actor.find_all_matches("**/+GeomNode"):
@@ -62,54 +102,21 @@ class AnimatedEntity(Entity):
 
 class Player(AnimatedEntity):
     def __init__(self, maze: "Maze") -> None:
-        super().__init__(C.GHOST_SPECS[0])
-        self.speed = C.PLAYER_SPEED
-        self.maze = maze
-        self.grid_direction: tuple[int, int] = (0, -1)
-        self.pos_gridx: int
-        self.pos_gridy: int
-        self.animate
+        super().__init__(
+            spec=C.GHOST_SPECS[0], maze=maze, speed=C.PLAYER_SPEED
+        )
 
     def update(self) -> None:
-        self.pos_gridx, self.pos_gridy = world_to_grid(
-            self.x,
-            self.z,
-            self.maze.width,
-            self.maze.height,
-        )
-        center_x, center_z = grid_to_world(
-            self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
-        )
-        cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
-        align_speed = 15.0
+        self.update_grid_position()
+
         if held_keys["w"] or held_keys["up arrow"]:
-            self.grid_direction = (0, -1)
-            self.x += (center_x - self.x) * align_speed * time.dt
-            self.z += self.speed * time.dt
-            if cell_value & 1:
-                self.z = min(self.z, center_z)
-
+            self.move_in_direction(0, -1)
         elif held_keys["s"] or held_keys["down arrow"]:
-            self.grid_direction = (0, 1)
-            self.x += (center_x - self.x) * align_speed * time.dt
-            self.z -= self.speed * time.dt
-            if cell_value & 4:
-                self.z = max(self.z, center_z)
-
+            self.move_in_direction(0, 1)
         elif held_keys["a"] or held_keys["left arrow"]:
-            self.grid_direction = (-1, 0)
-
-            self.z += (center_z - self.z) * align_speed * time.dt
-            self.x -= self.speed * time.dt
-            if cell_value & 8:
-                self.x = max(self.x, center_x)
-
+            self.move_in_direction(-1, 0)
         elif held_keys["d"] or held_keys["right arrow"]:
-            self.grid_direction = (1, 0)
-            self.z += (center_z - self.z) * align_speed * time.dt
-            self.x += self.speed * time.dt
-            if cell_value & 2:
-                self.x = min(self.x, center_x)
+            self.move_in_direction(1, 0)
 
 
 class Ghost(Entity):
@@ -117,6 +124,7 @@ class Ghost(Entity):
         self,
         index: int = 0,
         position: tuple[float, float, float] = (0.0, 0.5, 0.0),
+        maze: "Maze" = None,
     ) -> None:
         ghost_colors = [color.red, color.pink, color.cyan, color.orange]
         my_color = ghost_colors[index % len(ghost_colors)]
@@ -126,12 +134,79 @@ class Ghost(Entity):
         )
 
         self.ghost_index = index
-        # self.pos_gridx, self.pos_gridy = world_to_grid(
-        #     self.x,
-        #     self.z,
-        #     self.maze.width,
-        #     self.maze.height,
-        # )
+        self.maze = maze
+        self.speed = 3.5
+        self.grid_direction: tuple[int, int] = (0, 0)
+        self.pos_gridx, self.pos_gridy = world_to_grid(
+            self.x, self.z, self.maze.width, self.maze.height
+        )
+
+    def update_ai(self, target_x: int, target_y: int) -> None:
+        self.pos_gridx, self.pos_gridy = world_to_grid(
+            self.x, self.z, self.maze.width, self.maze.height
+        )
+        center_x, center_z = grid_to_world(
+            self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
+        )
+        cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
+
+        dist_to_center = abs(self.x - center_x) + abs(self.z - center_z)
+
+        if dist_to_center < 0.1 or self.grid_direction == (0, 0):
+
+            directions = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
+
+            best_dir = self.grid_direction
+            min_dist = float("inf")
+
+            for dx, dy, wall_flag in directions:
+                if cell_value & wall_flag:
+                    continue
+
+                if (
+                    self.grid_direction != (0, 0)
+                    and dx == -self.grid_direction[0]
+                    and dy == -self.grid_direction[1]
+                ):
+                    continue
+
+                next_x = self.pos_gridx + dx
+                next_y = self.pos_gridy + dy
+                dist = (next_x - target_x) ** 2 + (next_y - target_y) ** 2
+
+                if dist < min_dist:
+                    min_dist = dist
+                    best_dir = (dx, dy)
+
+            self.grid_direction = best_dir
+
+        self.move_in_direction(self.grid_direction[0], self.grid_direction[1])
+
+    def move_in_direction(self, dir_x: int, dir_y: int) -> None:
+        if dir_x == 0 and dir_y == 0:
+            return
+
+        center_x, center_z = grid_to_world(
+            self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
+        )
+        cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
+        align_speed = 15.0
+
+        if dir_x != 0:
+            self.z += (center_z - self.z) * align_speed * time.dt
+            self.x += dir_x * self.speed * time.dt
+            if dir_x == 1 and (cell_value & 2):
+                self.x = min(self.x, center_x)
+            elif dir_x == -1 and (cell_value & 8):
+                self.x = max(self.x, center_x)
+
+        elif dir_y != 0:
+            self.x += (center_x - self.x) * align_speed * time.dt
+            self.z -= dir_y * self.speed * time.dt
+            if dir_y == -1 and (cell_value & 1):
+                self.z = min(self.z, center_z)
+            elif dir_y == 1 and (cell_value & 4):
+                self.z = max(self.z, center_z)
 
         # ANIMATED A REVENIR DESSUS
         # spec = C.GHOST_SPECS[index % len(C.GHOST_SPECS)]

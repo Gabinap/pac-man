@@ -37,18 +37,25 @@ class GhostController:
                 grid_x, grid_y, self.maze.width, self.maze.height
             )
 
-            ghost_entity = Ghost(i, position=(world_x, 0.5, world_z))
+            ghost_entity = Ghost(
+                i, position=(world_x, 0.5, world_z), maze=self.maze
+            )
             ghosts.append(ghost_entity)
 
         return ghosts
 
     def update_ghosts(self) -> None:
         for ghost in self.ghosts:
-            target_x, target_z = 0.0, 0.0
+            target_x, target_z = 0, 0
+
             if ghost.ghost_index == 0:
-                target_x, target_z = self.t_player.x, self.t_player.Z
+                target_x = self.t_player.pos_gridx
+                target_z = self.t_player.pos_gridy
+
             elif ghost.ghost_index == 1:
                 target_x, target_z = self._calculate_pinky_target()
+
+            ghost.update_ai(target_x, target_z)
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(
@@ -61,4 +68,6 @@ class GhostController:
         return (target_x, target_y)
 
     # def _calculate_inky_target(self) -> tuple[int, int]:
-        
+
+    def update(self) -> None:
+        self.update_ghosts()
