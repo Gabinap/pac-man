@@ -60,9 +60,9 @@ class AnimatedEntity(Entity):
     def update(self) -> None:
         pass
 
-#crash 1 7
+# crash 1 7
 # in progress
-#are perfect 0 2
+# are perfect 0 2
 class Player(AnimatedEntity):
     def __init__(self) -> None:
         super().__init__(C.GHOST_SPECS[1])
