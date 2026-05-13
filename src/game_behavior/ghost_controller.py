@@ -65,23 +65,14 @@ class GhostController:
             ghost.update_ai(target_x, target_z)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
-        p_centerx, p_centerz = grid_to_world(
-            self.t_player.pos_gridx,
-            self.t_player.pos_gridy,
-            self.maze.width,
-            self.maze.height,
-        )
-        g_centerx, g_centerz = grid_to_world(
-            ghost.pos_gridx,
-            ghost.pos_gridy,
-            self.maze.width,
-            self.maze.height,
-        )
-        distance_player_ghost = abs(p_centerx - g_centerx) + abs(
-            p_centerz - g_centerz
-        )
+        px, pz = self.t_player.x, self.t_player.z
+        gx, gz = ghost.x, ghost.z
+
+        distance_player_ghost = abs(px - gx) + abs(pz - gz)
+
         if distance_player_ghost < 0.5:
             return True
+
         return False
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
