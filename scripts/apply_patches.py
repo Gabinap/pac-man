@@ -81,28 +81,70 @@ PATCHES: list[tuple[str, str]] = [
         "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
     ),
     # Bug 4: animation deforms the mesh when the skinned mesh node sits under
-    # parent transforms with non-uniform scale (e.g. FBX → GLTF exports with
+    # parent transforms with non-unit scale (e.g. FBX → GLTF exports with
     # scale=100 on the armature/mesh node). The original code pre-multiplies
     # vertices by inverse(W_mesh) then relies on the scene graph to reapply
     # W_mesh at render. At bind pose this cancels out, but during animation
-    # the skin transform `joint_world_now * inverse(joint_world_bind)` ends up
-    # conjugated by W_mesh, scaling its translation component by W_mesh's
-    # scale factor. With scale=100 in the chain, joint translations are
-    # amplified 100x, blowing the mesh up and collapsing faces. Per GLTF spec
-    # the mesh node's world transform must NOT be applied to skinned vertices
-    # — reparent the geom under the Character instead so the scale chain
-    # never reaches it, and drop the now-incorrect vertex pre-multiplication.
+    # the skin transform `joint_world_now * inverse(joint_world_bind)` ends
+    # up conjugated by W_mesh: `W_mesh * skin * inverse(W_mesh)`. For a pure
+    # rotation that's harmless (rotations are preserved by rotation-conjuga-
+    # tion), but for non-unit scale the conjugation **multiplies the joint
+    # translation components by the scale factor**, amplifying them and
+    # blowing the mesh up. Fix: detect a non-unit scale in the chain and, in
+    # that case only, reparent the geom directly under the Character so the
+    # scale chain never reaches it. Pure-rotation chains keep the original
+    # pre-mul behaviour (Grobbo-style models depend on the rotation being
+    # cancelled out at render to land in the right orientation).
+    # Bug 4a: original (unpatched) form — pre-mul vertices by inverse(W_mesh).
     (
-        "            # Set the transform of the skinned node to the inverse of the parent's\n"
-        "            # transform.  This allows skinning to happen in global space.\n"
-        "            net_xform = NodePath(geom_node.get_parent(0)).get_net_transform()\n"
+        "            # Set the transform of the skinned node to the inverse"  # noqa: E501
+        " of the parent's\n"
+        "            # transform.  This allows skinning to happen in"
+        " global space.\n"
+        "            net_xform = NodePath(geom_node.get_parent(0))"
+        ".get_net_transform()\n"
         "            inverse = net_xform.get_inverse()\n"
         "            gvd.transform_vertices(inverse.get_mat())",
-        "            # Bypass the mesh node's parent transform chain (which often\n"
-        "            # contains scale=100 on FBX → GLTF armatures); the GLTF spec\n"
-        "            # says the mesh node's world transform must not be applied to\n"
+        "            net_xform = NodePath(geom_node.get_parent(0))"
+        ".get_net_transform()\n"
+        "            _mat = net_xform.get_mat()\n"
+        "            _sx = _mat.get_row3(0).length()\n"
+        "            _sy = _mat.get_row3(1).length()\n"
+        "            _sz = _mat.get_row3(2).length()\n"
+        "            if (abs(_sx - 1.0) > 1e-3\n"
+        "                    or abs(_sy - 1.0) > 1e-3\n"
+        "                    or abs(_sz - 1.0) > 1e-3):\n"
+        "                NodePath(geom_node).reparent_to("
+        "charinfo.nodepath)\n"
+        "            else:\n"
+        "                gvd.transform_vertices("
+        "net_xform.get_inverse().get_mat())",
+    ),
+    # Bug 4b: upgrade from the previous unconditional-reparent fix (which
+    # broke pure-rotation models like Grobbo) to the conditional version.
+    (
+        "            # Bypass the mesh node's parent transform chain"
+        " (which often\n"
+        "            # contains scale=100 on FBX → GLTF armatures); the"
+        " GLTF spec\n"
+        "            # says the mesh node's world transform must not be"
+        " applied to\n"
         "            # skinned vertices.\n"
         "            NodePath(geom_node).reparent_to(charinfo.nodepath)",
+        "            net_xform = NodePath(geom_node.get_parent(0))"
+        ".get_net_transform()\n"
+        "            _mat = net_xform.get_mat()\n"
+        "            _sx = _mat.get_row3(0).length()\n"
+        "            _sy = _mat.get_row3(1).length()\n"
+        "            _sz = _mat.get_row3(2).length()\n"
+        "            if (abs(_sx - 1.0) > 1e-3\n"
+        "                    or abs(_sy - 1.0) > 1e-3\n"
+        "                    or abs(_sz - 1.0) > 1e-3):\n"
+        "                NodePath(geom_node).reparent_to("
+        "charinfo.nodepath)\n"
+        "            else:\n"
+        "                gvd.transform_vertices("
+        "net_xform.get_inverse().get_mat())",
     ),
 ]
 
