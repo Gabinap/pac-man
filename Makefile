@@ -11,6 +11,11 @@ install:
 
 patch:
 	@python3 scripts/apply_patches.py
+	@$(MAKE) clean-model-cache
+
+clean-model-cache:
+	@rm -f ~/.cache/panda3d/*.bam ~/.cache/panda3d/index-*.boo 2>/dev/null || true
+	@echo "Panda3D model cache cleared"
 
 ifeq (run, $(firstword $(MAKECMDGOALS)))
   _EXTRA := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
@@ -48,4 +53,4 @@ clean:
 	rm -rf .vscode
 	find . -type d -name output -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: install patch run debug lint lint-strict clean
+.PHONY: install patch clean-model-cache run debug lint lint-strict clean

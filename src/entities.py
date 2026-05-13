@@ -57,7 +57,7 @@ class AnimatedEntity(Entity):
 
 class Player(AnimatedEntity):
     def __init__(self) -> None:
-        super().__init__(C.GHOST_SPECS[2])
+        super().__init__(C.GHOST_SPECS[0])
 
 
 
