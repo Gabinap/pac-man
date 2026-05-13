@@ -31,7 +31,7 @@ GHOST_COUNT: int = 4
 
 # Movement speeds in cells per second
 PLAYER_SPEED: float = 4.0
-GHOST_SPEED_NORMAL: float = 3.5
+GHOST_SPEED_NORMAL: float = 2.6
 GHOST_SPEED_FRIGHTENED: float = 2.0
 GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 

@@ -135,7 +135,7 @@ class Ghost(Entity):
 
         self.ghost_index = index
         self.maze = maze
-        self.speed = 3.5
+        self.speed = C.GHOST_SPEED_NORMAL
         self.grid_direction: tuple[int, int] = (0, 0)
         self.pos_gridx, self.pos_gridy = world_to_grid(
             self.x, self.z, self.maze.width, self.maze.height
@@ -159,6 +159,8 @@ class Ghost(Entity):
             best_dir = self.grid_direction
             min_dist = float("inf")
 
+            possible_paths = []
+
             for dx, dy, wall_flag in directions:
                 if cell_value & wall_flag:
                     continue
@@ -170,13 +172,20 @@ class Ghost(Entity):
                 ):
                     continue
 
-                next_x = self.pos_gridx + dx
-                next_y = self.pos_gridy + dy
-                dist = (next_x - target_x) ** 2 + (next_y - target_y) ** 2
+                possible_paths.append((dx, dy))
 
-                if dist < min_dist:
-                    min_dist = dist
-                    best_dir = (dx, dy)
+            if len(possible_paths) == 0:
+                best_dir = (-self.grid_direction[0], -self.grid_direction[1])
+            else:
+                for dx, dy in possible_paths:
+                    next_x = self.pos_gridx + dx
+                    next_y = self.pos_gridy + dy
+
+                    dist = (next_x - target_x) ** 2 + (next_y - target_y) ** 2
+
+                    if dist < min_dist:
+                        min_dist = dist
+                        best_dir = (dx, dy)
 
             self.grid_direction = best_dir
 
