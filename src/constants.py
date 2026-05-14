@@ -31,15 +31,16 @@ GHOST_COUNT: int = 4
 
 # Movement speeds in cells per second
 PLAYER_SPEED: float = 4.0
-GHOST_SPEED_NORMAL: float = 3.5
+GHOST_SPEED_NORMAL: float = 2.6
 GHOST_SPEED_FRIGHTENED: float = 2.0
-GHOST_SPEED_DEAD: float = 6.0       # returning to spawn after being eaten
+GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 
 # Durations in seconds
-FRIGHTENED_DURATION: float = 8.0    # frightened state after a super-pacgum
-GHOST_RESPAWN_DELAY: float = 3.0    # pause at spawn before re-entering maze
-PLAYER_RESPAWN_DELAY: float = 2.0   # freeze after death before respawn
+FRIGHTENED_DURATION: float = 8.0  # frightened state after a super-pacgum
+GHOST_RESPAWN_DELAY: float = 3.0  # pause at spawn before re-entering maze
+PLAYER_RESPAWN_DELAY: float = 2.0  # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
+
 
 # --- Assets ---
 # anim_idle/walk/attack: an int (single animation) or a tuple of ints (a

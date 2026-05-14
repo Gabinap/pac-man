@@ -5,7 +5,6 @@ from src.constants import Ambiance
 from src.entities import Floor
 from src.game_config import LevelConfig
 
-
 NORTH, EAST, SOUTH, WEST = 1, 2, 4, 8
 
 _V3 = tuple[float, float, float]
@@ -28,69 +27,157 @@ def _face(
 
 
 def _add_wall(
-    wv: list[_V3], wu: list[_V2], wt: list[int],
-    wx: float, wz: float, s_x: float, s_z: float,
+    wv: list[_V3],
+    wu: list[_V2],
+    wt: list[int],
+    wx: float,
+    wz: float,
+    s_x: float,
+    s_z: float,
 ) -> None:
     hx, hz = s_x / 2, s_z / 2
     y0, y1 = 0.0, 1.0
     # top
-    _face(wv, wu, wt, [
-        (wx - hx, y1, wz - hz), (wx + hx, y1, wz - hz),
-        (wx + hx, y1, wz + hz), (wx - hx, y1, wz + hz),
-    ], s_x, s_z)
+    _face(
+        wv,
+        wu,
+        wt,
+        [
+            (wx - hx, y1, wz - hz),
+            (wx + hx, y1, wz - hz),
+            (wx + hx, y1, wz + hz),
+            (wx - hx, y1, wz + hz),
+        ],
+        s_x,
+        s_z,
+    )
     # north (z- face)
-    _face(wv, wu, wt, [
-        (wx - hx, y0, wz - hz), (wx + hx, y0, wz - hz),
-        (wx + hx, y1, wz - hz), (wx - hx, y1, wz - hz),
-    ], s_x, 1.0)
+    _face(
+        wv,
+        wu,
+        wt,
+        [
+            (wx - hx, y0, wz - hz),
+            (wx + hx, y0, wz - hz),
+            (wx + hx, y1, wz - hz),
+            (wx - hx, y1, wz - hz),
+        ],
+        s_x,
+        1.0,
+    )
     # south (z+ face)
-    _face(wv, wu, wt, [
-        (wx + hx, y0, wz + hz), (wx - hx, y0, wz + hz),
-        (wx - hx, y1, wz + hz), (wx + hx, y1, wz + hz),
-    ], s_x, 1.0)
+    _face(
+        wv,
+        wu,
+        wt,
+        [
+            (wx + hx, y0, wz + hz),
+            (wx - hx, y0, wz + hz),
+            (wx - hx, y1, wz + hz),
+            (wx + hx, y1, wz + hz),
+        ],
+        s_x,
+        1.0,
+    )
     # west (x- face)
-    _face(wv, wu, wt, [
-        (wx - hx, y0, wz + hz), (wx - hx, y0, wz - hz),
-        (wx - hx, y1, wz - hz), (wx - hx, y1, wz + hz),
-    ], s_z, 1.0)
+    _face(
+        wv,
+        wu,
+        wt,
+        [
+            (wx - hx, y0, wz + hz),
+            (wx - hx, y0, wz - hz),
+            (wx - hx, y1, wz - hz),
+            (wx - hx, y1, wz + hz),
+        ],
+        s_z,
+        1.0,
+    )
     # east (x+ face)
-    _face(wv, wu, wt, [
-        (wx + hx, y0, wz - hz), (wx + hx, y0, wz + hz),
-        (wx + hx, y1, wz + hz), (wx + hx, y1, wz - hz),
-    ], s_z, 1.0)
+    _face(
+        wv,
+        wu,
+        wt,
+        [
+            (wx + hx, y0, wz - hz),
+            (wx + hx, y0, wz + hz),
+            (wx + hx, y1, wz + hz),
+            (wx + hx, y1, wz - hz),
+        ],
+        s_z,
+        1.0,
+    )
 
 
 def _add_pattern(
-    pv: list[_V3], pu: list[_V2], pt: list[int],
-    px: float, pz: float,
+    pv: list[_V3],
+    pu: list[_V2],
+    pt: list[int],
+    px: float,
+    pz: float,
 ) -> None:
     hx, hz = 0.5, 0.5
     y0, y1 = 0.0, 1.0
     # top
-    _face(pv, pu, pt, [
-        (px - hx, y1, pz - hz), (px + hx, y1, pz - hz),
-        (px + hx, y1, pz + hz), (px - hx, y1, pz + hz),
-    ])
+    _face(
+        pv,
+        pu,
+        pt,
+        [
+            (px - hx, y1, pz - hz),
+            (px + hx, y1, pz - hz),
+            (px + hx, y1, pz + hz),
+            (px - hx, y1, pz + hz),
+        ],
+    )
     # north
-    _face(pv, pu, pt, [
-        (px - hx, y0, pz - hz), (px + hx, y0, pz - hz),
-        (px + hx, y1, pz - hz), (px - hx, y1, pz - hz),
-    ])
+    _face(
+        pv,
+        pu,
+        pt,
+        [
+            (px - hx, y0, pz - hz),
+            (px + hx, y0, pz - hz),
+            (px + hx, y1, pz - hz),
+            (px - hx, y1, pz - hz),
+        ],
+    )
     # south
-    _face(pv, pu, pt, [
-        (px + hx, y0, pz + hz), (px - hx, y0, pz + hz),
-        (px - hx, y1, pz + hz), (px + hx, y1, pz + hz),
-    ])
+    _face(
+        pv,
+        pu,
+        pt,
+        [
+            (px + hx, y0, pz + hz),
+            (px - hx, y0, pz + hz),
+            (px - hx, y1, pz + hz),
+            (px + hx, y1, pz + hz),
+        ],
+    )
     # west
-    _face(pv, pu, pt, [
-        (px - hx, y0, pz + hz), (px - hx, y0, pz - hz),
-        (px - hx, y1, pz - hz), (px - hx, y1, pz + hz),
-    ])
+    _face(
+        pv,
+        pu,
+        pt,
+        [
+            (px - hx, y0, pz + hz),
+            (px - hx, y0, pz - hz),
+            (px - hx, y1, pz - hz),
+            (px - hx, y1, pz + hz),
+        ],
+    )
     # east
-    _face(pv, pu, pt, [
-        (px + hx, y0, pz - hz), (px + hx, y0, pz + hz),
-        (px + hx, y1, pz + hz), (px + hx, y1, pz - hz),
-    ])
+    _face(
+        pv,
+        pu,
+        pt,
+        [
+            (px + hx, y0, pz - hz),
+            (px + hx, y0, pz + hz),
+            (px + hx, y1, pz + hz),
+            (px + hx, y1, pz - hz),
+        ],
+    )
 
 
 class Maze:
@@ -101,6 +188,7 @@ class Maze:
             size=(level.width, level.height), perfect=False, seed=seed
         )
         self.grid = gen.maze
+        self.height, self.width = len(self.grid), len(self.grid[0])
         self._build(ambiance)
 
     def _build(self, ambiance: Ambiance) -> None:
@@ -130,38 +218,38 @@ class Maze:
                 cx, cz = float(x - w // 2), float(h // 2 - z)
 
                 if cell & NORTH and (z == 0 or grid[z - 1][x] != 15):
-                    key = (cx, cz + 0.5, 'h')
+                    key = (cx, cz + 0.5, "h")
                     if key not in placed:
                         placed.add(key)
                         _add_wall(wv, wu, wt, cx, cz + 0.5, 1.0, 0.1)
 
                 if cell & EAST and (x == w - 1 or grid[z][x + 1] != 15):
-                    key = (cx + 0.5, cz, 'v')
+                    key = (cx + 0.5, cz, "v")
                     if key not in placed:
                         placed.add(key)
                         _add_wall(wv, wu, wt, cx + 0.5, cz, 0.1, 1.0)
 
                 if cell & SOUTH and (z == h - 1 or grid[z + 1][x] != 15):
-                    key = (cx, cz - 0.5, 'h')
+                    key = (cx, cz - 0.5, "h")
                     if key not in placed:
                         placed.add(key)
                         _add_wall(wv, wu, wt, cx, cz - 0.5, 1.0, 0.1)
 
                 if cell & WEST and (x == 0 or grid[z][x - 1] != 15):
-                    key = (cx - 0.5, cz, 'v')
+                    key = (cx - 0.5, cz, "v")
                     if key not in placed:
                         placed.add(key)
                         _add_wall(wv, wu, wt, cx - 0.5, cz, 0.1, 1.0)
 
         if wv:
             Entity(
-                model=Mesh(vertices=wv, uvs=wu, triangles=wt, mode='triangle'),
+                model=Mesh(vertices=wv, uvs=wu, triangles=wt, mode="triangle"),
                 texture=ambiance.wall,
                 double_sided=True,
             )
         if pv:
             Entity(
-                model=Mesh(vertices=pv, uvs=pu, triangles=pt, mode='triangle'),
+                model=Mesh(vertices=pv, uvs=pu, triangles=pt, mode="triangle"),
                 texture=ambiance.pattern,
                 double_sided=True,
             )
