@@ -6,7 +6,21 @@ power-up durations, and default configuration values.
 These values are never modified at runtime.
 """
 
+from enum import Enum, auto
 from typing import NamedTuple
+
+
+class EGameView(Enum):
+    MENU = "menu"
+    GAME = "game"
+    INSTRUCTIONS = "instructions"
+    GAME_OVER = "game_over"
+
+
+class EDifficulty(Enum):
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
 
 
 class Ambiance(NamedTuple):
@@ -63,11 +77,12 @@ class ModelSpec(NamedTuple):
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
 _CROCKIE = ModelSpec(
     path="ghosts/crockie_vgdc.glb",
-    scale=0.5, rotation_x=90,
+    scale=0.5,
+    rotation_x=90,
     anim_idle=1,
-    anim_walk=(3, 4),    # Run1_g, Run2_g
-    anim_attack=2,       # Lunge_g
-    attack_scale=0.4
+    anim_walk=(3, 4),  # Run1_g, Run2_g
+    anim_attack=2,  # Lunge_g
+    attack_scale=0.4,
 )
 
 # Animations: ['005_attack', 'monster_hit', 'monster_death', '002_crit',
@@ -79,18 +94,20 @@ _CROCKIE = ModelSpec(
 # 'idle_interruption2', 'idle_interruption1']
 _CROCODILE = ModelSpec(
     path="ghosts/crocodile.glb",
-    scale=1.0, rotation_x=0,
-    anim_idle=19,                          # monster_idle
-    anim_walk=20,                          # monster_run
-    anim_attack=(0, 4, 5, 7, 10, 15),      # 005/002/001/004/003_attack + heavy
+    scale=1.0,
+    rotation_x=0,
+    anim_idle=19,  # monster_idle
+    anim_walk=20,  # monster_run
+    anim_attack=(0, 4, 5, 7, 10, 15),  # 005/002/001/004/003_attack + heavy
     attack_scale=0.9,
-    supported=False
+    supported=False,
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
     path="ghosts/grobbo_alien_hatchling.glb",
-    scale=0.00175, rotation_x=90,
+    scale=0.00175,
+    rotation_x=90,
     anim_idle=0,
     anim_walk=0,
     anim_attack=1,
@@ -103,7 +120,8 @@ _GROBBO = ModelSpec(
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
 _HALLOWEEN_BAT = ModelSpec(
     path="ghosts/halloween_bat.glb",
-    scale=0.15, rotation_x=-90,
+    scale=0.15,
+    rotation_x=-90,
     spawn_y=0.9,
     anim_idle=0,
     anim_walk=0,
@@ -117,46 +135,52 @@ _HALLOWEEN_BAT = ModelSpec(
 # Animations: ['Armature.001Armature.002Action.002']
 _OPHANIM_ANGEL = ModelSpec(
     path="ghosts/ophanim_angel.glb",
-    scale=0.1, rotation_x=0, spawn_y=0.75,
+    scale=0.1,
+    rotation_x=0,
+    spawn_y=0.75,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
+    supported=False,
 )
 
 # Animations: ['ArmatureArmatureAction']
 _SKULL_CRAWLER = ModelSpec(
     path="ghosts/skull_crawler.glb",
-    scale=0.1, rotation_x=180,
+    scale=0.1,
+    rotation_x=180,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
+    supported=False,
 )
 
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
     path="ghosts/tuna_fish.glb",
-    scale=0.2, rotation_x=180, spawn_y=0.5,
+    scale=0.2,
+    rotation_x=180,
+    spawn_y=0.5,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
+    supported=False,
 )
 
 # Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
 # 'walkSpellEarthquake', 'spellWalkSheild', 'death']
 _VOLCANO_INFERNO = ModelSpec(
     path="ghosts/volcano_inferno.glb",
-    scale=1.0, rotation_x=0,
-    anim_idle=0,                  # idle
-    anim_walk=(1, 2, 3, 4),       # run, runVariation, walk, walkVariation
-    anim_attack=(5, 6),           # walkSpellEarthquake, spellWalkSheild
+    scale=1.0,
+    rotation_x=0,
+    anim_idle=0,  # idle
+    anim_walk=(1, 2, 3, 4),  # run, runVariation, walk, walkVariation
+    anim_attack=(5, 6),  # walkSpellEarthquake, spellWalkSheild
     attack_scale=0.9,
-    supported=False
+    supported=False,
 )
 
 # Animations: ['Idle', 'Walk', 'Taunt', 'Attack1', 'Attack_Stabs',
@@ -164,21 +188,22 @@ _VOLCANO_INFERNO = ModelSpec(
 # 'Stun_Super', 'Death']
 _CALIBUR = ModelSpec(
     path="player/calibur_vgdc.glb",
-    scale=0.5, rotation_x=180,
-    anim_idle=0,                  # Idle
-    anim_walk=1,                  # Walk
+    scale=0.5,
+    rotation_x=180,
+    anim_idle=0,  # Idle
+    anim_walk=1,  # Walk
     anim_attack=(3, 4, 5, 6, 7),  # Attack1/Stabs/TripleCombo/Jump/Stomp
 )
 
 GHOST_SPECS: list[ModelSpec] = [
-    _CROCKIE,           # 0
-    _CROCODILE,         # 1
-    _GROBBO,            # 2
-    _HALLOWEEN_BAT,     # 3
-    _OPHANIM_ANGEL,     # 4
-    _SKULL_CRAWLER,     # 5
-    _TUNA_FISH,         # 6
-    _VOLCANO_INFERNO,   # 7
+    _CROCKIE,  # 0
+    _CROCODILE,  # 1
+    _GROBBO,  # 2
+    _HALLOWEEN_BAT,  # 3
+    _OPHANIM_ANGEL,  # 4
+    _SKULL_CRAWLER,  # 5
+    _TUNA_FISH,  # 6
+    _VOLCANO_INFERNO,  # 7
 ]
 
 PLAYER_SPEC: ModelSpec = _CALIBUR
