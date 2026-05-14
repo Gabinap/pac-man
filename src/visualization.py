@@ -31,7 +31,6 @@ from src.game_config import GameConfig
 from src.maze import Maze
 from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
-from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
 from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController, GhostState
@@ -40,7 +39,6 @@ from src.game_behavior.ghost_controller import GhostController, GhostState
 class EGameView(Enum):
     MENU = "menu"
     GAME = "game"
-    SCORES = "scores"
     INSTRUCTIONS = "instructions"
     GAME_OVER = "game_over"
 
@@ -56,7 +54,6 @@ class GameRender(Entity):
         self._manager: Any = None
         self._barrel_strength: float = 0.2
         self._game_initialized = False
-
         self._views: dict[EGameView, BaseView] = {}
         self._current: EGameView | None = None
 
@@ -66,18 +63,11 @@ class GameRender(Entity):
         self._register(
             EGameView.MENU,
             MainMenuView(
+                self.gcf,
                 start_game=lambda: self.switch_view(EGameView.GAME),
-                show_scores=lambda: self.switch_view(EGameView.SCORES),
                 show_instructions=lambda: self.switch_view(
                     EGameView.INSTRUCTIONS
                 ),
-            ),
-        )
-        self._register(
-            EGameView.SCORES,
-            HighscoresView(
-                gcf=self.gcf,
-                back_callback=lambda: self.switch_view(EGameView.MENU),
             ),
         )
         self._register(
