@@ -106,7 +106,7 @@ class GameRender(Entity):
         self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
 
-        self._player = Player(self.maze)
+        self._player = Player(self.maze, self.gcf)
         self._ghost_controller = GhostController(self._player, self.maze)
 
     def _setup_barrel(self, strength: float = 0.2) -> None:
