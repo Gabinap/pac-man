@@ -104,7 +104,7 @@ _GROBBO = ModelSpec(
 _HALLOWEEN_BAT = ModelSpec(
     path="ghosts/halloween_bat.glb",
     scale=0.15, rotation_x=-90,
-    spawn_y=0.9,
+    spawn_y=0.7,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
