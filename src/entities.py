@@ -30,6 +30,11 @@ def _pick_anim(spec: int | tuple[int, ...]) -> int:
 
 
 class AnimatedEntity(Entity):
+    x: float
+    y: float
+    z: float
+    rotation_y: float
+
     def __init__(
         self, spec: C.ModelSpec, maze: "Maze", speed: float = 0.0
     ) -> None:
@@ -74,7 +79,7 @@ class AnimatedEntity(Entity):
         raw = self._DIR_TO_ROT_Y.get((dir_x, dir_y))
         if raw is not None:
             delta = (raw - self.rotation_y + 180) % 360 - 180
-            duration = 0.3 * abs(delta) / 90
+            duration = 0.15 * abs(delta) / 90
             self.animate_rotation_y(self.rotation_y + delta, duration)
 
     def update_grid_position(self) -> None:
@@ -129,8 +134,6 @@ class AnimatedEntity(Entity):
 
     def attack(self) -> None:
         anim = self._anims[_pick_anim(self.spec.anim_attack)]
-        frames = self.actor.get_num_frames(anim) or 24
-        duration = frames / 24.0 / self.spec.anim_attack_rate
         self.actor.set_play_rate(self.spec.anim_attack_rate, anim)
         self.actor.loop(anim)
         self.animate_scale(self.spec.attack_scale, 0.15)
@@ -148,7 +151,7 @@ class PlayerState(Enum):
 class Player(AnimatedEntity):
     def __init__(self, maze: "Maze", gcf: GameConfig) -> None:
         super().__init__(
-            spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED
+            spec=C.GHOST_SPECS[2], maze=maze, speed=C.PLAYER_SPEED
         )
         self.gcf = gcf
         self.health = gcf.lives
@@ -156,7 +159,7 @@ class Player(AnimatedEntity):
         print("player lives:", self.health)
         self.walk()
 
-    def _reset_player_state(self):
+    def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL
 
     def update(self) -> None:
@@ -178,8 +181,9 @@ class Ghost(AnimatedEntity):
         index: int = 0,
         x: float = 0,
         z: float = 0,
-        maze: "Maze" = None,
+        maze: "Maze | None" = None,
     ) -> None:
+        assert maze is not None
         spec = random.choice([s for s in C.GHOST_SPECS if s.supported])
         super().__init__(spec=spec, maze=maze, speed=C.GHOST_SPEED_NORMAL)
         self.x, self.z = x, z

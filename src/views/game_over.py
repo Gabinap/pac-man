@@ -1,9 +1,15 @@
+from typing import Callable
+
 from ursina import Entity, Text, Button, InputField, color, camera
 from src.views.base import BaseView
 
 
 class GameOverView(BaseView):
-    def __init__(self, submit_callback, menu_callback) -> None:
+    def __init__(
+        self,
+        submit_callback: Callable[[str], None],
+        menu_callback: Callable[[], None],
+    ) -> None:
         super().__init__()
         self.parent_entity = Entity(
             parent=camera.ui, enabled=False, ignore_paused=True
