@@ -34,7 +34,7 @@ from src.views.main_menu import MainMenuView
 from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
 from src.views.game_over import GameOverView
-from src.game_behavior.ghost_controller import GhostController, GhostState
+from src.game_behavior.ghost_controller import GhostController
 
 
 class EGameView(Enum):

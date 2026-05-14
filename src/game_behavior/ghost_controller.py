@@ -76,7 +76,7 @@ class GhostController:
     def handle_collision(self) -> None:
         self.t_player.health -= 1
         print(
-            f"Collided and lost a live... Remaining lives : {self.t_player.health}"
+            f"Collided! Remaining lives: {self.t_player.health}"
         )
         self.t_player.state = PlayerState.UNTOUCHABLE
         invoke(
