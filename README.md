@@ -61,5 +61,3 @@ CALIBUR est une armure, ses bras et jambes ont parfaits, en revanche son torse e
 :char(error): Could not find joint LowerArm.R_010 within the character hierarchy.
 
 Les models 1 et 7 crash mais 0 2 3 sont parfait
-
-Voici les logs de crash pour ghost 1
