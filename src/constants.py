@@ -30,8 +30,8 @@ MIN_LEVELS: int = 1
 GHOST_COUNT: int = 4
 
 # Movement speeds in cells per second
-PLAYER_SPEED: float = 4.0
-GHOST_SPEED_NORMAL: float = 2.6
+PLAYER_SPEED: float = 2.0
+GHOST_SPEED_NORMAL: float = 1
 GHOST_SPEED_FRIGHTENED: float = 2.0
 GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 
@@ -60,13 +60,13 @@ class ModelSpec(NamedTuple):
     supported: bool = True
 
 
-# Animations: ['Idle_g', 'Run1_g', 'Run2_g', 'Lunge_g', 'Default_g']
+# Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
 _CROCKIE = ModelSpec(
     path="ghosts/crockie_vgdc.glb",
     scale=0.5, rotation_x=90,
-    anim_idle=0,
-    anim_walk=(1, 2),    # Run1_g, Run2_g
-    anim_attack=3,       # Lunge_g
+    anim_idle=1,
+    anim_walk=(3, 4),    # Run1_g, Run2_g
+    anim_attack=2,       # Lunge_g
     attack_scale=0.4
 )
 
@@ -84,6 +84,7 @@ _CROCODILE = ModelSpec(
     anim_walk=20,                          # monster_run
     anim_attack=(0, 4, 5, 7, 10, 15),      # 005/002/001/004/003_attack + heavy
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
@@ -121,6 +122,7 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['ArmatureArmatureAction']
@@ -131,6 +133,7 @@ _SKULL_CRAWLER = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['Swim']
@@ -141,6 +144,7 @@ _TUNA_FISH = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
@@ -152,6 +156,7 @@ _VOLCANO_INFERNO = ModelSpec(
     anim_walk=(1, 2, 3, 4),       # run, runVariation, walk, walkVariation
     anim_attack=(5, 6),           # walkSpellEarthquake, spellWalkSheild
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['Idle', 'Walk', 'Taunt', 'Attack1', 'Attack_Stabs',

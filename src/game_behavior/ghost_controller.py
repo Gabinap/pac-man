@@ -1,9 +1,11 @@
 from enum import Enum, auto
+
+from ursina import invoke
+
 import src.constants as C
-from ursina import Entity, color, invoke
-from src.utils import grid_to_world, world_to_grid
 from src.entities import Ghost, Player, PlayerState
 from src.maze import Maze
+from src.utils import grid_to_world, world_to_grid
 
 
 class GhostState(Enum):
@@ -32,36 +34,32 @@ class GhostController:
                 grid_x, grid_y, self.maze.width, self.maze.height
             )
 
-            ghost_entity = Ghost(
-                i, position=(world_x, 0.5, world_z), maze=self.maze
-            )
+            ghost_entity = Ghost(i, x=world_x, z=world_z, maze=self.maze)
             ghosts.append(ghost_entity)
 
         return ghosts
 
     def update_ghosts(self) -> None:
-        collided: bool = False
         for ghost in self.ghosts:
-            target_x, target_z = 0, 0
-
             if ghost.ghost_index == 0:
                 target_x = self.t_player.pos_gridx
                 target_z = self.t_player.pos_gridy
-                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 1:
                 target_x, target_z = self._calculate_pinky_target()
-                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 2:
                 target_x, target_z = self._calculate_inky_target(
                     self.ghosts[0]
                 )
-                collided = self.check_collision_with_player(ghost)
             elif ghost.ghost_index == 3:
                 target_x, target_z = self._calculate_clyde_target(ghost)
-                collided = self.check_collision_with_player(ghost)
+            else:
+                raise ValueError(
+                    f"Unexpected ghost index: {ghost.ghost_index}"
+                )
 
-            if collided and self.t_player.state != PlayerState.UNTOUCHABLE:
-                self.handle_collision()
+            if self.check_collision_with_player(ghost):
+                if self.t_player.state != PlayerState.UNTOUCHABLE:
+                    self.handle_collision()
             ghost.update_ai(target_x, target_z)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
