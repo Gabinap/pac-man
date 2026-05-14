@@ -25,24 +25,15 @@ from enum import Enum
 from typing import Any
 
 import random
-from src.constants import AMBIANCES
+import src.constants as C
 from src.entities import Player
 from src.game_config import GameConfig
 from src.maze import Maze
 from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
-from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
 from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController
-
-
-class EGameView(Enum):
-    MENU = "menu"
-    GAME = "game"
-    SCORES = "scores"
-    INSTRUCTIONS = "instructions"
-    GAME_OVER = "game_over"
 
 
 class GameRender(Entity):
@@ -56,46 +47,40 @@ class GameRender(Entity):
         self._manager: Any = None
         self._barrel_strength: float = 0.2
         self._game_initialized = False
-
-        self._views: dict[EGameView, BaseView] = {}
-        self._current: EGameView | None = None
+        self._views: dict[C.EGameView, BaseView] = {}
+        self._current: C.EGameView | None = None
+        self._difficulty = C.EDifficulty.MEDIUM
 
         window.color = color.black
         window.exit_button.enabled = False
 
         self._register(
-            EGameView.MENU,
+            C.EGameView.MENU,
             MainMenuView(
-                start_game=lambda: self.switch_view(EGameView.GAME),
-                show_scores=lambda: self.switch_view(EGameView.SCORES),
+                self.gcf,
+                self._difficulty,
+                start_game=lambda: self.switch_view(C.EGameView.GAME),
                 show_instructions=lambda: self.switch_view(
-                    EGameView.INSTRUCTIONS
+                    C.EGameView.INSTRUCTIONS
                 ),
             ),
         )
         self._register(
-            EGameView.SCORES,
-            HighscoresView(
-                gcf=self.gcf,
-                back_callback=lambda: self.switch_view(EGameView.MENU),
-            ),
-        )
-        self._register(
-            EGameView.INSTRUCTIONS,
+            C.EGameView.INSTRUCTIONS,
             InstructionsView(
-                back_callback=lambda: self.switch_view(EGameView.MENU),
+                back_callback=lambda: self.switch_view(C.EGameView.MENU),
             ),
         )
         self._register(
-            EGameView.GAME_OVER,
+            C.EGameView.GAME_OVER,
             GameOverView(
                 submit_callback=self._on_replay,
-                menu_callback=lambda: self.switch_view(EGameView.MENU),
+                menu_callback=lambda: self.switch_view(C.EGameView.MENU),
             ),
         )
-        self.switch_view(EGameView.MENU)
+        self.switch_view(C.EGameView.MENU)
 
-    def _register(self, name: EGameView, view: BaseView) -> None:
+    def _register(self, name: C.EGameView, view: BaseView) -> None:
         self._views[name] = view
 
     def _init_game(self) -> None:
@@ -107,9 +92,9 @@ class GameRender(Entity):
         window.color = color.rgb(0, 0.2, 0)
         level = self.gcf.levels[0]
         ambiance = (
-            AMBIANCES[level.ambiance]
+            C.AMBIANCES[level.ambiance]
             if level.ambiance is not None
-            else random.choice(list(AMBIANCES.values()))
+            else random.choice(list(C.AMBIANCES.values()))
         )
         self.maze = Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._setup_barrel(strength=self._barrel_strength)
@@ -178,7 +163,7 @@ class GameRender(Entity):
         else:
             self._set_topdown()
 
-    def switch_view(self, target: EGameView) -> None:
+    def switch_view(self, target: C.EGameView) -> None:
         if self._current is not None and self._current in self._views:
             old = self._views[self._current]
             old.on_exit()
@@ -186,9 +171,9 @@ class GameRender(Entity):
 
         self._current = target
 
-        if target == EGameView.GAME_OVER:
+        if target == C.EGameView.GAME_OVER:
             application.paused = True
-        if target == EGameView.GAME:
+        if target == C.EGameView.GAME:
             application.paused = False
             self._init_game()
             return
@@ -200,12 +185,12 @@ class GameRender(Entity):
     def _on_replay(self, player_name: str) -> None:
         print(f"Saved score for : {player_name}")
         self._game_initialized = False
-        self.switch_view(EGameView.GAME)
+        self.switch_view(C.EGameView.GAME)
 
     def update(self) -> None:
-        if self._game_initialized and self._current == EGameView.GAME:
+        if self._game_initialized and self._current == C.EGameView.GAME:
             if self._player.health <= 0:
-                self.switch_view(EGameView.GAME_OVER)
+                self.switch_view(C.EGameView.GAME_OVER)
                 return
             self._ghost_controller.update_ghosts()
 
