@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import MaterialAttrib
-from ursina import Entity, held_keys
+from ursina import Entity, application, held_keys
 from ursina import time as _ursina_time
 
 import src.constants as C
@@ -40,8 +40,21 @@ class AnimatedEntity(Entity):
     ) -> None:
         super().__init__()
         self.spec = spec
-        self.actor = Actor(f"assets/{spec.path}")
-        self.actor.reparent_to(self)
+        # Some GLBs (Sketchfab/FAB exports) split a model across multiple
+        # skins sharing the same skeleton root (body + eyes + weapon, etc.).
+        # Each becomes a separate Character once the panda3d-gltf patches
+        # land — wrap each as its own Actor so all skins render and animate.
+        _loader: Any = application.base.loader  # type: ignore[union-attr]
+        raw = _loader.loadModel(f"assets/{spec.path}")
+        char_paths = raw.find_all_matches("**/+Character")
+        n_chars = char_paths.get_num_paths()
+        actors = [Actor(char_paths.get_path(i)) for i in range(n_chars)]
+        if not actors:
+            actors = [Actor(f"assets/{spec.path}")]
+        for a in actors:
+            a.reparent_to(self)
+        self._actors: list[Actor] = actors
+        self.actor = actors[0]
         self._fix_metallic()
         self.scale = spec.scale
         self.rotation_x = spec.rotation_x
@@ -116,26 +129,30 @@ class AnimatedEntity(Entity):
                 self.z = max(self.z, center_z)
 
     def _fix_metallic(self) -> None:
-        for np in self.actor.find_all_matches("**/+GeomNode"):
-            for i in range(np.node().get_num_geoms()):
-                ma = np.node().get_geom_state(i).get_attrib(MaterialAttrib)
-                if ma and ma.get_material():
-                    ma.get_material().set_metallic(0.0)
+        for actor in self._actors:
+            for np in actor.find_all_matches("**/+GeomNode"):
+                for i in range(np.node().get_num_geoms()):
+                    ma = np.node().get_geom_state(i).get_attrib(MaterialAttrib)
+                    if ma and ma.get_material():
+                        ma.get_material().set_metallic(0.0)
+
+    def _play_on_all(self, anim: str, rate: float) -> None:
+        for actor in self._actors:
+            if anim in actor.get_anim_names():
+                actor.set_play_rate(rate, anim)
+                actor.loop(anim)
 
     def idle(self) -> None:
         anim = self._anims[_pick_anim(self.spec.anim_idle)]
-        self.actor.set_play_rate(self.spec.anim_idle_rate, anim)
-        self.actor.loop(anim)
+        self._play_on_all(anim, self.spec.anim_idle_rate)
 
     def walk(self) -> None:
         anim = self._anims[_pick_anim(self.spec.anim_walk)]
-        self.actor.set_play_rate(self.spec.anim_walk_rate, anim)
-        self.actor.loop(anim)
+        self._play_on_all(anim, self.spec.anim_walk_rate)
 
     def attack(self) -> None:
         anim = self._anims[_pick_anim(self.spec.anim_attack)]
-        self.actor.set_play_rate(self.spec.anim_attack_rate, anim)
-        self.actor.loop(anim)
+        self._play_on_all(anim, self.spec.anim_attack_rate)
         self.animate_scale(self.spec.attack_scale, 0.15)
 
     def update(self) -> None:
@@ -151,7 +168,7 @@ class PlayerState(Enum):
 class Player(AnimatedEntity):
     def __init__(self, maze: "Maze", gcf: GameConfig) -> None:
         super().__init__(
-            spec=C.GHOST_SPECS[2], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.MODEL_SPECS[9], maze=maze, speed=C.PLAYER_SPEED
         )
         self.gcf = gcf
         self.health = gcf.lives
@@ -184,7 +201,7 @@ class Ghost(AnimatedEntity):
         maze: "Maze | None" = None,
     ) -> None:
         assert maze is not None
-        spec = random.choice([s for s in C.GHOST_SPECS if s.supported])
+        spec = random.choice([s for s in C.MODEL_SPECS if s.supported])
         super().__init__(spec=spec, maze=maze, speed=C.GHOST_SPEED_NORMAL)
         self.x, self.z = x, z
         self.ghost_index = index

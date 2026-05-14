@@ -146,6 +146,82 @@ PATCHES: list[tuple[str, str]] = [
         "                gvd.transform_vertices("
         "net_xform.get_inverse().get_mat())",
     ),
+    # Bug 5: multiple skins sharing the same LCA (Sketchfab/FAB exports with
+    # separate meshes for body / eyes / weapon). After Bug 1, build_characters
+    # creates one CharInfo per skinid, but build_character internally hard-codes
+    # `skinid = self.skeletons[nodeid][0]`, so all CharInfos are clones of
+    # skin[0]. Also add_node only reparents skinids[0]'s character to the scene
+    # graph and attaches every mesh to that same character — so meshes for the
+    # other skins are skinned by joints belonging to orphan characters that
+    # never receive animation updates, and they appear static.
+    # Fix 5a: thread the loop's skinid through build_character so each CharInfo
+    # is built with its own skin's joints/animations.
+    (
+        "    def build_character(self, charinfo: CharInfo, nodeid,"
+        " gltf_data, recurse=True):",
+        "    def build_character(self, charinfo: CharInfo, nodeid,"
+        " gltf_data, recurse=True, skinid=None):",
+    ),
+    (
+        "        if nodeid in self.skeletons:\n"
+        "            skinid = self.skeletons[nodeid][0]\n"
+        "            gltf_skin = gltf_data['skins'][skinid]",
+        "        if nodeid in self.skeletons:\n"
+        "            if skinid is None:\n"
+        "                skinid = self.skeletons[nodeid][0]\n"
+        "            gltf_skin = gltf_data['skins'][skinid]",
+    ),
+    (
+        "            if nodeid in self.skeletons:\n"
+        "                for skinid in self.skeletons[nodeid]:\n"
+        "                    charinfo = CharInfo(node_name)\n"
+        "                    charinfo.character.set_transform("
+        "get_node_transform(gltf_node))\n"
+        "                    self.build_character("
+        "charinfo, nodeid, gltf_data, recurse=True)\n"
+        "                    self.characters[skinid] = charinfo",
+        "            if nodeid in self.skeletons:\n"
+        "                for skinid in self.skeletons[nodeid]:\n"
+        "                    charinfo = CharInfo(node_name)\n"
+        "                    charinfo.character.set_transform("
+        "get_node_transform(gltf_node))\n"
+        "                    self.build_character("
+        "charinfo, nodeid, gltf_data, recurse=True, skinid=skinid)\n"
+        "                    self.characters[skinid] = charinfo",
+    ),
+    # Fix 5b: in add_node, reparent ALL characters sharing this LCA to the
+    # scene graph (not just skinids[0]), and attach each skinned mesh under
+    # its own skin's character so the joints driving its vertices actually
+    # belong to a character that's in the scene and receives animation.
+    (
+        "            skinids = self.skeletons.get(nodeid, None)\n"
+        "            skinid = skinids[0] if skinids is not None else None\n"
+        "            charinfo = self.characters.get(skinid, None)",
+        "            skinids = self.skeletons.get(nodeid, None)\n"
+        "            skinid = skinids[0] if skinids is not None else None\n"
+        "            charinfo = self.characters.get(skinid, None)\n"
+        "            if skinids is not None:\n"
+        "                for _sid in skinids[1:]:\n"
+        "                    _ci = self.characters.get(_sid)\n"
+        "                    if _ci is not None:\n"
+        "                        _ci.nodepath.reparent_to(root)",
+    ),
+    (
+        "                else:\n"
+        "                    np.attach_new_node(mesh)\n"
+        "                    if charinfo:\n"
+        "                        self.combine_mesh_skin(mesh, charinfo)\n"
+        "                        self.combine_mesh_morphs("
+        "mesh, meshid, charinfo)",
+        "                else:\n"
+        "                    if charinfo:\n"
+        "                        charinfo.nodepath.attach_new_node(mesh)\n"
+        "                        self.combine_mesh_skin(mesh, charinfo)\n"
+        "                        self.combine_mesh_morphs("
+        "mesh, meshid, charinfo)\n"
+        "                    else:\n"
+        "                        np.attach_new_node(mesh)",
+    ),
 ]
 
 

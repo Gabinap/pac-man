@@ -1,4 +1,3 @@
-from typing import Callable
 import json
 
 from src.game_config import GameConfig
