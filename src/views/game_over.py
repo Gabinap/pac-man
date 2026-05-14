@@ -1,5 +1,6 @@
 from ursina import Entity, Text, Button, InputField, color, camera
 from src.views.base import BaseView
+import string
 
 
 class GameOverView(BaseView):
@@ -8,6 +9,7 @@ class GameOverView(BaseView):
         self.parent_entity = Entity(
             parent=camera.ui, enabled=False, ignore_paused=True
         )
+        allowed_chars = string.ascii_letters + string.digits + " "
 
         self.bg = Entity(
             parent=self.parent_entity,
@@ -29,12 +31,21 @@ class GameOverView(BaseView):
             ignore_paused=True,
         )
 
+        self.input_label = Text(
+            "Enter your name:",
+            parent=self.parent_entity,
+            origin=(0, 0),
+            y=0.16,
+            color=color.white,
+            z=-1,
+            ignore_paused=True,
+        )
         self.name_input = InputField(
             parent=self.parent_entity,
             y=0.1,
             z=-1,
-            default_value="Enter your name...",
             character_limit=10,
+            limit_content_to=allowed_chars,
         )
         self.name_input.ignore_paused = True
 
@@ -48,7 +59,7 @@ class GameOverView(BaseView):
             ignore_paused=True,
         )
         self.btn_menu = Button(
-            "Menu Principal",
+            "Main menu",
             parent=self.parent_entity,
             y=-0.2,
             scale=(0.3, 0.05),
@@ -61,10 +72,13 @@ class GameOverView(BaseView):
 
     def _on_submit(self) -> None:
         player_name = self.name_input.text
+        if not player_name:
+            player_name = "UNKNOWN"
         self.submit_callback(player_name)
 
     def enable(self) -> None:
         self.parent_entity.enable()
+        self.name_input.text = ""
         self.name_input.active = True
 
     def disable(self) -> None:

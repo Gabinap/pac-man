@@ -83,7 +83,7 @@ class GameRender(Entity):
                 menu_callback=lambda: self.switch_view(EGameView.MENU),
             ),
         )
-        self.switch_view(EGameView.MENU)
+        self.switch_view(EGameView.GAME_OVER)
 
     def _register(self, name: EGameView, view: BaseView) -> None:
         self._views[name] = view

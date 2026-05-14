@@ -112,7 +112,7 @@ class MainMenuView(BaseView):
                 origin=(-0.5, 0),
                 x=-0.8,
                 y=start_y - (i * 0.08),
-                scale=1.2,
+                scale=0.8,
                 color=color.white,
             )
 
