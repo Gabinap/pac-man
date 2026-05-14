@@ -69,7 +69,7 @@ parser.py ──── valide et construit ───► GameConfig
 
 ## Chargement des modèles 3D animés (patches `panda3d-gltf`)
 
-Les assets `.glb` du projet (ghosts, player) passent par `panda3d-gltf` 1.3.0 quand Ursina les charge via `Actor()`. Cette lib a plusieurs bugs qui empêchent la majorité de nos modèles de s'afficher correctement. Le script [scripts/apply_patches.py](../scripts/apply_patches.py), exécuté automatiquement par `make install`, applique 4 correctifs textuels à [.venv/lib/python3.13/site-packages/gltf/_converter.py](../.venv/lib/python3.13/site-packages/gltf/_converter.py).
+Les assets `.glb` du projet (`assets/models/`) passent par `panda3d-gltf` 1.3.0 quand Ursina les charge via `Actor()`. Cette lib a plusieurs bugs qui empêchent la majorité de nos modèles de s'afficher correctement. Le script [scripts/apply_patches.py](../scripts/apply_patches.py), exécuté automatiquement par `make install`, applique 4 correctifs textuels à [.venv/lib/python3.13/site-packages/gltf/_converter.py](../.venv/lib/python3.13/site-packages/gltf/_converter.py).
 
 ### Bug 1 — Plusieurs skins partageant la même racine de squelette
 

@@ -76,7 +76,7 @@ class ModelSpec(NamedTuple):
 
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
 _CROCKIE = ModelSpec(
-    path="ghosts/crockie_vgdc.glb",
+    path="models/crockie_vgdc.glb",
     scale=0.5,
     rotation_x=90,
     anim_idle=1,
@@ -93,7 +93,7 @@ _CROCKIE = ModelSpec(
 # 'monster_run', '001_stun_sleep', 'monster_idle_HeroScene',
 # 'idle_interruption2', 'idle_interruption1']
 _CROCODILE = ModelSpec(
-    path="ghosts/crocodile.glb",
+    path="models/crocodile.glb",
     scale=1.0,
     rotation_x=0,
     anim_idle=19,  # monster_idle
@@ -105,9 +105,9 @@ _CROCODILE = ModelSpec(
 
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
-    path="ghosts/grobbo_alien_hatchling.glb",
+    path="models/grobbo_alien_hatchling.glb",
     scale=0.00175,
-    rotation_x=90,
+    rotation_x=0,
     anim_idle=0,
     anim_walk=0,
     anim_attack=1,
@@ -119,7 +119,7 @@ _GROBBO = ModelSpec(
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
 _HALLOWEEN_BAT = ModelSpec(
-    path="ghosts/halloween_bat.glb",
+    path="models/halloween_bat.glb",
     scale=0.15,
     rotation_x=-90,
     spawn_y=0.7,
@@ -134,7 +134,7 @@ _HALLOWEEN_BAT = ModelSpec(
 
 # Animations: ['Armature.001Armature.002Action.002']
 _OPHANIM_ANGEL = ModelSpec(
-    path="ghosts/ophanim_angel.glb",
+    path="models/ophanim_angel.glb",
     scale=0.1,
     rotation_x=0,
     spawn_y=0.75,
@@ -142,12 +142,11 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False,
 )
 
 # Animations: ['ArmatureArmatureAction']
 _SKULL_CRAWLER = ModelSpec(
-    path="ghosts/skull_crawler.glb",
+    path="models/skull_crawler.glb",
     scale=0.1,
     rotation_x=180,
     anim_idle=0,
@@ -159,7 +158,7 @@ _SKULL_CRAWLER = ModelSpec(
 
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
-    path="ghosts/tuna_fish.glb",
+    path="models/tuna_fish.glb",
     scale=0.2,
     rotation_x=180,
     spawn_y=0.5,
@@ -167,13 +166,12 @@ _TUNA_FISH = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False,
 )
 
 # Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
 # 'walkSpellEarthquake', 'spellWalkSheild', 'death']
 _VOLCANO_INFERNO = ModelSpec(
-    path="ghosts/volcano_inferno.glb",
+    path="models/volcano_inferno.glb",
     scale=1.0,
     rotation_x=0,
     anim_idle=0,  # idle
@@ -187,15 +185,28 @@ _VOLCANO_INFERNO = ModelSpec(
 # 'Attack_TripleCombo', 'Attack_Jump', 'Attack_Stomp', 'Backstep', 'Stun',
 # 'Stun_Super', 'Death']
 _CALIBUR = ModelSpec(
-    path="player/calibur_vgdc.glb",
+    path="models/calibur_vgdc.glb",
     scale=0.5,
-    rotation_x=180,
+    rotation_x=90,
     anim_idle=0,  # Idle
     anim_walk=1,  # Walk
     anim_attack=(3, 4, 5, 6, 7),  # Attack1/Stabs/TripleCombo/Jump/Stomp
 )
 
-GHOST_SPECS: list[ModelSpec] = [
+# Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',
+# 'skeleton-skeleton|run', 'skeleton-skeleton|spawn',
+# 'skeleton-skeleton|taunt']
+_ARTOON_SKELETON = ModelSpec(
+    path="models/artoon_skeleton.glb",
+    scale=1.0,
+    rotation_x=90,
+    anim_idle=1,  # idle
+    anim_walk=2,  # run
+    anim_attack=0,  # attack
+    attack_scale=0.9,
+)
+
+MODEL_SPECS: list[ModelSpec] = [
     _CROCKIE,  # 0
     _CROCODILE,  # 1
     _GROBBO,  # 2
@@ -204,6 +215,31 @@ GHOST_SPECS: list[ModelSpec] = [
     _SKULL_CRAWLER,  # 5
     _TUNA_FISH,  # 6
     _VOLCANO_INFERNO,  # 7
+    _CALIBUR,  # 8
+    _ARTOON_SKELETON,  # 9
+]
+
+# Static GLBs used as pickups in the maze. Paths are relative to `assets/`.
+# Loaded via `loader.loadModel` without animation. The split mirrors the
+# gameplay distinction: a regular pacgum scores points, a super-pacgum also
+# triggers the frightened state on ghosts.
+PACGUM_MODELS: list[str] = [
+    "pacgums/cc0_potato_chips_tube_2.glb",
+    "pacgums/coffee_mug.glb",
+    "pacgums/custom_thin_soda_can.glb",
+    "pacgums/dala_swedish_horse.glb",
+    "pacgums/donut_vcbjfbu_low.glb",
+    "pacgums/donut_vcckafl_low.glb",
+    "pacgums/inflatable_buoy.glb",
+    "pacgums/lowpoly_watermelon.glb",
+    "pacgums/pink_donut.glb",
+    "pacgums/pomegranate_scan_lowpoly.glb",
+    "pacgums/potato_scan_lowpoly.glb",
+    "pacgums/stylized_energy_cell.glb",
+]
+
+SUPER_PACGUM_MODELS: list[str] = [
+    "pacgums/super_pacgum_game_ready_free_inflatable_rings.glb",
 ]
 
 PLAYER_SPEC: ModelSpec = _CALIBUR

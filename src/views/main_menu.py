@@ -1,5 +1,5 @@
 from ursina import Button, Text, color, application
-from typing import Callable, TYPE_CHECKING
+from typing import Callable
 
 from src.views.base import BaseView
 from src.highscores import Highscores

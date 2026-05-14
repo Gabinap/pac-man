@@ -1,6 +1,6 @@
 from typing import Callable
 
-from ursina import Entity, Text, Button, InputField, color, camera
+from ursina import Entity, Text, Button, InputField, color, camera, application
 from src.views.base import BaseView
 import string
 

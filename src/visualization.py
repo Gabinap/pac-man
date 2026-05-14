@@ -21,7 +21,6 @@ from ursina import (
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
-from enum import Enum
 from typing import Any
 
 import random
