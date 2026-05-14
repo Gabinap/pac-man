@@ -80,15 +80,11 @@ class GhostController:
         print(
             f"Collided and lost a live... Remaining lives : {self.t_player.health}"
         )
-
-        if self.t_player.health <= 0:
-            print("GAME OVER")
-        else:
-            self.t_player.state = PlayerState.UNTOUCHABLE
-            invoke(
-                self.t_player._reset_player_state,
-                delay=C.PLAYER_INVINCIBILITY_DURATION,
-            )
+        self.t_player.state = PlayerState.UNTOUCHABLE
+        invoke(
+            self.t_player._reset_player_state,
+            delay=C.PLAYER_INVINCIBILITY_DURATION,
+        )
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(

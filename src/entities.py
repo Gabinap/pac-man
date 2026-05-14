@@ -117,6 +117,7 @@ class Player(AnimatedEntity):
         self.gcf = gcf
         self.health = gcf.lives
         self.state = PlayerState.NORMAL
+        print("player lives:", self.health)
 
     def _reset_player_state(self):
         self.state = PlayerState.NORMAL

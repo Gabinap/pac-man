@@ -17,6 +17,7 @@ from ursina import (
     scene,
     held_keys,
     time,
+    application,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
@@ -32,6 +33,7 @@ from src.views.base import BaseView
 from src.views.main_menu import MainMenuView
 from src.views.highscores import HighscoresView
 from src.views.instructions import InstructionsView
+from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController, GhostState
 
 
@@ -40,6 +42,7 @@ class EGameView(Enum):
     GAME = "game"
     SCORES = "scores"
     INSTRUCTIONS = "instructions"
+    GAME_OVER = "game_over"
 
 
 class GameRender(Entity):
@@ -83,7 +86,13 @@ class GameRender(Entity):
                 back_callback=lambda: self.switch_view(EGameView.MENU),
             ),
         )
-
+        self._register(
+            EGameView.GAME_OVER,
+            GameOverView(
+                submit_callback=self._on_replay,
+                menu_callback=lambda: self.switch_view(EGameView.MENU),
+            ),
+        )
         self.switch_view(EGameView.MENU)
 
     def _register(self, name: EGameView, view: BaseView) -> None:
@@ -177,7 +186,10 @@ class GameRender(Entity):
 
         self._current = target
 
+        if target == EGameView.GAME_OVER:
+            application.paused = True
         if target == EGameView.GAME:
+            application.paused = False
             self._init_game()
             return
 
@@ -185,9 +197,18 @@ class GameRender(Entity):
         view.enable()
         view.on_enter()
 
+    def _on_replay(self, player_name: str) -> None:
+        print(f"Saved score for : {player_name}")
+        self._game_initialized = False
+        self.switch_view(EGameView.GAME)
+
     def update(self) -> None:
         if self._game_initialized and self._current == EGameView.GAME:
+            if self._player.health <= 0:
+                self.switch_view(EGameView.GAME_OVER)
+                return
             self._ghost_controller.update_ghosts()
+
         if self._fps_mode and self._fps_ctrl is not None:
             speed = 5
             if held_keys["space"]:
