@@ -1,15 +1,17 @@
 from ursina import Button, Text, color, application
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from src.views.base import BaseView
 from src.highscores import Highscores
 from src.game_config import GameConfig
+import src.constants as C
 
 
 class MainMenuView(BaseView):
     def __init__(
         self,
         gcf: GameConfig,
+        difficulty: C.EDifficulty,
         start_game: Callable[[], None],
         show_instructions: Callable[[], None],
     ) -> None:
@@ -17,6 +19,7 @@ class MainMenuView(BaseView):
 
         self.start_game = start_game
         self.show_instructions = show_instructions
+        self.difficulty = difficulty
 
         self.scores_manager = Highscores(gcf)
 
@@ -33,7 +36,7 @@ class MainMenuView(BaseView):
             origin=(0, 0),
             color=color.white,
             scale=1.5,
-            y=0.15,
+            y=0.2,
             parent=self,
         )
 
@@ -41,10 +44,19 @@ class MainMenuView(BaseView):
             text="Start Game",
             color=color.azure,
             scale=(0.4, 0.08),
-            y=0.0,
+            y=0.1,
             parent=self,
         )
         self.btn_start.on_click = self.start_game
+
+        self.btn_difficulty = Button(
+            text=f"Difficulty: {self.difficulty.value}",
+            color=color.azure,
+            scale=(0.4, 0.08),
+            y=0.0,
+            parent=self,
+        )
+        self.btn_difficulty.on_click = self.change_difficulty
 
         self.btn_instructions = Button(
             text="Instructions",
@@ -64,7 +76,12 @@ class MainMenuView(BaseView):
         )
         self.btn_exit.on_click = application.quit
 
-        self.buttons = [self.btn_start, self.btn_instructions, self.btn_exit]
+        self.buttons = [
+            self.btn_start,
+            self.btn_difficulty,
+            self.btn_instructions,
+            self.btn_exit,
+        ]
         self.selected_index = 0
         self.update_highlight()
         self._render_highscores()
@@ -120,7 +137,7 @@ class MainMenuView(BaseView):
         if not self.enabled:
             return
         if key == "space":
-            self._action_start()
+            self.start_game()
         elif key == "up arrow":
             self.selected_index = (self.selected_index - 1) % len(self.buttons)
             self.update_highlight()
@@ -133,3 +150,13 @@ class MainMenuView(BaseView):
                 action()
         elif key in ("q", "escape"):
             application.quit()
+
+    def change_difficulty(self) -> None:
+        if self.difficulty == C.EDifficulty.EASY:
+            self.difficulty = C.EDifficulty.MEDIUM
+        elif self.difficulty == C.EDifficulty.MEDIUM:
+            self.difficulty = C.EDifficulty.HARD
+        elif self.difficulty == C.EDifficulty.HARD:
+            self.difficulty = C.EDifficulty.EASY
+
+        self.btn_difficulty.text = f"Difficulty: {self.difficulty.value}"

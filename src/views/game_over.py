@@ -1,4 +1,4 @@
-from ursina import Entity, Text, Button, InputField, color, camera
+from ursina import Entity, Text, Button, InputField, color, application, camera
 from src.views.base import BaseView
 import string
 
@@ -83,3 +83,7 @@ class GameOverView(BaseView):
 
     def disable(self) -> None:
         self.parent_entity.disable()
+
+    def input(self, key: str) -> None:
+        if key == "escape" or key == "q":
+            application.quit()
