@@ -12,6 +12,8 @@ from panda3d.core import MaterialAttrib
 import src.constants as C
 from src.utils import world_to_grid, grid_to_world
 from typing import TYPE_CHECKING
+from src.game_config import GameConfig
+from enum import Enum, auto
 
 if TYPE_CHECKING:
     from src.maze import Maze
@@ -101,11 +103,23 @@ class AnimatedEntity(Entity):
         pass
 
 
+class PlayerState(Enum):
+    NORMAL = auto()
+    UNTOUCHABLE = auto()
+    HUNT = auto
+
+
 class Player(AnimatedEntity):
-    def __init__(self, maze: "Maze") -> None:
+    def __init__(self, maze: "Maze", gcf: GameConfig) -> None:
         super().__init__(
             spec=C.GHOST_SPECS[0], maze=maze, speed=C.PLAYER_SPEED
         )
+        self.gcf = gcf
+        self.health = gcf.lives
+        self.state = PlayerState.NORMAL
+
+    def _reset_player_state(self):
+        self.state = PlayerState.NORMAL
 
     def update(self) -> None:
         self.update_grid_position()

@@ -1,8 +1,8 @@
 from enum import Enum, auto
 import src.constants as C
-from ursina import Entity, color
+from ursina import Entity, color, invoke
 from src.utils import grid_to_world, world_to_grid
-from src.entities import Ghost, Player
+from src.entities import Ghost, Player, PlayerState
 from src.maze import Maze
 
 
@@ -60,8 +60,8 @@ class GhostController:
                 target_x, target_z = self._calculate_clyde_target(ghost)
                 collided = self.check_collision_with_player(ghost)
 
-            if collided:
-                print("Collided")
+            if collided and self.t_player.state != PlayerState.UNTOUCHABLE:
+                self.handle_collision()
             ghost.update_ai(target_x, target_z)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
@@ -74,6 +74,21 @@ class GhostController:
             return True
 
         return False
+
+    def handle_collision(self) -> None:
+        self.t_player.health -= 1
+        print(
+            f"Collided and lost a live... Remaining lives : {self.t_player.health}"
+        )
+
+        if self.t_player.health <= 0:
+            print("GAME OVER")
+        else:
+            self.t_player.state = PlayerState.UNTOUCHABLE
+            invoke(
+                self.t_player._reset_player_state,
+                delay=C.PLAYER_INVINCIBILITY_DURATION,
+            )
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(
