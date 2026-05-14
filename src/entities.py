@@ -8,19 +8,21 @@ These classes are consumed by game_behavior and visualization.
 
 import random
 from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import MaterialAttrib
-from ursina import Entity, held_keys, time
+from ursina import Entity, held_keys
+from ursina import time as _ursina_time
 
 import src.constants as C
 from src.game_config import GameConfig
 from src.utils import grid_to_world, world_to_grid
 
-
 if TYPE_CHECKING:
     from src.maze import Maze
+
+ursina_time: Any = _ursina_time
 
 
 def _pick_anim(spec: int | tuple[int, ...]) -> int:
@@ -44,16 +46,11 @@ class AnimatedEntity(Entity):
 
         self.maze = maze
         self.speed = speed
-        self.grid_direction: tuple[int, int] = (0, 0)
+        self._grid_direction: tuple[int, int] = (0, 0)
         self._facing: tuple[int, int] = (0, 0)
         self.pos_gridx: int
         self.pos_gridy: int
         self.update_grid_position()
-
-    def update_grid_position(self) -> None:
-        self.pos_gridx, self.pos_gridy = world_to_grid(
-            self.x, self.z, self.maze.width, self.maze.height
-        )
 
     _DIR_TO_ROT_Y: dict[tuple[int, int], float] = {
         (1, 0): 270,
@@ -62,10 +59,34 @@ class AnimatedEntity(Entity):
         (0, -1): 180,
     }
 
+    @property
+    def grid_direction(self) -> tuple[int, int]:
+        return self._grid_direction
+
+    @grid_direction.setter
+    def grid_direction(self, value: tuple[int, int]) -> None:
+        self._grid_direction = value
+
+    def _rotate_toward(self, dir_x: int, dir_y: int) -> None:
+        if (dir_x, dir_y) == self._facing:
+            return
+        self._facing = (dir_x, dir_y)
+        raw = self._DIR_TO_ROT_Y.get((dir_x, dir_y))
+        if raw is not None:
+            delta = (raw - self.rotation_y + 180) % 360 - 180
+            duration = 0.3 * abs(delta) / 90
+            self.animate_rotation_y(self.rotation_y + delta, duration)
+
+    def update_grid_position(self) -> None:
+        self.pos_gridx, self.pos_gridy = world_to_grid(
+            self.x, self.z, self.maze.width, self.maze.height
+        )
+
     def move_in_direction(self, dir_x: int, dir_y: int) -> None:
         if dir_x == 0 and dir_y == 0:
             return
 
+        self._rotate_toward(dir_x, dir_y)
         self.grid_direction = (dir_x, dir_y)
         center_x, center_z = grid_to_world(
             self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
@@ -74,26 +95,20 @@ class AnimatedEntity(Entity):
         align_speed = 15.0
 
         if dir_x != 0:
-            self.z += (center_z - self.z) * align_speed * time.dt
-            self.x += dir_x * self.speed * time.dt
+            self.z += (center_z - self.z) * align_speed * ursina_time.dt
+            self.x += dir_x * self.speed * ursina_time.dt
             if dir_x == 1 and (cell_value & 2):
                 self.x = min(self.x, center_x)
             elif dir_x == -1 and (cell_value & 8):
                 self.x = max(self.x, center_x)
 
         elif dir_y != 0:
-            self.x += (center_x - self.x) * align_speed * time.dt
-            self.z -= dir_y * self.speed * time.dt
+            self.x += (center_x - self.x) * align_speed * ursina_time.dt
+            self.z -= dir_y * self.speed * ursina_time.dt
             if dir_y == -1 and (cell_value & 1):
                 self.z = min(self.z, center_z)
             elif dir_y == 1 and (cell_value & 4):
                 self.z = max(self.z, center_z)
-
-        if (dir_x, dir_y) != self._facing:
-            self._facing = (dir_x, dir_y)
-            target_rot = self._DIR_TO_ROT_Y.get((dir_x, dir_y))
-            if target_rot is not None:
-                self.animate_rotation_y(target_rot, 0.1)
 
     def _fix_metallic(self) -> None:
         for np in self.actor.find_all_matches("**/+GeomNode"):
@@ -133,7 +148,7 @@ class PlayerState(Enum):
 class Player(AnimatedEntity):
     def __init__(self, maze: "Maze", gcf: GameConfig) -> None:
         super().__init__(
-            spec=C.GHOST_SPECS[0], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED
         )
         self.gcf = gcf
         self.health = gcf.lives
@@ -171,50 +186,50 @@ class Ghost(AnimatedEntity):
         self.ghost_index = index
         self.walk()
 
+    def _compute_best_dir(
+        self, target_x: int, target_y: int, cell_value: int
+    ) -> tuple[int, int]:
+        directions = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
+        possible_paths = []
+        for dx, dy, wall_flag in directions:
+            if cell_value & wall_flag:
+                continue
+            if (
+                self.grid_direction != (0, 0)
+                and dx == -self.grid_direction[0]
+                and dy == -self.grid_direction[1]
+            ):
+                continue
+            possible_paths.append((dx, dy))
+
+        if not possible_paths:
+            return (-self.grid_direction[0], -self.grid_direction[1])
+
+        best_dir = self.grid_direction
+        min_dist = float("inf")
+        for dx, dy in possible_paths:
+            dist = (
+                (self.pos_gridx + dx - target_x) ** 2
+                + (self.pos_gridy + dy - target_y) ** 2
+            )
+            if dist < min_dist:
+                min_dist = dist
+                best_dir = (dx, dy)
+        return best_dir
+
     def update_ai(self, target_x: int, target_y: int) -> None:
         self.update_grid_position()
         center_x, center_z = grid_to_world(
             self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
         )
         cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
-
         dist_to_center = abs(self.x - center_x) + abs(self.z - center_z)
 
         if dist_to_center < 0.1 or self.grid_direction == (0, 0):
-            directions = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
-
-            best_dir = self.grid_direction
-            min_dist = float("inf")
-
-            possible_paths = []
-
-            for dx, dy, wall_flag in directions:
-                if cell_value & wall_flag:
-                    continue
-
-                if (
-                    self.grid_direction != (0, 0)
-                    and dx == -self.grid_direction[0]
-                    and dy == -self.grid_direction[1]
-                ):
-                    continue
-
-                possible_paths.append((dx, dy))
-
-            if len(possible_paths) == 0:
-                best_dir = (-self.grid_direction[0], -self.grid_direction[1])
-            else:
-                for dx, dy in possible_paths:
-                    next_x = self.pos_gridx + dx
-                    next_y = self.pos_gridy + dy
-
-                    dist = (next_x - target_x) ** 2 + (next_y - target_y) ** 2
-
-                    if dist < min_dist:
-                        min_dist = dist
-                        best_dir = (dx, dy)
-
-            self.grid_direction = best_dir
+            best_dir = self._compute_best_dir(target_x, target_y, cell_value)
+            self._rotate_toward(*best_dir)
+            if dist_to_center < 0.1 or self.grid_direction == (0, 0):
+                self.grid_direction = best_dir
 
         self.move_in_direction(self.grid_direction[0], self.grid_direction[1])
 
