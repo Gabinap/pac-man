@@ -1,34 +1,28 @@
 from typing import Callable
-
-from ursina import Entity, Text, Button, InputField, color, camera, application
-from src.views.base import BaseView
 import string
+
+from ursina import Text, Button, InputField, color, application
+from src.views.base import BaseView
 
 
 class GameOverView(BaseView):
     def __init__(
         self,
-        submit_callback: Callable[[str], None],
+        register_callback: Callable[[str], None],
         menu_callback: Callable[[], None],
+        replay_callback: Callable[[], None],
     ) -> None:
         super().__init__()
-        self.parent_entity = Entity(
-            parent=camera.ui, enabled=False, ignore_paused=True
-        )
         allowed_chars = string.ascii_letters + string.digits + " "
 
-        self.bg = Entity(
-            parent=self.parent_entity,
-            model="quad",
-            scale=99,
-            color=color.rgba(0, 0, 0, 200),
-            z=1,
-            ignore_paused=True,
-        )
+        self.register_callback = register_callback
+        self.menu_callback = menu_callback
+        self.replay_callback = replay_callback
+        self.has_submitted = False
 
         self.title = Text(
             "GAME OVER",
-            parent=self.parent_entity,
+            parent=self,
             scale=4,
             origin=(0, 0),
             y=0.3,
@@ -39,15 +33,17 @@ class GameOverView(BaseView):
 
         self.input_label = Text(
             "Enter your name:",
-            parent=self.parent_entity,
+            parent=self,
             origin=(0, 0),
             y=0.16,
             color=color.white,
             z=-1,
             ignore_paused=True,
+            active=self.has_submitted,
         )
+
         self.name_input = InputField(
-            parent=self.parent_entity,
+            parent=self,
             y=0.1,
             z=-1,
             character_limit=10,
@@ -55,41 +51,108 @@ class GameOverView(BaseView):
         )
         self.name_input.ignore_paused = True
 
-        self.btn_submit = Button(
-            "Register and replay",
-            parent=self.parent_entity,
+        self.input_error = Text(
+            "",
+            parent=self,
+            origin=(0, 0),
+            y=0.05,
+            color=color.red,
+            z=-1,
+            ignore_paused=True,
+        )
+
+        self.btn_register = Button(
+            text="Register score",
+            parent=self,
             y=-0.1,
             scale=(0.3, 0.05),
-            on_click=self._on_submit,
+            on_click=self._on_register,
+            z=-1,
+            ignore_paused=True,
+        )
+        self.btn_replay = Button(
+            text="Replay",
+            parent=self,
+            y=-0.2,
+            scale=(0.3, 0.05),
+            on_click=self.replay_callback,
             z=-1,
             ignore_paused=True,
         )
         self.btn_menu = Button(
-            "Main menu",
-            parent=self.parent_entity,
-            y=-0.2,
+            text="Main menu",
+            parent=self,
+            y=-0.3,
             scale=(0.3, 0.05),
-            on_click=menu_callback,
+            on_click=self.menu_callback,
             z=-1,
             ignore_paused=True,
         )
 
-        self.submit_callback = submit_callback
+        self.elements = [
+            self.name_input,
+            self.btn_register,
+            self.btn_replay,
+            self.btn_menu,
+        ]
+        self.selected_index = 0
 
-    def _on_submit(self) -> None:
-        player_name = self.name_input.text
-        if not player_name:
-            player_name = "UNKNOWN"
-        self.submit_callback(player_name)
-
-    def enable(self) -> None:
-        self.parent_entity.enable()
+    def on_enter(self) -> None:
         self.name_input.text = ""
-        self.name_input.active = True
+        self.input_error.text = ""
+        self.selected_index = 0
+        self.has_submitted = False
+        self.update_highlight()
 
-    def disable(self) -> None:
-        self.parent_entity.disable()
+    def _on_register(self) -> None:
+        if self.has_submitted:
+            return
+        player_name = self.name_input.text.strip()
+        if not player_name:
+            self.input_error.text = "Please enter a name!"
+            self.input_error.color = color.red
+        else:
+            self.register_callback(player_name)
+            self.input_error.text = f"Score saved for {player_name}"
+            self.input_error.color = color.green
+            self.has_submitted = True
+
+    def update_highlight(self) -> None:
+        self.name_input.color = color.black
+        self.btn_register.color = color.azure
+        self.btn_replay.color = color.azure
+        self.btn_menu.color = color.azure
+
+        current = self.elements[self.selected_index]
+        current.color = color.orange
+
+        if isinstance(current, InputField):
+            current.active = True
+        else:
+            self.name_input.active = False
 
     def input(self, key: str) -> None:
-        if key == "escape" or key == "q":
+        if not self.enabled:
+            return
+
+        if key in ("down arrow", "tab"):
+            self.selected_index = (self.selected_index + 1) % len(
+                self.elements
+            )
+            self.update_highlight()
+
+        elif key in ("up arrow", "shift+tab"):
+            self.selected_index = (self.selected_index - 1) % len(
+                self.elements
+            )
+            self.update_highlight()
+
+        elif key == "enter":
+            current = self.elements[self.selected_index]
+            if isinstance(current, InputField):
+                self._on_register()
+            elif hasattr(current, "on_click") and current.on_click:
+                current.on_click()
+
+        elif key in ("escape"):
             application.quit()

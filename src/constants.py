@@ -6,13 +6,12 @@ power-up durations, and default configuration values.
 These values are never modified at runtime.
 """
 
-from enum import Enum
+from enum import Enum, auto
 from typing import NamedTuple
 
 
 class EGameView(Enum):
     MENU = "menu"
-    GAME = "game"
     INSTRUCTIONS = "instructions"
     GAME_OVER = "game_over"
 
@@ -21,6 +20,14 @@ class EDifficulty(Enum):
     EASY = "easy"
     MEDIUM = "medium"
     HARD = "hard"
+
+
+class EGameState(Enum):
+    NOT_STARTED = auto()
+    RUNNING = auto()
+    PAUSE = auto()
+    GAME_OVER = auto()
+    WIN = auto()
 
 
 class Ambiance(NamedTuple):

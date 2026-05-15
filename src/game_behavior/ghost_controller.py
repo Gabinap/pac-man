@@ -14,7 +14,10 @@ class GhostState(Enum):
 
 
 class GhostController:
-    def __init__(self, t_player: Player, maze: Maze) -> None:
+    def __init__(
+        self, t_player: Player, maze: Maze, game_state: C.EGameState
+    ) -> None:
+        self.game_state = game_state
         self.t_player = t_player
         self.maze = maze
         self.ghosts: list[Ghost] = self._init_ghosts()
@@ -40,6 +43,8 @@ class GhostController:
         return ghosts
 
     def update_ghosts(self) -> None:
+        if self.game_state != C.EGameState.RUNNING:
+            return
         for ghost in self.ghosts:
             if ghost.ghost_index == 0:
                 target_x = self.t_player.pos_gridx
@@ -75,9 +80,7 @@ class GhostController:
 
     def handle_collision(self) -> None:
         self.t_player.health -= 1
-        print(
-            f"Collided! Remaining lives: {self.t_player.health}"
-        )
+        print(f"Collided! Remaining lives: {self.t_player.health}")
         self.t_player.state = PlayerState.UNTOUCHABLE
         invoke(
             self.t_player._reset_player_state,
