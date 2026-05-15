@@ -28,5 +28,5 @@ class InstructionsView(BaseView):
         self.btn_back.on_click = self.back_callback
 
     def input(self, key: str) -> None:
-        if self.enabled and key in ("escape", "backspace"):
+        if self.enabled and key in ("backspace"):
             self.back_callback()
