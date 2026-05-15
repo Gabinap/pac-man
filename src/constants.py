@@ -34,6 +34,8 @@ class Ambiance(NamedTuple):
     wall: str
     floor: str
     pattern: str
+    pacgums: tuple[str, ...]
+    super_pacgums: tuple[str, ...]
 
 
 # --- Config validation bounds ---
@@ -199,64 +201,76 @@ MODEL_SPECS: list[ModelSpec] = [
     _ARTOON_SKELETON,  # 7
 ]
 
-# Static GLBs used as pickups in the maze. Paths are relative to `assets/`.
-# Loaded via `loader.loadModel` without animation. The split mirrors the
-# gameplay distinction: a regular pacgum scores points, a super-pacgum also
-# triggers the frightened state on ghosts.
-PACGUM_MODELS: list[str] = [
-    "pacgums/cc0_potato_chips_tube_2.glb",
-    "pacgums/coffee_mug.glb",
-    "pacgums/custom_thin_soda_can.glb",
-    "pacgums/dala_swedish_horse.glb",
-    "pacgums/donut_vcbjfbu_low.glb",
-    "pacgums/donut_vcckafl_low.glb",
-    "pacgums/inflatable_buoy.glb",
-    "pacgums/lowpoly_watermelon.glb",
-    "pacgums/pink_donut.glb",
-    "pacgums/pomegranate_scan_lowpoly.glb",
-    "pacgums/potato_scan_lowpoly.glb",
-    "pacgums/stylized_energy_cell.glb",
-    "pacgums/inflatable_rings.glb",
-]
-
-PLAYER_SPEC: ModelSpec = _CALIBUR
+# Pacgum model paths (relative to assets/). Loaded via `loader.loadModel`
+# without animation. The split between `pacgums` and `super_pacgums` in each
+# Ambiance mirrors gameplay: a regular pacgum scores points, a super-pacgum
+# also triggers the frightened state on ghosts (and is rendered larger).
+_POTATO_CHIPS = "pacgums/cc0_potato_chips_tube_2.glb"
+_COFFEE_MUG = "pacgums/coffee_mug.glb"
+_SODA_CAN = "pacgums/custom_thin_soda_can.glb"
+_SWEDISH_HORSE = "pacgums/dala_swedish_horse.glb"
+_DONUT_A = "pacgums/donut_vcbjfbu_low.glb"
+_DONUT_B = "pacgums/donut_vcckafl_low.glb"
+_BUOY = "pacgums/inflatable_buoy.glb"
+_RINGS = "pacgums/inflatable_rings.glb"
+_WATERMELON = "pacgums/lowpoly_watermelon.glb"
+_PINK_DONUT = "pacgums/pink_donut.glb"
+_POMEGRANATE = "pacgums/pomegranate_scan_lowpoly.glb"
+_POTATO = "pacgums/potato_scan_lowpoly.glb"
+_ENERGY_CELL = "pacgums/stylized_energy_cell.glb"
 
 # Textures loaded relative to assets/ (Ursina default search path).
+# Pattern marks "solid block" cells (full enclosure) — keep it in the same
+# family as the wall so the maze reads as one environment.
 # Usage: AMBIANCES["forest"] or random.choice(list(AMBIANCES.values())).
 AMBIANCES: dict[str, Ambiance] = {
     "classic": Ambiance(
         wall="textures/wall_brick.jpg",
         floor="textures/floor_marble.jpg",
         pattern="textures/pattern_bathroom.jpg",
+        pacgums=(_DONUT_A, _DONUT_B, _COFFEE_MUG),
+        super_pacgums=(_PINK_DONUT,) * 4,
     ),
     "dungeon": Ambiance(
-        wall="textures/wall_plywood.jpg",
+        wall="textures/wall_brick.jpg",
         floor="textures/floor_rubble.jpg",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_brick.jpg",
+        pacgums=(_POTATO, _POMEGRANATE),
+        super_pacgums=(_ENERGY_CELL,) * 4,
     ),
     "manor": Ambiance(
         wall="textures/wall_fabric.jpg",
         floor="textures/floor_parquet.jpg",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_wood.jpg",
+        pacgums=(_COFFEE_MUG, _PINK_DONUT),
+        super_pacgums=(_SWEDISH_HORSE,) * 4,
     ),
     "forest": Ambiance(
         wall="textures/wall_wood.jpg",
         floor="textures/floor_forest.jpg",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_wood.jpg",
+        pacgums=(_POMEGRANATE, _POTATO),
+        super_pacgums=(_WATERMELON,) * 4,
     ),
     "ruins": Ambiance(
         wall="textures/wall_brick.jpg",
         floor="textures/floor_moss.jpg",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_brick.jpg",
+        pacgums=(_POTATO,),
+        super_pacgums=(_POMEGRANATE,) * 4,
     ),
     "beach": Ambiance(
         wall="textures/wall_wood.jpg",
         floor="textures/floor_sand.jpg",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_wood.jpg",
+        pacgums=(_SODA_CAN, _POTATO_CHIPS, _RINGS),
+        super_pacgums=(_BUOY,) * 4,
     ),
     "meme": Ambiance(
         wall="textures/wall_meme.jpg",
         floor="textures/floor_brick.png",
-        pattern="textures/pattern_bathroom.jpg",
+        pattern="textures/wall_meme.jpg",
+        pacgums=(_COFFEE_MUG, _PINK_DONUT, _ENERGY_CELL, _RINGS),
+        super_pacgums=(_SWEDISH_HORSE,) * 4,
     ),
 }
