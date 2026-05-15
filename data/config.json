@@ -7,7 +7,7 @@
     "highscore_filename": "data/highscores.json",
 
     # Number of lives the player starts with — must be between 1 and 9
-    "lives": 10,
+    "lives": 1,
 
     // Points awarded for eating a regular pacgum (small dot)
     "points_per_pacgum": 10,
