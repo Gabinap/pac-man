@@ -84,31 +84,15 @@ class ModelSpec(NamedTuple):
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
 _CROCKIE = ModelSpec(
     path="models/crockie_vgdc.glb",
-    scale=0.5,
+    scale=0.3,
     rotation_x=90,
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
     attack_scale=0.4,
+    supported=False
 )
 
-# Animations: ['005_attack', 'monster_hit', 'monster_death', '002_crit',
-# '002_attack', '001_attack', '001_AOE_twohanded', '004_attack', '002_AOE_all',
-# '003_crit', '003_attack', '001_victory_all', '009_attack_x3_ogre_01',
-# '009_attack_x3_ogre_02', '009_attack_x3_ogre_03', '008_attack_heavyweapon',
-# '007_attack_x3_01', '007_attack_x3_02', '005_buff_ogre', 'monster_idle',
-# 'monster_run', '001_stun_sleep', 'monster_idle_HeroScene',
-# 'idle_interruption2', 'idle_interruption1']
-_CROCODILE = ModelSpec(
-    path="models/crocodile.glb",
-    scale=1.0,
-    rotation_x=0,
-    anim_idle=19,  # monster_idle
-    anim_walk=20,  # monster_run
-    anim_attack=(0, 4, 5, 7, 10, 15),  # 005/002/001/004/003_attack + heavy
-    attack_scale=0.9,
-    supported=False,
-)
 
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
@@ -122,13 +106,14 @@ _GROBBO = ModelSpec(
     anim_idle_rate=0.05,
     anim_walk_rate=0.6,
     anim_attack_rate=1.0,
+    supported=False
 )
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
 _HALLOWEEN_BAT = ModelSpec(
     path="models/halloween_bat.glb",
     scale=0.15,
-    rotation_x=-90,
+    rotation_x=180,
     spawn_y=0.7,
     anim_idle=0,
     anim_walk=0,
@@ -137,6 +122,7 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_idle_rate=0.5,
     anim_walk_rate=1,
     anim_attack_rate=2.0,
+    supported=False
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -149,42 +135,32 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['ArmatureArmatureAction']
 _SKULL_CRAWLER = ModelSpec(
     path="models/skull_crawler.glb",
-    scale=0.1,
+    scale=0.07,
     rotation_x=90,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    anim_idle_rate=3,
 )
 
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
     path="models/tuna_fish.glb",
-    scale=0.2,
-    rotation_x=180,
+    scale=0.18,
+    rotation_x=90,
     spawn_y=0.5,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-)
-
-# Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
-# 'walkSpellEarthquake', 'spellWalkSheild', 'death']
-_VOLCANO_INFERNO = ModelSpec(
-    path="models/volcano_inferno.glb",
-    scale=1.0,
-    rotation_x=0,
-    anim_idle=0,  # idle
-    anim_walk=(1, 2, 3, 4),  # run, runVariation, walk, walkVariation
-    anim_attack=(5, 6),  # walkSpellEarthquake, spellWalkSheild
-    attack_scale=0.9,
-    supported=False,
+    supported=False
 )
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
@@ -192,11 +168,12 @@ _VOLCANO_INFERNO = ModelSpec(
 # 'Stun_Super', 'Taunt', 'Walk']
 _CALIBUR = ModelSpec(
     path="models/calibur_vgdc.glb",
-    scale=0.5,
-    rotation_x=180,
+    scale=0.4,
+    rotation_x=90,
     anim_idle=7,  # Idle
     anim_walk=11,  # Walk
     anim_attack=(0, 1, 2, 3, 4),  # Attack1/Jump/Stabs/Stomp/TripleCombo
+    supported=False
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',
@@ -205,7 +182,7 @@ _CALIBUR = ModelSpec(
 _ARTOON_SKELETON = ModelSpec(
     path="models/artoon_skeleton.glb",
     scale=1.0,
-    rotation_x=180,
+    rotation_x=90,
     anim_idle=1,  # idle
     anim_walk=2,  # run
     anim_attack=0,  # attack
@@ -215,15 +192,13 @@ _ARTOON_SKELETON = ModelSpec(
 
 MODEL_SPECS: list[ModelSpec] = [
     _CROCKIE,  # 0
-    _CROCODILE,  # 1
-    _GROBBO,  # 2
-    _HALLOWEEN_BAT,  # 3
-    _OPHANIM_ANGEL,  # 4
-    _SKULL_CRAWLER,  # 5
-    _TUNA_FISH,  # 6
-    _VOLCANO_INFERNO,  # 7
-    _CALIBUR,  # 8
-    _ARTOON_SKELETON,  # 9
+    _GROBBO,  # 1
+    _HALLOWEEN_BAT,  # 2
+    _OPHANIM_ANGEL,  # 3
+    _SKULL_CRAWLER,  # 4
+    _TUNA_FISH,  # 5
+    _CALIBUR,  # 6
+    _ARTOON_SKELETON,  # 7
 ]
 
 # Static GLBs used as pickups in the maze. Paths are relative to `assets/`.
