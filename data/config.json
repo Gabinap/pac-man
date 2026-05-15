@@ -19,7 +19,6 @@
     "points_per_ghost": 200,
 
     # Fixed seed for the first level's maze — guarantees a reproducible starting layout
-    "seed": 4,
 
     // Maximum time allowed per level in seconds; set to 0 to disable the timer
     "level_max_time": 90,
@@ -30,7 +29,7 @@
     # Optional "ambiance" key sets the visual theme; omit for a random pick each run.
     # Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
     "levels": [
-        {"width": 11, "height": 11, "ambiance": "forest", "difficulty": "medium"},
+        {"width": 11, "height": 11, "difficulty": "medium", "lives": 9},
         {"width": 11, "height": 11, "ambiance": "forest", "difficulty": "medium"},
         {"width": 15, "height": 15, "difficulty": "medium"}
     ]

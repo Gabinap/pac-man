@@ -25,6 +25,7 @@ ifeq (run, $(firstword $(MAKECMDGOALS)))
   endif
 endif
 run:
+	rm -f ~/.cache/panda3d/*.boo ~/.cache/panda3d/index_name.txt 2>/dev/null
 	uv run python pac-man.py $(RUN_ARGS)
 
 debug:

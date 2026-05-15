@@ -85,7 +85,7 @@ class ModelSpec(NamedTuple):
 _CROCKIE = ModelSpec(
     path="models/crockie_vgdc.glb",
     scale=0.5,
-    rotation_x=180,
+    rotation_x=90,
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
@@ -128,7 +128,7 @@ _GROBBO = ModelSpec(
 _HALLOWEEN_BAT = ModelSpec(
     path="models/halloween_bat.glb",
     scale=0.15,
-    rotation_x=180,
+    rotation_x=-90,
     spawn_y=0.7,
     anim_idle=0,
     anim_walk=0,
@@ -160,20 +160,18 @@ _SKULL_CRAWLER = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False,
 )
 
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
     path="models/tuna_fish.glb",
     scale=0.2,
-    rotation_x=90,
+    rotation_x=180,
     spawn_y=0.5,
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
 )
 
 # Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
@@ -189,16 +187,16 @@ _VOLCANO_INFERNO = ModelSpec(
     supported=False,
 )
 
-# Animations: ['Idle', 'Walk', 'Taunt', 'Attack1', 'Attack_Stabs',
-# 'Attack_TripleCombo', 'Attack_Jump', 'Attack_Stomp', 'Backstep', 'Stun',
-# 'Stun_Super', 'Death']
+# Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
+# 'Attack_Stomp', 'Attack_TripleCombo', 'Backstep', 'Death', 'Idle', 'Stun',
+# 'Stun_Super', 'Taunt', 'Walk']
 _CALIBUR = ModelSpec(
     path="models/calibur_vgdc.glb",
     scale=0.5,
-    rotation_x=90,
-    anim_idle=0,  # Idle
-    anim_walk=1,  # Walk
-    anim_attack=(3, 4, 5, 6, 7),  # Attack1/Stabs/TripleCombo/Jump/Stomp
+    rotation_x=180,
+    anim_idle=7,  # Idle
+    anim_walk=11,  # Walk
+    anim_attack=(0, 1, 2, 3, 4),  # Attack1/Jump/Stabs/Stomp/TripleCombo
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',
@@ -207,11 +205,12 @@ _CALIBUR = ModelSpec(
 _ARTOON_SKELETON = ModelSpec(
     path="models/artoon_skeleton.glb",
     scale=1.0,
-    rotation_x=90,
+    rotation_x=180,
     anim_idle=1,  # idle
     anim_walk=2,  # run
     anim_attack=0,  # attack
     attack_scale=0.9,
+    supported=False,
 )
 
 MODEL_SPECS: list[ModelSpec] = [
@@ -244,10 +243,7 @@ PACGUM_MODELS: list[str] = [
     "pacgums/pomegranate_scan_lowpoly.glb",
     "pacgums/potato_scan_lowpoly.glb",
     "pacgums/stylized_energy_cell.glb",
-]
-
-SUPER_PACGUM_MODELS: list[str] = [
-    "pacgums/super_pacgum_game_ready_free_inflatable_rings.glb",
+    "pacgums/inflatable_rings.glb",
 ]
 
 PLAYER_SPEC: ModelSpec = _CALIBUR
