@@ -166,6 +166,7 @@ _TUNA_FISH = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
+    supported=False
 )
 
 # Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
