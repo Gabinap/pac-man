@@ -170,10 +170,13 @@ class PlayerState(Enum):
 
 
 class Player(AnimatedEntity):
-    def __init__(self, maze: "Maze", gcf: GameConfig) -> None:
+    def __init__(
+        self, maze: "Maze", gcf: GameConfig, game_state: C.EGameState
+    ) -> None:
         super().__init__(
             spec=C.MODEL_SPECS[9], maze=maze, speed=C.PLAYER_SPEED
         )
+        self.game_state = game_state
         self.gcf = gcf
         self.health = gcf.lives
         self.state = PlayerState.NORMAL
@@ -183,6 +186,9 @@ class Player(AnimatedEntity):
         self.state = PlayerState.NORMAL
 
     def update(self) -> None:
+        if self.game_state != C.EGameState.RUNNING:
+            self.idle()
+            return
         moving = False
 
         if held_keys["w"] or held_keys["up arrow"]:

@@ -1,11 +1,5 @@
-"""Ursina application and rendering layer.
-
-Initializes the Ursina app, manages the main menu and game views,
-loads 3D models and assets, manages the camera (top-down perspective
-and first-person), renders all entities each frame, and delegates all
-game logic to game_behavior via the global update() callback.
-Entry point for the Ursina event loop.
-"""
+from typing import Any
+import random
 
 from ursina import (
     color,
@@ -18,12 +12,11 @@ from ursina import (
     held_keys,
     time,
     application,
+    destroy,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
-from typing import Any
 
-import random
 import src.constants as C
 from src.entities import Player
 from src.game_config import GameConfig
@@ -40,54 +33,83 @@ class GameRender(Entity):
         self.app: Any = Ursina(development_mode=True)
         super().__init__()
         self.gcf = gcf
+
         self._fps_mode = False
         self._fps_ctrl: Any = None
         self._barrel_quad: Any = None
         self._manager: Any = None
         self._barrel_strength: float = 0.2
+
         self._game_initialized = False
-        self._views: dict[C.EGameView, BaseView] = {}
-        self._current: C.EGameView | None = None
+        self.game_state = C.EGameState.NOT_STARTED
         self._difficulty = C.EDifficulty.MEDIUM
+
+        self.maze: Maze | None = None
+        self._player: Player | None = None
+        self._ghost_controller: GhostController | None = None
 
         window.color = color.black
         window.exit_button.enabled = False
 
-        self._register(
-            C.EGameView.MENU,
-            MainMenuView(
-                self.gcf,
-                self._difficulty,
-                start_game=lambda: self.switch_view(C.EGameView.GAME),
-                show_instructions=lambda: self.switch_view(
-                    C.EGameView.INSTRUCTIONS
-                ),
-            ),
-        )
-        self._register(
-            C.EGameView.INSTRUCTIONS,
-            InstructionsView(
-                back_callback=lambda: self.switch_view(C.EGameView.MENU),
-            ),
-        )
-        self._register(
-            C.EGameView.GAME_OVER,
-            GameOverView(
-                submit_callback=self._on_replay,
-                menu_callback=lambda: self.switch_view(C.EGameView.MENU),
-            ),
-        )
-        self.switch_view(C.EGameView.MENU)
+        self._setup_barrel()
 
-    def _register(self, name: C.EGameView, view: BaseView) -> None:
-        self._views[name] = view
+        self._views: dict[C.EGameView, BaseView] = {}
+        self._current: C.EGameView | None = None
+        self._register_views()
+
+        self._init_game()
+        self.switch_view(C.EGameView.GAME_OVER)
+
+    def _register_views(self) -> None:
+        self._views[C.EGameView.MENU] = MainMenuView(
+            self.gcf,
+            self._difficulty,
+            start_game=self.start_game,
+            show_instructions=lambda: self.switch_view(
+                C.EGameView.INSTRUCTIONS
+            ),
+        )
+        self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
+            back_callback=lambda: self.switch_view(C.EGameView.MENU),
+        )
+        self._views[C.EGameView.GAME_OVER] = GameOverView(
+            register_callback=self._on_register_highscore,
+            menu_callback=lambda: self.switch_view(C.EGameView.MENU),
+            replay_callback=self.start_game,
+        )
+
+    def start_game(self) -> None:
+        for view in self._views.values():
+            view.disable()
+
+        if self.game_state == C.EGameState.GAME_OVER:
+            self._destroy_entities()
+            self._init_game()
+
+        self.game_state = C.EGameState.RUNNING
+
+        if self._player:
+            self._player.game_state = self.game_state
+        if self._ghost_controller:
+            self._ghost_controller.game_state = self.game_state
+
+        application.paused = False
+
+    def _destroy_entities(self) -> None:
+        if not self._game_initialized:
+            return
+
+        if self.maze:
+            destroy(self.maze)
+        if self._player:
+            destroy(self._player)
+        if self._ghost_controller:
+            for ghost in self._ghost_controller.ghosts:
+                destroy(ghost)
+
+        self._game_initialized = False
 
     def _init_game(self) -> None:
-        """Build maze, camera, and barrel distortion
-        (runs once on first Start)."""
-        if self._game_initialized:
-            return
-        self._game_initialized = True
         window.color = color.rgb(0, 0.2, 0)
         level = self.gcf.levels[0]
         ambiance = (
@@ -95,20 +117,25 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
+
         self.maze = Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
-        self._setup_barrel(strength=self._barrel_strength)
         self._set_topdown()
 
-        self._player = Player(self.maze, self.gcf)
-        self._ghost_controller = GhostController(self._player, self.maze)
+        self._player = Player(self.maze, self.gcf, self.game_state)
+        self._ghost_controller = GhostController(
+            self._player, self.maze, self.game_state
+        )
 
-    def _setup_barrel(self, strength: float = 0.2) -> None:
+        self._game_initialized = True
+
+    def _setup_barrel(self) -> None:
         from direct.filter.FilterManager import FilterManager
 
-        self._barrel_strength = strength
-        manager = FilterManager(self.app.win, self.app.cam)
+        if self._manager is not None:
+            return
+        self._manager = FilterManager(self.app.win, self.app.cam)
         tex = Texture()
-        self._barrel_quad = manager.renderSceneInto(colortex=tex)
+        self._barrel_quad = self._manager.renderSceneInto(colortex=tex)
         self._barrel_quad.setShader(
             Shader.load(
                 Shader.SL_GLSL,
@@ -118,19 +145,19 @@ class GameRender(Entity):
         )
         self._barrel_quad.setShaderInput("tex", tex)
         self._barrel_quad.setShaderInput("strength", 0.0)
-        self._manager = manager
 
     def _enable_barrel(self) -> None:
-        if self._barrel_quad is not None:
+        if self._barrel_quad:
             self._barrel_quad.setShaderInput("strength", self._barrel_strength)
 
     def _disable_barrel(self) -> None:
-        if self._barrel_quad is not None:
+        if self._barrel_quad:
             self._barrel_quad.setShaderInput("strength", 0.0)
 
     def _set_topdown(self) -> None:
-        if self._fps_ctrl is not None:
+        if self._fps_ctrl:
             self._fps_ctrl.enabled = False
+
         camera.parent = scene
         y = max(self.gcf.levels[0].width, self.gcf.levels[0].height) * 0.6
         camera.position = (0, y * 1.25, -y * 0.30)
@@ -138,6 +165,7 @@ class GameRender(Entity):
         camera.rotation_y = 0
         camera.rotation_z = 0
         camera.fov = 110
+
         mouse.locked = False
         mouse.visible = True
         self._enable_barrel()
@@ -146,16 +174,15 @@ class GameRender(Entity):
         self._disable_barrel()
         if self._fps_ctrl is None:
             self._fps_ctrl = FirstPersonController(
-                position=(1, 2, 1),
-                gravity=0,
+                position=(1, 2, 1), gravity=0
             )
         else:
             self._fps_ctrl.enabled = True
+
         mouse.locked = True
         mouse.visible = False
 
     def toggle_fps(self) -> None:
-        """Toggle between top-down and FPS camera modes."""
         self._fps_mode = not self._fps_mode
         if self._fps_mode:
             self._set_fps()
@@ -163,7 +190,7 @@ class GameRender(Entity):
             self._set_topdown()
 
     def switch_view(self, target: C.EGameView) -> None:
-        if self._current is not None and self._current in self._views:
+        if self._current and self._current in self._views:
             old = self._views[self._current]
             old.on_exit()
             old.disable()
@@ -172,30 +199,33 @@ class GameRender(Entity):
 
         if target == C.EGameView.GAME_OVER:
             application.paused = True
-        if target == C.EGameView.GAME:
-            application.paused = False
-            self._init_game()
-            return
 
         view = self._views[target]
         view.enable()
         view.on_enter()
 
-    def _on_replay(self, player_name: str) -> None:
-        print(f"Saved score for : {player_name}")
-        self._game_initialized = False
-        self.switch_view(C.EGameView.GAME)
+    def _on_register_highscore(self, player_name: str) -> None:
+        print(f"saved {player_name}'s score")
 
     def update(self) -> None:
-        if self._game_initialized and self._current == C.EGameView.GAME:
-            if self._player.health <= 0:
-                self.switch_view(C.EGameView.GAME_OVER)
-                return
-            self._ghost_controller.update_ghosts()
-
-        if self._fps_mode and self._fps_ctrl is not None:
+        if self._fps_mode and self._fps_ctrl:
             speed = 5
             if held_keys["space"]:
                 self._fps_ctrl.y += speed * time.dt
             if held_keys["shift"]:
                 self._fps_ctrl.y -= speed * time.dt
+
+        if (
+            not self._game_initialized
+            or self.game_state != C.EGameState.RUNNING
+        ):
+            return
+
+        if self._player and self._ghost_controller:
+            if self._player.health <= 0:
+                self.game_state = C.EGameState.GAME_OVER
+                self._player.game_state = self.game_state
+                self._ghost_controller.game_state = self.game_state
+                self.switch_view(C.EGameView.GAME_OVER)
+                return
+            self._ghost_controller.update_ghosts()
