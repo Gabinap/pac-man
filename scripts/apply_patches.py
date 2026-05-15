@@ -206,22 +206,6 @@ PATCHES: list[tuple[str, str]] = [
         "                    if _ci is not None:\n"
         "                        _ci.nodepath.reparent_to(root)",
     ),
-    (
-        "                else:\n"
-        "                    np.attach_new_node(mesh)\n"
-        "                    if charinfo:\n"
-        "                        self.combine_mesh_skin(mesh, charinfo)\n"
-        "                        self.combine_mesh_morphs("
-        "mesh, meshid, charinfo)",
-        "                else:\n"
-        "                    if charinfo:\n"
-        "                        charinfo.nodepath.attach_new_node(mesh)\n"
-        "                        self.combine_mesh_skin(mesh, charinfo)\n"
-        "                        self.combine_mesh_morphs("
-        "mesh, meshid, charinfo)\n"
-        "                    else:\n"
-        "                        np.attach_new_node(mesh)",
-    ),
 ]
 
 
