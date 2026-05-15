@@ -148,7 +148,7 @@ PATCHES: list[tuple[str, str]] = [
     ),
     # Bug 5: multiple skins sharing the same LCA (Sketchfab/FAB exports with
     # separate meshes for body / eyes / weapon). After Bug 1, build_characters
-    # creates one CharInfo per skinid, but build_character internally hard-codes
+    # creates one CharInfo per skinid, but build_character internally hardcodes
     # `skinid = self.skeletons[nodeid][0]`, so all CharInfos are clones of
     # skin[0]. Also add_node only reparents skinids[0]'s character to the scene
     # graph and attaches every mesh to that same character — so meshes for the

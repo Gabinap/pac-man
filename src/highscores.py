@@ -62,7 +62,7 @@ class Highscores:
         current_scores = self.get_top_scores()
 
         current_scores.append((player_name, score))
-        data_to_save: list[dict[str, int]] = []
+        data_to_save: list[dict[str, str | int]] = []
         for name, score in current_scores:
             data_to_save.append({"name": name, "score": score})
         try:

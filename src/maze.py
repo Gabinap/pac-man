@@ -180,7 +180,7 @@ def _add_pattern(
     )
 
 
-class Maze(Entity):
+class Maze(Entity):  # type: ignore[misc, unused-ignore]
     def __init__(
         self, level: LevelConfig, seed: int, ambiance: Ambiance
     ) -> None:
