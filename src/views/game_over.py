@@ -3,22 +3,25 @@ import string
 
 from ursina import Text, Button, InputField, color, application
 from src.views.base import BaseView
+from src.highscores import Highscores
 
 
 class GameOverView(BaseView):
     def __init__(
         self,
-        register_callback: Callable[[str], None],
+        scores_manager: Highscores,
+        score_callback: Callable[[], None],
         menu_callback: Callable[[], None],
         replay_callback: Callable[[], None],
     ) -> None:
         super().__init__()
-        allowed_chars = string.ascii_letters + string.digits + " "
-
-        self.register_callback = register_callback
+        self.scores_manager = scores_manager
+        self.score_callback = score_callback
         self.menu_callback = menu_callback
         self.replay_callback = replay_callback
+
         self.has_submitted = False
+        allowed_chars = string.ascii_letters + string.digits + " "
 
         self.title = Text(
             "GAME OVER",
@@ -39,7 +42,6 @@ class GameOverView(BaseView):
             color=color.white,
             z=-1,
             ignore_paused=True,
-            active=self.has_submitted,
         )
 
         self.name_input = InputField(
@@ -112,8 +114,9 @@ class GameOverView(BaseView):
             self.input_error.text = "Please enter a name!"
             self.input_error.color = color.red
         else:
-            self.register_callback(player_name)
-            self.input_error.text = f"Score saved for {player_name}"
+            score = self.score_callback()
+            add_score_msg = self.scores_manager.add_score(player_name, score)
+            self.input_error.text = add_score_msg
             self.input_error.color = color.green
             self.has_submitted = True
 
@@ -154,5 +157,5 @@ class GameOverView(BaseView):
             elif hasattr(current, "on_click") and current.on_click:
                 current.on_click()
 
-        elif key in ("escape"):
+        elif key == "escape":
             application.quit()

@@ -26,6 +26,7 @@ from src.views.main_menu import MainMenuView
 from src.views.instructions import InstructionsView
 from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController
+from src.highscores import Highscores
 
 
 class GameRender(Entity):
@@ -43,6 +44,8 @@ class GameRender(Entity):
         self._game_initialized = False
         self.game_state = C.EGameState.NOT_STARTED
         self._difficulty = C.EDifficulty.MEDIUM
+        self.scores_manager = Highscores(self.gcf)
+        self.score = 0
 
         self.maze: Maze | None = None
         self._player: Player | None = None
@@ -58,11 +61,12 @@ class GameRender(Entity):
         self._register_views()
 
         self._init_game()
-        self.switch_view(C.EGameView.GAME_OVER)
+        self.switch_view(C.EGameView.MENU)
 
     def _register_views(self) -> None:
         self._views[C.EGameView.MENU] = MainMenuView(
             self.gcf,
+            self.scores_manager,
             self._difficulty,
             start_game=self.start_game,
             show_instructions=lambda: self.switch_view(
@@ -73,7 +77,8 @@ class GameRender(Entity):
             back_callback=lambda: self.switch_view(C.EGameView.MENU),
         )
         self._views[C.EGameView.GAME_OVER] = GameOverView(
-            register_callback=self._on_register_highscore,
+            scores_manager=self.scores_manager,
+            score_callback=self.get_score,
             menu_callback=lambda: self.switch_view(C.EGameView.MENU),
             replay_callback=self.start_game,
         )
@@ -117,7 +122,7 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
-
+        self.score = 0
         self.maze = Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
         self._set_topdown()
 
@@ -204,8 +209,8 @@ class GameRender(Entity):
         view.enable()
         view.on_enter()
 
-    def _on_register_highscore(self, player_name: str) -> None:
-        print(f"saved {player_name}'s score")
+    def get_score(self) -> int:
+        return self.score
 
     def update(self) -> None:
         if self._fps_mode and self._fps_ctrl:
