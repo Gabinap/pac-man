@@ -11,6 +11,7 @@ class MainMenuView(BaseView):
     def __init__(
         self,
         gcf: GameConfig,
+        scores_manager: Highscores,
         difficulty: C.EDifficulty,
         start_game: Callable[[], None],
         show_instructions: Callable[[], None],
@@ -20,8 +21,8 @@ class MainMenuView(BaseView):
         self.start_game = start_game
         self.show_instructions = show_instructions
         self.difficulty = difficulty
-
-        self.scores_manager = Highscores(gcf)
+        self.gcf = gcf
+        self.scores_manager = scores_manager
 
         self.title = Text(
             "PAC-MAN",
