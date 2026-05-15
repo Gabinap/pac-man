@@ -30,12 +30,24 @@ class EGameState(Enum):
     WIN = auto()
 
 
+class PacgumSpec(NamedTuple):
+    path: str
+    scale: float = 0.2
+    hover_y: float = 0.4
+    rotation_x: float = 0.0
+
+
+# Super-pacgums use the same PacgumSpec as regular ones — only scaled up
+# at render time. Tweak this to make supers more (or less) prominent.
+SUPER_PACGUM_SCALE_MULTIPLIER: float = 2.25
+
+
 class Ambiance(NamedTuple):
     wall: str
     floor: str
     pattern: str
-    pacgums: tuple[str, ...]
-    super_pacgums: tuple[str, ...]
+    pacgums: tuple[PacgumSpec, ...]
+    super_pacgums: tuple[PacgumSpec, ...]
 
 
 # --- Config validation bounds ---
@@ -201,23 +213,23 @@ MODEL_SPECS: list[ModelSpec] = [
     _ARTOON_SKELETON,  # 7
 ]
 
-# Pacgum model paths (relative to assets/). Loaded via `loader.loadModel`
-# without animation. The split between `pacgums` and `super_pacgums` in each
-# Ambiance mirrors gameplay: a regular pacgum scores points, a super-pacgum
-# also triggers the frightened state on ghosts (and is rendered larger).
-_POTATO_CHIPS = "pacgums/cc0_potato_chips_tube_2.glb"
-_COFFEE_MUG = "pacgums/coffee_mug.glb"
-_SODA_CAN = "pacgums/custom_thin_soda_can.glb"
-_SWEDISH_HORSE = "pacgums/dala_swedish_horse.glb"
-_DONUT_A = "pacgums/donut_vcbjfbu_low.glb"
-_DONUT_B = "pacgums/donut_vcckafl_low.glb"
-_BUOY = "pacgums/inflatable_buoy.glb"
-_RINGS = "pacgums/inflatable_rings.glb"
-_WATERMELON = "pacgums/lowpoly_watermelon.glb"
-_PINK_DONUT = "pacgums/pink_donut.glb"
-_POMEGRANATE = "pacgums/pomegranate_scan_lowpoly.glb"
-_POTATO = "pacgums/potato_scan_lowpoly.glb"
-_ENERGY_CELL = "pacgums/stylized_energy_cell.glb"
+# Pacgum specs. Loaded via `loader.loadModel` without animation. The split
+# between `pacgums` and `super_pacgums` in each Ambiance mirrors gameplay:
+# a regular pacgum scores points, a super-pacgum also triggers the
+# frightened state on ghosts (and is rendered larger via the multiplier).
+_POTATO_CHIPS = PacgumSpec(path="pacgums/potato_chips_tube.glb", scale=1.3)
+_COFFEE_MUG = PacgumSpec(path="pacgums/coffee_mug.glb", scale=0.66)
+_SODA_CAN = PacgumSpec(path="pacgums/custom_thin_soda_can.glb", scale=0.04)
+_SWEDISH_HORSE = PacgumSpec(path="pacgums/dala_swedish_horse.glb")
+_DONUT_A = PacgumSpec(path="pacgums/donut_vcbjfbu_low.glb", scale=2.7)
+_DONUT_B = PacgumSpec(path="pacgums/donut_vcckafl_low.glb", scale=2.7)
+_BUOY = PacgumSpec(path="pacgums/inflatable_buoy.glb")
+_RINGS = PacgumSpec(path="pacgums/inflatable_rings.glb", scale=0.05)
+_WATERMELON = PacgumSpec(path="pacgums/lowpoly_watermelon.glb")
+_PINK_DONUT = PacgumSpec(path="pacgums/pink_donut.glb", scale=0.1)
+_POMEGRANATE = PacgumSpec(path="pacgums/pomegranate_scan_lowpoly.glb")
+_POTATO = PacgumSpec(path="pacgums/potato_scan_lowpoly.glb")
+_ENERGY_CELL = PacgumSpec(path="pacgums/stylized_energy_cell.glb", scale=0.05)
 
 # Textures loaded relative to assets/ (Ursina default search path).
 # Pattern marks "solid block" cells (full enclosure) — keep it in the same
@@ -263,14 +275,14 @@ AMBIANCES: dict[str, Ambiance] = {
         wall="textures/wall_wood.jpg",
         floor="textures/floor_sand.jpg",
         pattern="textures/wall_wood.jpg",
-        pacgums=(_SODA_CAN, _POTATO_CHIPS, _RINGS),
-        super_pacgums=(_BUOY,) * 4,
+        pacgums=(_SODA_CAN, _POTATO_CHIPS, _BUOY),
+        super_pacgums=(_RINGS,) * 4,
     ),
     "meme": Ambiance(
         wall="textures/wall_meme.jpg",
         floor="textures/floor_brick.png",
         pattern="textures/wall_meme.jpg",
-        pacgums=(_COFFEE_MUG, _PINK_DONUT, _ENERGY_CELL, _RINGS),
-        super_pacgums=(_SWEDISH_HORSE,) * 4,
+        pacgums=(_COFFEE_MUG, _PINK_DONUT, _ENERGY_CELL, _SWEDISH_HORSE),
+        super_pacgums=(_RINGS,) * 4,
     ),
 }

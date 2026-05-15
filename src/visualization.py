@@ -26,6 +26,7 @@ from src.views.main_menu import MainMenuView
 from src.views.instructions import InstructionsView
 from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController
+from src.game_behavior.pacgum_controller import PacgumController
 from src.highscores import Highscores
 
 
@@ -50,6 +51,7 @@ class GameRender(Entity):
         self.maze: Maze | None = None
         self._player: Player | None = None
         self._ghost_controller: GhostController | None = None
+        self._pacgum_controller: PacgumController | None = None
 
         window.color = color.black
         window.exit_button.enabled = False
@@ -111,6 +113,8 @@ class GameRender(Entity):
         if self._ghost_controller:
             for ghost in self._ghost_controller.ghosts:
                 destroy(ghost)
+        if self._pacgum_controller:
+            self._pacgum_controller.destroy_all()
 
         self._game_initialized = False
 
@@ -130,8 +134,14 @@ class GameRender(Entity):
         self._ghost_controller = GhostController(
             self._player, self.maze, self.game_state
         )
+        self._pacgum_controller = PacgumController(
+            self._player, self.maze, ambiance, self.gcf, self._add_score
+        )
 
         self._game_initialized = True
+
+    def _add_score(self, points: int) -> None:
+        self.score += points
 
     def _setup_barrel(self) -> None:
         from direct.filter.FilterManager import FilterManager
@@ -234,3 +244,5 @@ class GameRender(Entity):
                 self.switch_view(C.EGameView.GAME_OVER)
                 return
             self._ghost_controller.update_ghosts()
+            if self._pacgum_controller:
+                self._pacgum_controller.update()
