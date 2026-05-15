@@ -284,3 +284,68 @@ class Floor(Entity):
             scale=(width, 1, height),
             position=(0, 0, 0),
         )
+
+
+class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
+    SCALE_MULTIPLIER: float = 1.0
+    SPIN_SPEED: float = 90.0  # degrees per second
+
+    def __init__(
+        self,
+        spec: C.PacgumSpec,
+        grid_x: int,
+        grid_y: int,
+        maze: "Maze",
+        points: int,
+    ) -> None:
+        world_x, world_z = grid_to_world(
+            grid_x, grid_y, maze.width, maze.height
+        )
+        super().__init__(
+            model=f"assets/{spec.path}",
+            scale=spec.scale * self.SCALE_MULTIPLIER,
+            rotation_x=spec.rotation_x,
+            position=(world_x, spec.hover_y, world_z),
+        )
+        self.spec = spec
+        self.grid_x = grid_x
+        self.grid_y = grid_y
+        self.points = points
+        self.is_super = False
+        self._recenter_model()
+
+    def _recenter_model(self) -> None:
+        """Shift the loaded mesh so its visual center sits on the entity's
+        pivot. Without this, GLBs whose geometry is offset from the file's
+        origin trace a circle when we rotate around Y (orbit) instead of
+        spinning in place.
+        """
+        if not self.model:
+            return
+        bounds = self.model.getTightBounds()
+        if bounds is None:
+            return
+        mins, maxs = bounds
+        self.model.setPos(
+            -(mins.x + maxs.x) * 0.5,
+            -(mins.y + maxs.y) * 0.5,
+            -(mins.z + maxs.z) * 0.5,
+        )
+
+    def update(self) -> None:
+        self.rotation_y += self.SPIN_SPEED * ursina_time.dt
+
+
+class SuperPacgum(Pacgum):
+    SCALE_MULTIPLIER: float = C.SUPER_PACGUM_SCALE_MULTIPLIER
+
+    def __init__(
+        self,
+        spec: C.PacgumSpec,
+        grid_x: int,
+        grid_y: int,
+        maze: "Maze",
+        points: int,
+    ) -> None:
+        super().__init__(spec, grid_x, grid_y, maze, points)
+        self.is_super = True
