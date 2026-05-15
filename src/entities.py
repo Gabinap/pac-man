@@ -44,7 +44,7 @@ class AnimatedEntity(Entity):
         # skins sharing the same skeleton root (body + eyes + weapon, etc.).
         # Each becomes a separate Character once the panda3d-gltf patches
         # land — wrap each as its own Actor so all skins render and animate.
-        _loader: Any = application.base.loader  # type: ignore[union-attr]
+        _loader: Any = application.base.loader
         raw = _loader.loadModel(f"assets/{spec.path}")
         char_paths = raw.find_all_matches("**/+Character")
         n_chars = char_paths.get_num_paths()
@@ -174,7 +174,7 @@ class Player(AnimatedEntity):
         self, maze: "Maze", gcf: GameConfig, game_state: C.EGameState
     ) -> None:
         super().__init__(
-            spec=C.MODEL_SPECS[9], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.MODEL_SPECS[8], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.gcf = gcf

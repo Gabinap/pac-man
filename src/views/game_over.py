@@ -10,7 +10,7 @@ class GameOverView(BaseView):
     def __init__(
         self,
         scores_manager: Highscores,
-        score_callback: Callable[[], None],
+        score_callback: Callable[[], int],
         menu_callback: Callable[[], None],
         replay_callback: Callable[[], None],
     ) -> None:
