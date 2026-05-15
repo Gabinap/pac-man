@@ -180,10 +180,11 @@ def _add_pattern(
     )
 
 
-class Maze:
+class Maze(Entity):
     def __init__(
         self, level: LevelConfig, seed: int, ambiance: Ambiance
     ) -> None:
+        super().__init__()
         gen = MazeGenerator(
             size=(level.width, level.height), perfect=False, seed=seed
         )
@@ -194,7 +195,9 @@ class Maze:
     def _build(self, ambiance: Ambiance) -> None:
         grid = self.grid
         h, w = len(grid), len(grid[0])
-        Floor(width=w, height=h, texture=ambiance.floor)
+
+        floor = Floor(width=w, height=h, texture=ambiance.floor)
+        floor.parent = self
 
         wv: list[_V3] = []
         wu: list[_V2] = []
@@ -246,10 +249,12 @@ class Maze:
                 model=Mesh(vertices=wv, uvs=wu, triangles=wt, mode="triangle"),
                 texture=ambiance.wall,
                 double_sided=True,
+                parent=self,
             )
         if pv:
             Entity(
                 model=Mesh(vertices=pv, uvs=pu, triangles=pt, mode="triangle"),
                 texture=ambiance.pattern,
                 double_sided=True,
+                parent=self,
             )
