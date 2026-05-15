@@ -11,4 +11,4 @@ class BaseView(Entity):
         pass
 
     def on_exit(self) -> None:
-        self.destroy()
+        pass
