@@ -3,8 +3,6 @@ hightscore a cote dans le main menu ?
 faut mettre du son en sah
 Pouvoir selectionner une difficulte (easy, normal, hard etc)
 
-le game doit etre une view
-
 Dans les parametres avant le jeu on doit aussi pouvoir choisir le player quon veut ainsi que les ghosts (Il faudra les representer par des gif), choisir lambiance quon veut (default (le niveau en json), ou un precise), Si on laisse les animations des models, le song des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir) avec des sections pour le song, le visuel, les commandes.
 
 ghost 4 est un oeil avec des anneaux qui tournent autour, actuellement aucun anneau ne tourne et la texture de loeil est cassee, en revanche ce qui englobe loeil bouge et la texture du coutour ainsi que des anneaux fonctionne (cest la meme). Jai ces infos a lexecution:

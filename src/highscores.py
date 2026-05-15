@@ -57,3 +57,27 @@ class Highscores:
         except Exception as e:
             print(f"Unexpected error loading scores: {e}")
             return highscores
+
+    def add_score(self, player_name: str, score: int) -> str:
+        current_scores = self.get_top_scores()
+
+        current_scores.append((player_name, score))
+        data_to_save: list[dict[str, int]] = []
+        for name, score in current_scores:
+            data_to_save.append({"name": name, "score": score})
+        try:
+            with open(
+                self.gcf.highscore_filename, "w", encoding="utf-8"
+            ) as file:
+                json.dump(data_to_save, file, indent=4)
+            return f"Score added for {player_name}"
+        except PermissionError:
+            return (
+                "Error: no permission to write "
+                f"on file {self.gcf.highscore_filename}"
+            )
+        except OSError:
+            return (
+                "Error: can't write to this file  "
+                f"on file {self.gcf.highscore_filename}"
+            )
