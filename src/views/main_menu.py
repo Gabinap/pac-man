@@ -25,7 +25,7 @@ class MainMenuView(BaseView):
         self.scores_manager = scores_manager
 
         self.title = Text(
-            "PAC-MAN",
+            "PAK-MAN",
             origin=(0, 0),
             y=0.3,
             scale=4,

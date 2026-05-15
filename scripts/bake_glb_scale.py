@@ -54,7 +54,7 @@ def _read_glb(path: Path) -> tuple[dict, bytes]:
     bin_bytes: bytes = b""
     while off < total:
         clen, ctype = struct.unpack_from("<II", raw, off)
-        body = raw[off + 8 : off + 8 + clen]
+        body = raw[off + 8: off + 8 + clen]
         if ctype == CHUNK_JSON:
             json_bytes = body
         elif ctype == CHUNK_BIN:
