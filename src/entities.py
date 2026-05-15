@@ -11,7 +11,7 @@ from enum import Enum, auto
 from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
-from panda3d.core import MaterialAttrib
+from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
 from ursina import Entity, application, held_keys
 from ursina import time as _ursina_time
 
@@ -303,16 +303,49 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
         )
         super().__init__(
             model=f"assets/{spec.path}",
+            position=(world_x, spec.hover_y, world_z),
             scale=spec.scale * self.SCALE_MULTIPLIER,
             rotation_x=spec.rotation_x,
-            position=(world_x, spec.hover_y, world_z),
         )
         self.spec = spec
         self.grid_x = grid_x
         self.grid_y = grid_y
         self.points = points
         self.is_super = False
+        self._fix_materials()
         self._recenter_model()
+
+    def _fix_materials(self) -> None:
+        """Two PBR quirks Panda3D's default rendering doesn't handle for us:
+
+        1. `metallic > 0` washes the model out to white under the non-PBR
+           pipeline — force metallic to 0 on every material.
+        2. Materials that only carry a `baseColorFactor` (no texture, e.g.
+           the inflatable buoy, energy cell) render as plain white because
+           Panda3D shows `diffuse`, not `base_color`. For each geom without
+           a texture, copy `base_color` onto a flat `ColorAttrib` so the
+           color factor actually shows up.
+        """
+        model: Any = self.model
+        if not model:
+            return
+        for geom_np in model.find_all_matches("**/+GeomNode"):
+            gn = geom_np.node()
+            for i in range(gn.get_num_geoms()):
+                state = gn.get_geom_state(i)
+                ma = state.get_attrib(MaterialAttrib)
+                if not ma or not ma.get_material():
+                    continue
+                mat = ma.get_material()
+                mat.set_metallic(0.0)
+
+                ta = state.get_attrib(TextureAttrib)
+                if ta is None or ta.get_num_on_stages() == 0:
+                    base = mat.get_base_color()
+                    new_state = state.set_attrib(
+                        ColorAttrib.make_flat(base)
+                    )
+                    gn.set_geom_state(i, new_state)
 
     def _recenter_model(self) -> None:
         """Shift the loaded mesh so its visual center sits on the entity's
@@ -320,13 +353,14 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
         origin trace a circle when we rotate around Y (orbit) instead of
         spinning in place.
         """
-        if not self.model:
+        model: Any = self.model
+        if not model:
             return
-        bounds = self.model.getTightBounds()
+        bounds = model.get_tight_bounds()
         if bounds is None:
             return
         mins, maxs = bounds
-        self.model.setPos(
+        model.set_pos(
             -(mins.x + maxs.x) * 0.5,
             -(mins.y + maxs.y) * 0.5,
             -(mins.z + maxs.z) * 0.5,
