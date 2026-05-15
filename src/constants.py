@@ -84,8 +84,8 @@ class ModelSpec(NamedTuple):
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
 _CROCKIE = ModelSpec(
     path="models/crockie_vgdc.glb",
-    scale=0.3,
-    rotation_x=180,
+    scale=0.006,
+    rotation_x=90,
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
@@ -146,7 +146,6 @@ _SKULL_CRAWLER = ModelSpec(
     anim_attack=0,
     attack_scale=0.9,
     anim_idle_rate=2,
-    supported=False
 )
 
 # Animations: ['Swim']
@@ -180,7 +179,7 @@ _CALIBUR = ModelSpec(
 # 'skeleton-skeleton|taunt']
 _ARTOON_SKELETON = ModelSpec(
     path="models/artoon_skeleton.glb",
-    scale=1.0,
+    scale=0.85,
     rotation_x=90,
     anim_idle=1,  # idle
     anim_walk=2,  # run
