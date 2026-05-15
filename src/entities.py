@@ -60,6 +60,7 @@ class AnimatedEntity(Entity):
         self.rotation_x = spec.rotation_x
         self.y = spec.spawn_y
         self._anims = sorted(self.actor.get_anim_names())
+        self._current_anim: str | None = None
         self.idle()
 
         self.maze = maze
@@ -137,6 +138,9 @@ class AnimatedEntity(Entity):
                         ma.get_material().set_metallic(0.0)
 
     def _play_on_all(self, anim: str, rate: float) -> None:
+        if self._current_anim == anim:
+            return
+        self._current_anim = anim
         for actor in self._actors:
             if anim in actor.get_anim_names():
                 actor.set_play_rate(rate, anim)
@@ -174,22 +178,33 @@ class Player(AnimatedEntity):
         self.health = gcf.lives
         self.state = PlayerState.NORMAL
         print("player lives:", self.health)
-        self.walk()
 
     def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL
 
     def update(self) -> None:
-        self.update_grid_position()
+        moving = False
 
         if held_keys["w"] or held_keys["up arrow"]:
             self.move_in_direction(0, -1)
+            moving = True
         elif held_keys["s"] or held_keys["down arrow"]:
             self.move_in_direction(0, 1)
+            moving = True
         elif held_keys["a"] or held_keys["left arrow"]:
             self.move_in_direction(-1, 0)
+            moving = True
         elif held_keys["d"] or held_keys["right arrow"]:
             self.move_in_direction(1, 0)
+            moving = True
+
+        if moving:
+            self.walk()
+        else:
+            self.grid_direction = (0, 0)
+            self.idle()
+
+        self.update_grid_position()
 
 
 class Ghost(AnimatedEntity):
@@ -229,10 +244,9 @@ class Ghost(AnimatedEntity):
         best_dir = self.grid_direction
         min_dist = float("inf")
         for dx, dy in possible_paths:
-            dist = (
-                (self.pos_gridx + dx - target_x) ** 2
-                + (self.pos_gridy + dy - target_y) ** 2
-            )
+            dist = (self.pos_gridx + dx - target_x) ** 2 + (
+                self.pos_gridy + dy - target_y
+            ) ** 2
             if dist < min_dist:
                 min_dist = dist
                 best_dir = (dx, dy)
