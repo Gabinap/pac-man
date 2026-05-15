@@ -174,7 +174,7 @@ class Player(AnimatedEntity):
         self, maze: "Maze", gcf: GameConfig, game_state: C.EGameState
     ) -> None:
         super().__init__(
-            spec=C.MODEL_SPECS[9], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.gcf = gcf
