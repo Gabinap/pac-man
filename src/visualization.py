@@ -61,7 +61,7 @@ class GameRender(Entity):
         self._register_views()
 
         self._init_game()
-        self.switch_view(C.EGameView.GAME_OVER)
+        self.switch_view(C.EGameView.MENU)
 
     def _register_views(self) -> None:
         self._views[C.EGameView.MENU] = MainMenuView(
