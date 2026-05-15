@@ -18,6 +18,7 @@ class GameOverView(BaseView):
         self.register_callback = register_callback
         self.menu_callback = menu_callback
         self.replay_callback = replay_callback
+        self.has_submitted = False
 
         self.title = Text(
             "GAME OVER",
@@ -38,6 +39,7 @@ class GameOverView(BaseView):
             color=color.white,
             z=-1,
             ignore_paused=True,
+            active=self.has_submitted,
         )
 
         self.name_input = InputField(
@@ -99,9 +101,12 @@ class GameOverView(BaseView):
         self.name_input.text = ""
         self.input_error.text = ""
         self.selected_index = 0
+        self.has_submitted = False
         self.update_highlight()
 
     def _on_register(self) -> None:
+        if self.has_submitted:
+            return
         player_name = self.name_input.text.strip()
         if not player_name:
             self.input_error.text = "Please enter a name!"
@@ -110,6 +115,7 @@ class GameOverView(BaseView):
             self.register_callback(player_name)
             self.input_error.text = f"Score saved for {player_name}"
             self.input_error.color = color.green
+            self.has_submitted = True
 
     def update_highlight(self) -> None:
         self.name_input.color = color.black
@@ -148,5 +154,5 @@ class GameOverView(BaseView):
             elif hasattr(current, "on_click") and current.on_click:
                 current.on_click()
 
-        elif key in ("escape", "q"):
+        elif key in ("escape"):
             application.quit()
