@@ -85,14 +85,12 @@ class ModelSpec(NamedTuple):
 _CROCKIE = ModelSpec(
     path="models/crockie_vgdc.glb",
     scale=0.3,
-    rotation_x=90,
+    rotation_x=180,
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
     attack_scale=0.4,
-    supported=False
 )
-
 
 # Animations: ['Moving Idle', 'Tail Swipe']
 _GROBBO = ModelSpec(
@@ -147,7 +145,8 @@ _SKULL_CRAWLER = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    anim_idle_rate=3,
+    anim_idle_rate=2,
+    supported=False
 )
 
 # Animations: ['Swim']
