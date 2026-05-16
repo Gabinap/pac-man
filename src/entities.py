@@ -167,21 +167,42 @@ class AnimatedEntity(Entity):
         anim = self._anims[_pick_anim(self.spec.anim_walk)]
         self._play_on_all(anim, self.spec.anim_walk_rate)
 
-    def _finish_oneshot(self) -> None:
+    def _finish_oneshot(self, for_idle: bool = True) -> None:
         self._oneshot_seq = None
-        self.idle()
+        for actor in self._actors:
+            actor.stop()
+        self._current_anim = None
+        if for_idle:
+            self.idle()
+        else:
+            self.walk()
 
     def attack(self) -> None:
         if self._oneshot_seq:
             self._oneshot_seq.pause()
         anim = self._anims[_pick_anim(self.spec.anim_attack)]
-        self._play_on_all(anim, self.spec.anim_attack_rate, loop=False)
-        self.animate_scale(self.spec.attack_scale, 0.15)
-        invoke(lambda: self.animate_scale(self.spec.scale, 0.15), delay=0.01)
         raw = self.actor.get_duration(anim)
         rate = self.spec.anim_attack_rate
         duration = (raw if raw is not None else 1.0) / rate
-        self._oneshot_seq = invoke(self._finish_oneshot, delay=duration)
+        half = duration / 2
+        for actor in self._actors:
+            actor.stop()
+        self._current_anim = None
+        self._play_on_all(anim, rate, loop=False)
+        scale_up: Any = self.animate_scale(self.spec.attack_scale, half / 2)
+        scale_up.ignore_paused = True
+        invoke(
+            self._restore_scale, half * 2,
+            delay=half / 2, ignore_paused=True,
+        )
+        self._oneshot_seq = invoke(
+            self._finish_oneshot, for_idle=False,
+            delay=duration, ignore_paused=True
+        )
+
+    def _restore_scale(self, duration: float) -> None:
+        seq: Any = self.animate_scale(self.spec.scale, duration)
+        seq.ignore_paused = True
 
     def update(self) -> None:
         if self.game_state != C.EGameState.RUNNING:
@@ -193,7 +214,7 @@ class AnimatedEntity(Entity):
 class PlayerState(Enum):
     NORMAL = auto()
     UNTOUCHABLE = auto()
-    EMPOWERED = auto()  # after eating a super-pacgum: can hunt ghosts
+    EMPOWERED = auto()
 
 
 class Player(AnimatedEntity):

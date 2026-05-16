@@ -53,8 +53,8 @@ class Ambiance(NamedTuple):
 # --- Config validation bounds ---
 DEFAULT_HIGHSCORE_FILE: str = "data/highscores.json"
 MIN_LIVES: int = 1
-MAX_LIVES: int = 9
-MIN_POINTS: int = 0
+MAX_LIVES: int = 19
+MIN_POINTS: int = 1
 MIN_LEVEL_DIM: int = 5
 MAX_LEVEL_DIM: int = 19
 DEFAULT_LEVEL_WIDTH: int = 11
@@ -99,11 +99,12 @@ class ModelSpec(NamedTuple):
 _CROCKIE = ModelSpec(
     path="models/crockie_vgdc.glb",
     scale=0.006,
+    attack_scale=0.0018,
     rotation_x=90,
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
-    attack_scale=0.4,
+    supported=False
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
@@ -117,7 +118,8 @@ _GROBBO = ModelSpec(
     attack_scale=0.0011,
     anim_idle_rate=0.05,
     anim_walk_rate=0.6,
-    anim_attack_rate=1.0,
+    anim_attack_rate=4.0,
+    supported=False
 )
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
@@ -133,6 +135,7 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_idle_rate=0.5,
     anim_walk_rate=1,
     anim_attack_rate=2.0,
+    supported=False
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -144,7 +147,9 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
-    attack_scale=0.9,
+    attack_scale=0.28,
+    anim_attack_rate=5,
+    supported=False
 )
 
 # Animations: ['ArmatureArmatureAction']
@@ -155,8 +160,10 @@ _SKULL_CRAWLER = ModelSpec(
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
-    attack_scale=0.9,
-    anim_idle_rate=2,
+    attack_scale=0.12,
+    anim_idle_rate=0.5,
+    anim_attack_rate=3,
+    supported=False
 )
 
 # Animations: ['Swim']
@@ -168,7 +175,10 @@ _TUNA_FISH = ModelSpec(
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
-    attack_scale=0.9,
+    attack_scale=0.3,
+    anim_idle_rate=0.5,
+    anim_attack_rate=2,
+    supported=False
 )
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
@@ -176,11 +186,12 @@ _TUNA_FISH = ModelSpec(
 # 'Stun_Super', 'Taunt', 'Walk']
 _CALIBUR = ModelSpec(
     path="models/calibur_vgdc.glb",
-    scale=0.4,
+    scale=0.35,
     rotation_x=90,
     anim_idle=7,  # Idle
     anim_walk=11,  # Walk
-    anim_attack=(0, 1, 2, 3, 4),  # Attack1/Jump/Stabs/Stomp/TripleCombo
+    anim_attack=(0, 2),  # Attack1/Jump/Stabs/
+    attack_scale=0.35
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',

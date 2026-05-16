@@ -7,7 +7,7 @@
     "highscore_filename": "data/highscores.json",
 
     # Number of lives the player starts with — must be between 1 and 9
-    "lives": 1,
+    "lives": 19,
 
     // Points awarded for eating a regular pacgum (small dot)
     "points_per_pacgum": 10,
@@ -29,9 +29,13 @@
     # Optional "ambiance" key sets the visual theme; omit for a random pick each run.
     # Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
     "levels": [
+        {"width": 5, "height": 5},
         {"width": 11, "height": 11, "difficulty": "medium", "lives": 9},
-        {"width": 11, "height": 11, "ambiance": "forest", "difficulty": "medium"},
-        {"width": 15, "height": 15, "difficulty": "medium"}
+        {"width": 11, "height": 11},
+        {"width": 15, "height": 15, "difficulty": "medium"},
+        {"width": 11, "height": 11},
+        {"width": 11, "height": 11},
+        {"width": 11, "height": 11}
     ]
 
 }
