@@ -20,6 +20,7 @@ from ursina import (
     application,
     destroy,
     invoke,
+    Text,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
@@ -56,7 +57,10 @@ class GameRender(Entity):
         self.game_state = C.EGameState.NOT_STARTED
         self._difficulty = C.EDifficulty.MEDIUM
         self.scores_manager = Highscores(self.config)
-        self.score = 0
+        self._score = 0
+        self._score_text_entity = Text(
+            str(self.score), origin=(0, 0), position=(0, 0.45), scale=2
+        )
 
         self.maze: Maze | None = None
         self._player: Player | None = None
@@ -90,7 +94,7 @@ class GameRender(Entity):
         )
         self._views[C.EGameView.GAME_OVER] = GameOverView(
             scores_manager=self.scores_manager,
-            score_callback=self.get_score,
+            score_callback=lambda: self.score,
             menu_callback=lambda: self.switch_view(C.EGameView.MENU),
             replay_callback=self.start_game,
         )
@@ -136,21 +140,28 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
-        self.score = 0
         self.maze = Maze(level=level, seed=self.config.seed, ambiance=ambiance)
         self._set_topdown()
-
         self._player = Player(self.maze, self.config, self.game_state)
         self._ghost_controller = GhostController(
             self._player, self.maze, self.game_state
         )
         self._pacgum_controller = PacgumController(
-            self._player, self.maze, ambiance, self.config, self._add_score
+            self._player, self.maze, ambiance, self.config, self.add_score
         )
 
         self._game_initialized = True
 
-    def _add_score(self, points: int) -> None:
+    @property
+    def score(self) -> int:
+        return self._score
+
+    @score.setter
+    def score(self, value: int) -> None:
+        self._score = value
+        self._score_text_entity.text = str(self._score)
+
+    def add_score(self, points: int) -> None:
         self.score += points
 
     def _setup_barrel(self) -> None:
@@ -230,9 +241,6 @@ class GameRender(Entity):
         view.enable()
         view.on_enter()
 
-    def get_score(self) -> int:
-        return self.score
-
     def _shake_screen(
         self, mag: float = 0.3, dur: float = 0.25, period: float = 0.03
     ) -> None:
@@ -287,6 +295,7 @@ class GameRender(Entity):
                 self._ghost_controller.game_state = self.game_state
                 self.switch_view(C.EGameView.GAME_OVER)
                 return
+
             self._ghost_controller.update_ghosts()
             if self._pacgum_controller:
                 self._pacgum_controller.update()
