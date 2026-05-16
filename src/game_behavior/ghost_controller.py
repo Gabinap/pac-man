@@ -109,7 +109,7 @@ class GhostController:
         print(f"Collided! Remaining lives: {self.player.health}")
         self.player.state = PlayerState.UNTOUCHABLE
         invoke(
-            self.player._reseplayer_state,
+            self.player._reset_player_state,
             delay=C.PLAYER_INVINCIBILITY_DURATION,
         )
 
