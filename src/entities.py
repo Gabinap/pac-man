@@ -107,9 +107,12 @@ class AnimatedEntity(Entity):
             self.animate_rotation_y(self.rotation_y + delta, duration)
 
     def update_grid_position(self) -> None:
-        self.pos_gridx, self.pos_gridy = world_to_grid(
+        raw_x, raw_y = world_to_grid(
             self.x, self.z, self.maze.width, self.maze.height
         )
+
+        self.pos_gridx = max(0, min(raw_x, self.maze.width - 1))
+        self.pos_gridy = max(0, min(raw_y, self.maze.height - 1))
 
     def move_in_direction(self, dir_x: int, dir_y: int) -> None:
         if dir_x == 0 and dir_y == 0:
@@ -415,9 +418,7 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
                 ta = state.get_attrib(TextureAttrib)
                 if ta is None or ta.get_num_on_stages() == 0:
                     base = mat.get_base_color()
-                    new_state = state.set_attrib(
-                        ColorAttrib.make_flat(base)
-                    )
+                    new_state = state.set_attrib(ColorAttrib.make_flat(base))
                     gn.set_geom_state(i, new_state)
 
     def _recenter_model(self) -> None:
