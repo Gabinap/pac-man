@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
-from ursina import Entity, application, held_keys, invoke
+from ursina import Entity, application, held_keys, invoke, Text
 from ursina import time as _ursina_time
 
 import src.constants as C
@@ -107,9 +107,12 @@ class AnimatedEntity(Entity):
             self.animate_rotation_y(self.rotation_y + delta, duration)
 
     def update_grid_position(self) -> None:
-        self.pos_gridx, self.pos_gridy = world_to_grid(
+        raw_x, raw_y = world_to_grid(
             self.x, self.z, self.maze.width, self.maze.height
         )
+
+        self.pos_gridx = max(0, min(raw_x, self.maze.width - 1))
+        self.pos_gridy = max(0, min(raw_y, self.maze.height - 1))
 
     def move_in_direction(self, dir_x: int, dir_y: int) -> None:
         if dir_x == 0 and dir_y == 0:
@@ -223,19 +226,33 @@ class Player(AnimatedEntity):
     _TAUNT_CHANCE = 1 / 3
 
     def __init__(
-        self, maze: "Maze", config: GameConfig, game_state: C.EGameState
+        self,
+        maze: "Maze",
+        config: GameConfig,
+        game_state: C.EGameState,
+        health_text_entity: Text,
     ) -> None:
         super().__init__(
             spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.config = config
-        self.health = config.lives
+        self._health = config.lives
+        self.health_text_entity = health_text_entity
+        self.health_text_entity.text = f"lives: {self.health}"
         self.state = PlayerState.NORMAL
-        print("player lives:", self.health)
         self.spawn()
         if self._TAUNT_ANIM in self.actor.get_anim_names():
             invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
+
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value) -> None:
+        self._health = value
+        self.health_text_entity.text = f"lives: {self.health}"
 
     def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL
@@ -436,9 +453,7 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
                 ta = state.get_attrib(TextureAttrib)
                 if ta is None or ta.get_num_on_stages() == 0:
                     base = mat.get_base_color()
-                    new_state = state.set_attrib(
-                        ColorAttrib.make_flat(base)
-                    )
+                    new_state = state.set_attrib(ColorAttrib.make_flat(base))
                     gn.set_geom_state(i, new_state)
 
     def _recenter_model(self) -> None:
