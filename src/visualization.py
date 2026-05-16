@@ -36,6 +36,7 @@ from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController
 from src.game_behavior.pacgum_controller import PacgumController
 from src.highscores import Highscores
+from src.timer import Timer
 
 
 class GameRender(Entity):
@@ -62,6 +63,7 @@ class GameRender(Entity):
             f"Score: {self._score}", origin=(0, 0), position=(0, 0.45), scale=2
         )
 
+        self._timer: Timer | None = None
         self.maze: Maze | None = None
         self._player: Player | None = None
         self._health_text_entity = Text(
@@ -116,6 +118,9 @@ class GameRender(Entity):
 
         self.game_state = C.EGameState.RUNNING
 
+        if self._timer:
+            self._timer.launch_timer()
+
         if self._player:
             self._player.game_state = self.game_state
         if self._ghost_controller:
@@ -127,6 +132,8 @@ class GameRender(Entity):
         if not self._game_initialized:
             return
 
+        if self._timer:
+            self._timer.destroy_timer()
         if self.maze:
             destroy(self.maze)
         if self._player:
@@ -147,6 +154,7 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
+        self._timer = Timer(90)
         self.maze = Maze(level=level, seed=self.config.seed, ambiance=ambiance)
         self._set_topdown()
         self._player = Player(
