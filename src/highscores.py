@@ -1,16 +1,20 @@
+"""Read/write the JSON highscores file declared in the game config."""
+
 import json
 
 from src.game_config import GameConfig
 
 
 class Highscores:
-    def __init__(self, gcf: GameConfig) -> None:
-        self.gcf = gcf
+    """Load, sort and persist player highscores from a JSON file."""
+
+    def __init__(self, config: GameConfig) -> None:
+        self.config = config
 
     def get_top_scores(self) -> list[tuple[str, int]]:
         highscores: list[tuple[str, int]] = []
         try:
-            with open(self.gcf.highscore_filename, "r") as file:
+            with open(self.config.highscore_filename, "r") as file:
                 parsed_json = json.load(file)
 
                 if isinstance(parsed_json, list):
@@ -46,7 +50,7 @@ class Highscores:
 
         except FileNotFoundError:
             print(
-                f"Info: '{self.gcf.highscore_filename}' not found. "
+                f"Info: '{self.config.highscore_filename}' not found. "
                 "Starting fresh."
             )
             return highscores
@@ -67,17 +71,17 @@ class Highscores:
             data_to_save.append({"name": name, "score": score})
         try:
             with open(
-                self.gcf.highscore_filename, "w", encoding="utf-8"
+                self.config.highscore_filename, "w", encoding="utf-8"
             ) as file:
                 json.dump(data_to_save, file, indent=4)
             return f"Score added for {player_name}"
         except PermissionError:
             return (
                 "Error: no permission to write "
-                f"on file {self.gcf.highscore_filename}"
+                f"on file {self.config.highscore_filename}"
             )
         except OSError:
             return (
                 "Error: can't write to this file  "
-                f"on file {self.gcf.highscore_filename}"
+                f"on file {self.config.highscore_filename}"
             )

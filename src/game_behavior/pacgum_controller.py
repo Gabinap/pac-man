@@ -21,17 +21,19 @@ _PICKUP_DISTANCE: float = 0.5
 
 
 class PacgumController:
+    """Spawn pacgums/super-pacgums and award points on player pickup."""
+
     def __init__(
         self,
         player: Player,
         maze: Maze,
         ambiance: C.Ambiance,
-        gcf: GameConfig,
+        config: GameConfig,
         on_score: Callable[[int], None],
     ) -> None:
         self.player = player
         self.maze = maze
-        self.gcf = gcf
+        self.config = config
         self.on_score = on_score
         self.pacgums: list[Pacgum] = []
         self._w, self._h = self.maze.width, self.maze.height
@@ -74,7 +76,7 @@ class PacgumController:
         return chosen
 
     def _spawn(self, ambiance: C.Ambiance) -> None:
-        rng = random.Random(self.gcf.seed)
+        rng = random.Random(self.config.seed)
         regular_cells = self._open_cells()
         # _super_positions falls back to any non-wall cell; build the full
         # open set (without the candidate filter) for that lookup.
@@ -96,7 +98,7 @@ class PacgumController:
                     grid_x=gx,
                     grid_y=gy,
                     maze=self.maze,
-                    points=self.gcf.points_per_super_pacgum,
+                    points=self.config.points_per_super_pacgum,
                 )
             )
 
@@ -110,14 +112,14 @@ class PacgumController:
                     grid_x=gx,
                     grid_y=gy,
                     maze=self.maze,
-                    points=self.gcf.points_per_pacgum,
+                    points=self.config.points_per_pacgum,
                 )
             )
 
     def _picked_up(self, pacgum: Pacgum) -> bool:
         dx = abs(self.player.x - pacgum.x)
         dz = abs(self.player.z - pacgum.z)
-        return (dx + dz) < _PICKUP_DISTANCE
+        return bool((dx + dz) < _PICKUP_DISTANCE)
 
     def update(self) -> None:
         remaining: list[Pacgum] = []

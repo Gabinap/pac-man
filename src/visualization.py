@@ -1,3 +1,9 @@
+"""Ursina runtime: window, camera, views, and per-frame game loop.
+
+Owns the lifecycle of the player, ghosts, maze, and pacgums, and routes
+input/state changes to the right subsystem.
+"""
+
 from typing import Any
 import random
 
@@ -13,6 +19,7 @@ from ursina import (
     time,
     application,
     destroy,
+    invoke,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
@@ -31,21 +38,24 @@ from src.highscores import Highscores
 
 
 class GameRender(Entity):
-    def __init__(self, gcf: GameConfig) -> None:
+    """Owns the Ursina app, the active view, and the in-game entities."""
+
+    def __init__(self, config: GameConfig) -> None:
         self.app: Any = Ursina(development_mode=True)
         super().__init__()
-        self.gcf = gcf
+        self.config = config
 
         self._fps_mode = False
         self._fps_ctrl: Any = None
         self._barrel_quad: Any = None
         self._manager: Any = None
         self._barrel_strength: float = 0.2
+        self._shake_active: bool = False
 
         self._game_initialized = False
         self.game_state = C.EGameState.NOT_STARTED
         self._difficulty = C.EDifficulty.MEDIUM
-        self.scores_manager = Highscores(self.gcf)
+        self.scores_manager = Highscores(self.config)
         self.score = 0
 
         self.maze: Maze | None = None
@@ -67,7 +77,7 @@ class GameRender(Entity):
 
     def _register_views(self) -> None:
         self._views[C.EGameView.MENU] = MainMenuView(
-            self.gcf,
+            self.config,
             self.scores_manager,
             self._difficulty,
             start_game=self.start_game,
@@ -120,22 +130,22 @@ class GameRender(Entity):
 
     def _init_game(self) -> None:
         window.color = color.rgb(0, 0.2, 0)
-        level = self.gcf.levels[0]
+        level = self.config.levels[0]
         ambiance = (
             C.AMBIANCES[level.ambiance]
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
         self.score = 0
-        self.maze = Maze(level=level, seed=self.gcf.seed, ambiance=ambiance)
+        self.maze = Maze(level=level, seed=self.config.seed, ambiance=ambiance)
         self._set_topdown()
 
-        self._player = Player(self.maze, self.gcf, self.game_state)
+        self._player = Player(self.maze, self.config, self.game_state)
         self._ghost_controller = GhostController(
             self._player, self.maze, self.game_state
         )
         self._pacgum_controller = PacgumController(
-            self._player, self.maze, ambiance, self.gcf, self._add_score
+            self._player, self.maze, ambiance, self.config, self._add_score
         )
 
         self._game_initialized = True
@@ -174,7 +184,8 @@ class GameRender(Entity):
             self._fps_ctrl.enabled = False
 
         camera.parent = scene
-        y = max(self.gcf.levels[0].width, self.gcf.levels[0].height) * 0.6
+        lvl = self.config.levels[0]
+        y = max(lvl.width, lvl.height) * 0.6
         camera.position = (0, y * 1.25, -y * 0.30)
         camera.rotation_x = 80
         camera.rotation_y = 0
@@ -221,6 +232,39 @@ class GameRender(Entity):
 
     def get_score(self) -> int:
         return self.score
+
+    def _shake_screen(
+        self, mag: float = 0.3, dur: float = 0.25, period: float = 0.03
+    ) -> None:
+        # Top-down camera looks down the Y axis, so shake X/Z (horizontal
+        # plane) for a 2D screen-space jitter. Y would change "altitude"
+        # and read as zoom, not shake.
+        if self._shake_active:
+            return
+        self._shake_active = True
+        base_x, base_z = camera.x, camera.z
+        elapsed = [0.0]
+
+        def step() -> None:
+            elapsed[0] += period
+            if elapsed[0] >= dur:
+                camera.x, camera.z = base_x, base_z
+                self._shake_active = False
+                return
+            decay = 1 - elapsed[0] / dur
+            camera.x = base_x + random.uniform(-mag, mag) * decay
+            camera.z = base_z + random.uniform(-mag, mag) * decay
+            invoke(step, delay=period)
+
+        step()
+
+    def input(self, key: str) -> None:
+        if (
+            key == "left mouse down"
+            and self.game_state == C.EGameState.NOT_STARTED
+            and not self._fps_mode
+        ):
+            self._shake_screen()
 
     def update(self) -> None:
         if self._fps_mode and self._fps_ctrl:

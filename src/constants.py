@@ -118,7 +118,6 @@ _GROBBO = ModelSpec(
     anim_idle_rate=0.05,
     anim_walk_rate=0.6,
     anim_attack_rate=1.0,
-    supported=False
 )
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
@@ -134,7 +133,6 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_idle_rate=0.5,
     anim_walk_rate=1,
     anim_attack_rate=2.0,
-    supported=False
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -147,7 +145,6 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
 )
 
 # Animations: ['ArmatureArmatureAction']
@@ -172,7 +169,6 @@ _TUNA_FISH = ModelSpec(
     anim_walk=0,
     anim_attack=0,
     attack_scale=0.9,
-    supported=False
 )
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
@@ -185,7 +181,6 @@ _CALIBUR = ModelSpec(
     anim_idle=7,  # Idle
     anim_walk=11,  # Walk
     anim_attack=(0, 1, 2, 3, 4),  # Attack1/Jump/Stabs/Stomp/TripleCombo
-    supported=False
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',

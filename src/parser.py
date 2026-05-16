@@ -142,44 +142,44 @@ def load_config(path: str) -> GameConfig:
         print(f"Error: '{path}' must contain a JSON object at the top level")
         sys.exit(1)
 
-    gcf = GameConfig()
+    config = GameConfig()
 
     if "highscore_filename" in data:
         value = data["highscore_filename"]
         if isinstance(value, str) and value.strip():
-            gcf.highscore_filename = value.strip()
+            config.highscore_filename = value.strip()
         else:
             print(
                 f"Warning: 'highscore_filename' is invalid"
-                f" — using default '{gcf.highscore_filename}'"
+                f" — using default '{config.highscore_filename}'"
             )
 
-    gcf.lives = _clamp_int(
-        data.get("lives", gcf.lives),
-        "lives", gcf.lives, C.MIN_LIVES, C.MAX_LIVES
+    config.lives = _clamp_int(
+        data.get("lives", config.lives),
+        "lives", config.lives, C.MIN_LIVES, C.MAX_LIVES
     )
-    gcf.points_per_pacgum = _clamp_int(
-        data.get("points_per_pacgum", gcf.points_per_pacgum),
+    config.points_per_pacgum = _clamp_int(
+        data.get("points_per_pacgum", config.points_per_pacgum),
         "points_per_pacgum",
-        gcf.points_per_pacgum,
+        config.points_per_pacgum,
     )
-    gcf.points_per_super_pacgum = _clamp_int(
-        data.get("points_per_super_pacgum", gcf.points_per_super_pacgum),
+    config.points_per_super_pacgum = _clamp_int(
+        data.get("points_per_super_pacgum", config.points_per_super_pacgum),
         "points_per_super_pacgum",
-        gcf.points_per_super_pacgum,
+        config.points_per_super_pacgum,
     )
-    gcf.points_per_ghost = _clamp_int(
-        data.get("points_per_ghost", gcf.points_per_ghost),
+    config.points_per_ghost = _clamp_int(
+        data.get("points_per_ghost", config.points_per_ghost),
         "points_per_ghost",
-        gcf.points_per_ghost,
+        config.points_per_ghost,
     )
-    gcf.seed = _clamp_int(
-        data.get("seed", gcf.seed), "seed", gcf.seed, min_val=None
+    config.seed = _clamp_int(
+        data.get("seed", config.seed), "seed", config.seed, min_val=None
     )
-    gcf.level_max_time = _clamp_int(
-        data.get("level_max_time", gcf.level_max_time),
+    config.level_max_time = _clamp_int(
+        data.get("level_max_time", config.level_max_time),
         "level_max_time",
-        gcf.level_max_time,
+        config.level_max_time,
     )
 
     if "levels" in data:
@@ -190,8 +190,8 @@ def load_config(path: str) -> GameConfig:
                 " — using default single level"
             )
         else:
-            gcf.levels = [
+            config.levels = [
                 _parse_level(lvl, i) for i, lvl in enumerate(raw_levels)
             ]
 
-    return gcf
+    return config

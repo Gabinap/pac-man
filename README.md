@@ -5,10 +5,11 @@
 
 - deja definir les super pouvoirs des superpacgum
 - comment faire pour le cheatmod
+- pouvoir choisir le player dans un menu
+- timer
 
 - meilleure routine des ghosts
 - pouvoir mettre jusqua 16 ghosts
-
 
 - implementer la vue fps avec la minimap et hud
 - faut mettre du son en sah
@@ -18,5 +19,7 @@
 # Gab space:
 - refaire le parsing pour inclure tout ce quil faut
 
-- faire que les ghosts utilisent lanimation dattaque quand on perd une vie.
-- le joueur doit utiliser idle sil ne bouge pas, doit spawn au debut, attaquer quand il tue un ghost et taunt quand static longtemps (1chance/3 si temps>5s).
+- une partie des models doivent etre refactorises au niveau de leurs attaques et idle
+
+# Ali space:
+- mets sque tu veux mon sang

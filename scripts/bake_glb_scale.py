@@ -36,6 +36,9 @@ import json
 import struct
 import sys
 from pathlib import Path
+from typing import Any
+
+Gltf = dict[str, Any]
 
 GLB_MAGIC = 0x46546C67
 CHUNK_JSON = 0x4E4F534A
@@ -44,7 +47,7 @@ CHUNK_BIN = 0x004E4942
 GLTF_FLOAT = 5126
 
 
-def _read_glb(path: Path) -> tuple[dict, bytes]:
+def _read_glb(path: Path) -> tuple[Gltf, bytes]:
     raw = path.read_bytes()
     magic, _version, total = struct.unpack_from("<III", raw, 0)
     if magic != GLB_MAGIC:
@@ -65,7 +68,7 @@ def _read_glb(path: Path) -> tuple[dict, bytes]:
     return json.loads(json_bytes), bin_bytes
 
 
-def _write_glb(path: Path, gltf: dict, bin_data: bytes) -> None:
+def _write_glb(path: Path, gltf: Gltf, bin_data: bytes) -> None:
     json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
     json_pad = (-len(json_bytes)) % 4
     json_bytes += b" " * json_pad
@@ -83,7 +86,7 @@ def _write_glb(path: Path, gltf: dict, bin_data: bytes) -> None:
 
 
 def _accessor_view(
-    gltf: dict, bin_data: bytearray, acc_idx: int
+    gltf: Gltf, bin_data: bytearray, acc_idx: int
 ) -> tuple[int, int, int, int]:
     """Return (offset_in_bin, count, components, elem_stride) for a float
     accessor. Components: VEC2=2, VEC3=3, VEC4=4, MAT4=16, SCALAR=1."""
@@ -109,7 +112,11 @@ def _accessor_view(
 
 
 def _read_floats(
-    bin_data: bytes, offset: int, count: int, components: int, stride: int
+    bin_data: bytes | bytearray,
+    offset: int,
+    count: int,
+    components: int,
+    stride: int,
 ) -> list[list[float]]:
     out: list[list[float]] = []
     for i in range(count):
@@ -130,14 +137,14 @@ def _write_floats(
         struct.pack_into(f"<{components}f", bin_data, p, *v)
 
 
-def _find_node_by_name(gltf: dict, name: str) -> int:
+def _find_node_by_name(gltf: Gltf, name: str) -> int:
     for i, n in enumerate(gltf["nodes"]):
         if n.get("name") == name:
             return i
     raise SystemExit(f"node '{name}' not found")
 
 
-def _collect_descendants(gltf: dict, root_idx: int) -> set[int]:
+def _collect_descendants(gltf: Gltf, root_idx: int) -> set[int]:
     """All node indices reachable from root_idx (excluding root_idx itself)."""
     out: set[int] = set()
     stack = list(gltf["nodes"][root_idx].get("children", []))
@@ -150,7 +157,7 @@ def _collect_descendants(gltf: dict, root_idx: int) -> set[int]:
     return out
 
 
-def _scale_node_translation(node: dict, s: float) -> None:
+def _scale_node_translation(node: Gltf, s: float) -> None:
     if "matrix" in node:
         m = node["matrix"]
         m[12] *= s
@@ -272,7 +279,7 @@ def bake(input_path: Path, node_name: str, output_path: Path) -> None:
 
 
 def _scale_position_accessor(
-    gltf: dict, bin_data: bytearray, acc_idx: int, s: float
+    gltf: Gltf, bin_data: bytearray, acc_idx: int, s: float
 ) -> None:
     off, n, comp, stride = _accessor_view(gltf, bin_data, acc_idx)
     assert comp == 3, f"POSITION accessor {acc_idx} not VEC3"

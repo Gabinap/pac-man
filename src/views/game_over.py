@@ -1,3 +1,5 @@
+"""Game-over screen: name input, score submission, replay/menu buttons."""
+
 from typing import Callable
 import string
 
@@ -7,6 +9,8 @@ from src.highscores import Highscores
 
 
 class GameOverView(BaseView):
+    """End-of-run screen letting the player register their score."""
+
     def __init__(
         self,
         scores_manager: Highscores,

@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
-from ursina import Entity, application, held_keys
+from ursina import Entity, application, held_keys, invoke
 from ursina import time as _ursina_time
 
 import src.constants as C
@@ -30,6 +30,14 @@ def _pick_anim(spec: int | tuple[int, ...]) -> int:
 
 
 class AnimatedEntity(Entity):
+    """Animated GLB entity with grid-aligned movement and one-shot anims.
+
+    Shared base for Player and Ghost: handles loading multi-skin GLBs,
+    idle/walk/attack animations, directional rotation, and the
+    `_oneshot_seq` mechanism used to play and return from one-shot anims
+    (spawn, attack, taunt).
+    """
+
     x: float
     y: float
     z: float
@@ -61,8 +69,9 @@ class AnimatedEntity(Entity):
         self.y = spec.spawn_y
         self._anims = sorted(self.actor.get_anim_names())
         self._current_anim: str | None = None
-        self.idle()
+        self._oneshot_seq: Any = None
 
+        self.game_state: C.EGameState = C.EGameState.NOT_STARTED
         self.maze = maze
         self.speed = speed
         self._grid_direction: tuple[int, int] = (0, 0)
@@ -70,6 +79,7 @@ class AnimatedEntity(Entity):
         self.pos_gridx: int
         self.pos_gridy: int
         self.update_grid_position()
+        self.idle()
 
     _DIR_TO_ROT_Y: dict[tuple[int, int], float] = {
         (1, 0): 270,
@@ -137,14 +147,17 @@ class AnimatedEntity(Entity):
                     if ma and ma.get_material():
                         ma.get_material().set_metallic(0.0)
 
-    def _play_on_all(self, anim: str, rate: float) -> None:
+    def _play_on_all(self, anim: str, rate: float, loop: bool = True) -> None:
         if self._current_anim == anim:
             return
         self._current_anim = anim
         for actor in self._actors:
             if anim in actor.get_anim_names():
                 actor.set_play_rate(rate, anim)
-                actor.loop(anim)
+                if loop:
+                    actor.loop(anim)
+                else:
+                    actor.play(anim)
 
     def idle(self) -> None:
         anim = self._anims[_pick_anim(self.spec.anim_idle)]
@@ -154,40 +167,96 @@ class AnimatedEntity(Entity):
         anim = self._anims[_pick_anim(self.spec.anim_walk)]
         self._play_on_all(anim, self.spec.anim_walk_rate)
 
+    def _finish_oneshot(self) -> None:
+        self._oneshot_seq = None
+        self.idle()
+
     def attack(self) -> None:
+        if self._oneshot_seq:
+            self._oneshot_seq.pause()
         anim = self._anims[_pick_anim(self.spec.anim_attack)]
-        self._play_on_all(anim, self.spec.anim_attack_rate)
+        self._play_on_all(anim, self.spec.anim_attack_rate, loop=False)
         self.animate_scale(self.spec.attack_scale, 0.15)
+        invoke(lambda: self.animate_scale(self.spec.scale, 0.15), delay=0.01)
+        raw = self.actor.get_duration(anim)
+        rate = self.spec.anim_attack_rate
+        duration = (raw if raw is not None else 1.0) / rate
+        self._oneshot_seq = invoke(self._finish_oneshot, delay=duration)
 
     def update(self) -> None:
-        pass
+        if self.game_state != C.EGameState.RUNNING:
+            if not self._oneshot_seq:
+                self.idle()
+            return
 
 
 class PlayerState(Enum):
     NORMAL = auto()
     UNTOUCHABLE = auto()
-    HUNT = auto()
+    EMPOWERED = auto()  # after eating a super-pacgum: can hunt ghosts
 
 
 class Player(AnimatedEntity):
+    _TAUNT_ANIM = "skeleton-skeleton|taunt"
+    _TAUNT_INTERVAL = 5.0
+    _TAUNT_CHANCE = 1 / 3
+
     def __init__(
-        self, maze: "Maze", gcf: GameConfig, game_state: C.EGameState
+        self, maze: "Maze", config: GameConfig, game_state: C.EGameState
     ) -> None:
         super().__init__(
             spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
-        self.gcf = gcf
-        self.health = gcf.lives
+        self.config = config
+        self.health = config.lives
         self.state = PlayerState.NORMAL
         print("player lives:", self.health)
+        self.spawn()
+        if self._TAUNT_ANIM in self.actor.get_anim_names():
+            invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
 
     def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL
 
+    def spawn(self) -> None:
+        spawn_anim = "skeleton-skeleton|spawn"
+        if spawn_anim in self.actor.get_anim_names():
+            if self._oneshot_seq:
+                self._oneshot_seq.pause()
+            rate = 0.12
+            self._play_on_all(spawn_anim, rate, loop=False)
+            raw = self.actor.get_duration(spawn_anim)
+            duration = raw if raw is not None else 1.0
+            self._oneshot_seq = invoke(
+                self._finish_oneshot, delay=duration / rate
+            )
+        else:
+            self.idle()
+
+    def _maybe_taunt(self) -> None:
+        idle_name = self._anims[_pick_anim(self.spec.anim_idle)]
+        is_truly_idle = (
+            self.game_state == C.EGameState.RUNNING
+            and self._oneshot_seq is None
+            and self._current_anim == idle_name
+        )
+        if is_truly_idle and random.random() < self._TAUNT_CHANCE:
+            self._play_taunt()
+        invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
+
+    def _play_taunt(self) -> None:
+        if self._oneshot_seq:
+            self._oneshot_seq.pause()
+        self._play_on_all(self._TAUNT_ANIM, 1.0, loop=False)
+        raw = self.actor.get_duration(self._TAUNT_ANIM)
+        duration = raw if raw is not None else 1.0
+        self._oneshot_seq = invoke(self._finish_oneshot, delay=duration)
+
     def update(self) -> None:
         if self.game_state != C.EGameState.RUNNING:
-            self.idle()
+            if not self._oneshot_seq:
+                self.idle()
             return
         moving = False
 
@@ -205,10 +274,14 @@ class Player(AnimatedEntity):
             moving = True
 
         if moving:
+            if self._oneshot_seq:
+                self._oneshot_seq.pause()
+                self._oneshot_seq = None
             self.walk()
         else:
             self.grid_direction = (0, 0)
-            self.idle()
+            if not self._oneshot_seq:
+                self.idle()
 
         self.update_grid_position()
 
