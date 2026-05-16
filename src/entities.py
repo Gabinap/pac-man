@@ -12,7 +12,7 @@ from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
-from ursina import Entity, application, held_keys, invoke
+from ursina import Entity, application, held_keys, invoke, Text
 from ursina import time as _ursina_time
 
 import src.constants as C
@@ -205,19 +205,33 @@ class Player(AnimatedEntity):
     _TAUNT_CHANCE = 1 / 3
 
     def __init__(
-        self, maze: "Maze", config: GameConfig, game_state: C.EGameState
+        self,
+        maze: "Maze",
+        config: GameConfig,
+        game_state: C.EGameState,
+        health_text_entity: Text,
     ) -> None:
         super().__init__(
             spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.config = config
-        self.health = config.lives
+        self._health = config.lives
+        self.health_text_entity = health_text_entity
+        self.health_text_entity.text = f"lives: {self.health}"
         self.state = PlayerState.NORMAL
-        print("player lives:", self.health)
         self.spawn()
         if self._TAUNT_ANIM in self.actor.get_anim_names():
             invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
+
+    @property
+    def health(self) -> int:
+        return self._health
+
+    @health.setter
+    def health(self, value) -> None:
+        self._health = value
+        self.health_text_entity.text = f"lives: {self.health}"
 
     def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL

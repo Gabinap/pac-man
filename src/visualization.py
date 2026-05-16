@@ -59,11 +59,17 @@ class GameRender(Entity):
         self.scores_manager = Highscores(self.config)
         self._score = 0
         self._score_text_entity = Text(
-            str(self.score), origin=(0, 0), position=(0, 0.45), scale=2
+            f"Score: {self._score}", origin=(0, 0), position=(0, 0.45), scale=2
         )
 
         self.maze: Maze | None = None
         self._player: Player | None = None
+        self._health_text_entity = Text(
+            f"lives: {self.config.lives}",
+            origin=(0, 0),
+            position=(-0.2, 0.45),
+            scale=2,
+        )
         self._ghost_controller: GhostController | None = None
         self._pacgum_controller: PacgumController | None = None
 
@@ -105,6 +111,7 @@ class GameRender(Entity):
 
         if self.game_state == C.EGameState.GAME_OVER:
             self._destroy_entities()
+            self.score = 0
             self._init_game()
 
         self.game_state = C.EGameState.RUNNING
@@ -142,7 +149,9 @@ class GameRender(Entity):
         )
         self.maze = Maze(level=level, seed=self.config.seed, ambiance=ambiance)
         self._set_topdown()
-        self._player = Player(self.maze, self.config, self.game_state)
+        self._player = Player(
+            self.maze, self.config, self.game_state, self._health_text_entity
+        )
         self._ghost_controller = GhostController(
             self._player, self.maze, self.game_state
         )
@@ -159,7 +168,7 @@ class GameRender(Entity):
     @score.setter
     def score(self, value: int) -> None:
         self._score = value
-        self._score_text_entity.text = str(self._score)
+        self._score_text_entity.text = f"Score: {self._score}"
 
     def add_score(self, points: int) -> None:
         self.score += points
