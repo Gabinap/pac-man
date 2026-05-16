@@ -1,3 +1,9 @@
+"""Build the maze geometry from an A-Maze-ing bitmask grid.
+
+Walls (NORTH/EAST/SOUTH/WEST bits) and "solid block" cells (value 15)
+become two textured meshes parented under a single Maze entity.
+"""
+
 from ursina import Entity, Mesh
 
 from mazegenerator.mazegenerator import MazeGenerator

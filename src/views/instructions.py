@@ -1,3 +1,5 @@
+"""Instructions screen: static text and a back button."""
+
 from ursina import Text, Button, color
 from typing import Callable
 
@@ -5,6 +7,8 @@ from src.views.base import BaseView
 
 
 class InstructionsView(BaseView):
+    """Static help screen reachable from the main menu."""
+
     def __init__(self, back_callback: Callable[[], None]) -> None:
         super().__init__()
 
