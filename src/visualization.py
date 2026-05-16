@@ -20,6 +20,7 @@ from ursina import (
     application,
     destroy,
     invoke,
+    Text,
 )
 from ursina.prefabs.first_person_controller import FirstPersonController
 from panda3d.core import Shader, Texture
@@ -35,6 +36,7 @@ from src.views.game_over import GameOverView
 from src.game_behavior.ghost_controller import GhostController
 from src.game_behavior.pacgum_controller import PacgumController
 from src.highscores import Highscores
+from src.timer import Timer
 
 
 class GameRender(Entity):
@@ -56,10 +58,20 @@ class GameRender(Entity):
         self.game_state = C.EGameState.NOT_STARTED
         self._difficulty = C.EDifficulty.MEDIUM
         self.scores_manager = Highscores(self.config)
-        self.score = 0
+        self._score = 0
+        self._score_text_entity = Text(
+            f"Score: {self._score}", origin=(0, 0), position=(0, 0.45), scale=2
+        )
 
+        self._timer: Timer | None = None
         self.maze: Maze | None = None
         self._player: Player | None = None
+        self._health_text_entity = Text(
+            f"lives: {self.config.lives}",
+            origin=(0, 0),
+            position=(-0.2, 0.45),
+            scale=2,
+        )
         self._ghost_controller: GhostController | None = None
         self._pacgum_controller: PacgumController | None = None
 
@@ -90,7 +102,7 @@ class GameRender(Entity):
         )
         self._views[C.EGameView.GAME_OVER] = GameOverView(
             scores_manager=self.scores_manager,
-            score_callback=self.get_score,
+            score_callback=lambda: self.score,
             menu_callback=lambda: self.switch_view(C.EGameView.MENU),
             replay_callback=self.start_game,
         )
@@ -101,9 +113,13 @@ class GameRender(Entity):
 
         if self.game_state == C.EGameState.GAME_OVER:
             self._destroy_entities()
+            self.score = 0
             self._init_game()
 
         self.game_state = C.EGameState.RUNNING
+
+        if self._timer:
+            self._timer.launch_timer()
 
         if self._player:
             self._player.game_state = self.game_state
@@ -116,6 +132,8 @@ class GameRender(Entity):
         if not self._game_initialized:
             return
 
+        if self._timer:
+            self._timer.destroy_timer()
         if self.maze:
             destroy(self.maze)
         if self._player:
@@ -136,21 +154,31 @@ class GameRender(Entity):
             if level.ambiance is not None
             else random.choice(list(C.AMBIANCES.values()))
         )
-        self.score = 0
+        self._timer = Timer(90)
         self.maze = Maze(level=level, seed=self.config.seed, ambiance=ambiance)
         self._set_topdown()
-
-        self._player = Player(self.maze, self.config, self.game_state)
+        self._player = Player(
+            self.maze, self.config, self.game_state, self._health_text_entity
+        )
         self._ghost_controller = GhostController(
             self._player, self.maze, self.game_state
         )
         self._pacgum_controller = PacgumController(
-            self._player, self.maze, ambiance, self.config, self._add_score
+            self._player, self.maze, ambiance, self.config, self.add_score
         )
 
         self._game_initialized = True
 
-    def _add_score(self, points: int) -> None:
+    @property
+    def score(self) -> int:
+        return self._score
+
+    @score.setter
+    def score(self, value: int) -> None:
+        self._score = value
+        self._score_text_entity.text = f"Score: {self._score}"
+
+    def add_score(self, points: int) -> None:
         self.score += points
 
     def _setup_barrel(self) -> None:
@@ -230,9 +258,6 @@ class GameRender(Entity):
         view.enable()
         view.on_enter()
 
-    def get_score(self) -> int:
-        return self.score
-
     def _shake_screen(
         self, mag: float = 0.3, dur: float = 0.25, period: float = 0.03
     ) -> None:
@@ -287,6 +312,7 @@ class GameRender(Entity):
                 self._ghost_controller.game_state = self.game_state
                 self.switch_view(C.EGameView.GAME_OVER)
                 return
+
             self._ghost_controller.update_ghosts()
             if self._pacgum_controller:
                 self._pacgum_controller.update()

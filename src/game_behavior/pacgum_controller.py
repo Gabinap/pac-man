@@ -16,7 +16,6 @@ from src.entities import Pacgum, Player, SuperPacgum
 from src.game_config import GameConfig
 from src.maze import Maze
 
-
 _PICKUP_DISTANCE: float = 0.5
 
 
@@ -50,8 +49,8 @@ class PacgumController:
             (x, z)
             for z, row in enumerate(self.maze.grid)
             for x, cell in enumerate(row)
-            if cell != 15 and (x, z) not in
-            self._candidates + [(self._h // 2, self._w // 2)]
+            if cell != 15
+            and (x, z) not in self._candidates + [(self._h // 2, self._w // 2)]
         ]
 
     def _super_positions(
