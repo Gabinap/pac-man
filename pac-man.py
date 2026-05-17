@@ -15,13 +15,13 @@ import traceback
 from pathlib import Path
 from ursina import application
 
-from src.parser import load_config
-from src.visualization import GameRender
+from src.parser.parser import load_config
+from src.game_engine import GameEngine
 
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
 
-_renderer: "GameRender | None" = None
+_renderer: "GameEngine | None" = None
 
 
 def input(key: str) -> None:
@@ -68,7 +68,7 @@ def main() -> None:
     """Run the full game lifecycle: config → menu → game loop → cleanup."""
     global _renderer
     config = load_config(_parse_args())
-    _renderer = GameRender(config)
+    _renderer = GameEngine(config)
     _renderer.app.run()
 
 
