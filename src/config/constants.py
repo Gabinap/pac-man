@@ -172,10 +172,11 @@ _CALIBUR = ModelSpec(
     path="models/calibur_vgdc.glb",
     scale=0.35,
     rotation_x=90,
-    anim_idle=7,  # Idle
+    anim_idle=7,  # Idle (8.2s natif — trop lent à rate 1.0, paraît figé)
     anim_walk=11,  # Walk
     anim_attack=(0, 2),  # Attack1, Stabs
     attack_scale=0.35,
+    anim_idle_rate=2.0,
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',

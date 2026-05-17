@@ -30,8 +30,9 @@ class GameEngine(Entity):
         self.router = ViewRouter(engine=self)
         self.input_manager = InputManager(engine=self)
 
-        # Configuration cosmétique de la fenêtre
-        window.color = color.black
+        # Configuration cosmétique de la fenêtre — deep forest-navy de la
+        # palette Wes-Anderson (cohérent avec les panneaux du menu).
+        window.color = color.rgb32(30, 45, 50)
         window.exit_button.enabled = False
 
         self._preload_assets()
@@ -108,8 +109,17 @@ class GameEngine(Entity):
         self.camera_effects.shake_screen()
 
     def input(self, key: str) -> None:
-        # Touche Système Espace (Priorité Haute)
+        # Espace : un seul handler centralisé pour éviter les courses entre
+        # MainMenuView et l'engine (start → pause immédiat sur le même press).
         if key == "space":
+            # Depuis le menu, peu importe l'état (NOT_STARTED ou GAME_OVER
+            # quand on revient d'une partie), space relance une partie.
+            if self.router.current == C.EGameView.MENU and (
+                self.game_state == C.EGameState.NOT_STARTED
+                or self.game_state == C.EGameState.GAME_OVER
+            ):
+                self.start_game()
+                return
             if (
                 self.game_state == C.EGameState.RUNNING
                 and self.router.current is None
@@ -117,7 +127,7 @@ class GameEngine(Entity):
                 self.game_state = C.EGameState.PAUSE
                 self.router.switch_view(C.EGameView.PAUSE)
                 return
-            elif (
+            if (
                 self.game_state == C.EGameState.PAUSE
                 and self.router.current == C.EGameView.PAUSE
             ):

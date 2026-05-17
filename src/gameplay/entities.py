@@ -180,6 +180,12 @@ class AnimatedEntity(Entity):
 
     def _play_on_all(self, anim: str, rate: float, loop: bool = True) -> None:
         if self._current_anim == anim:
+            # Même clip pour idle/walk sur certains modèles (Grobbo, Bat,
+            # Skull_Crawler) — mettre à jour le rate pour que la transition
+            # idle ↔ walk soit visible, sans relancer la playback.
+            for actor in self._actors:
+                if anim in actor.get_anim_names():
+                    actor.set_play_rate(rate, anim)
             return
         self._current_anim = anim
         for actor in self._actors:

@@ -10,7 +10,7 @@ import json
 
 from src.config.game_config import GameConfig
 
-_MAX_ENTRIES: int = 100
+_MAX_ENTRIES: int = 10
 
 
 class Highscores:
