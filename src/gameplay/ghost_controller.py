@@ -88,20 +88,9 @@ class GhostController:
         if self.game_state != C.EGameState.RUNNING:
             return
         for ghost in self.ghosts:
-            if ghost.ghost_index == 0:
-                target_x = self.player.pos_gridx
-                target_z = self.player.pos_gridy
-            elif ghost.ghost_index == 1:
-                target_x, target_z = self._calculate_pinky_target()
-            elif ghost.ghost_index == 2:
-                target_x, target_z = self._calculate_inky_target(
-                    self.ghosts[0]
-                )
-            elif ghost.ghost_index == 3:
-                target_x, target_z = self._calculate_clyde_target(ghost)
-            else:
-                target_x = self.player.pos_gridx
-                target_z = self.player.pos_gridy
+            if ghost.is_stunned:
+                continue
+            target_x, target_z = self._get_target_for_ghost(ghost)
 
             if self.check_collision_with_player(ghost):
                 can_eat = (
@@ -124,6 +113,18 @@ class GhostController:
                     self.handle_attack(ghost, self.player)
             if not ghost.is_attacking and not ghost.is_stunned:
                 ghost.update_ai(target_x, target_z)
+
+    def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
+        """Centralise et distribue les stratégies de ciblage des fantômes."""
+        if ghost.ghost_index == 1:
+            return self._calculate_pinky_target()
+        if ghost.ghost_index == 2:
+            return self._calculate_inky_target(self.ghosts[0])
+        if ghost.ghost_index == 3:
+            return self._calculate_clyde_target(ghost)
+
+        # Par défaut (Blinky / Index 0 / Sécurité), on cible directement le joueur
+        return (self.player.pos_gridx, self.player.pos_gridy)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
         px, pz = self.player.x, self.player.z
