@@ -239,6 +239,12 @@ class AnimatedEntity(Entity):
         return duration
 
     @_skip_if_destroyed
+    def _blink_loop(self, condition_callable: Callable[[], bool]) -> None:
+        if condition_callable():
+            self.visible = not self.visible
+            invoke(self._blink_loop, condition_callable, delay=0.15)
+
+    @_skip_if_destroyed
     def _restore_scale(self, duration: float) -> None:
         seq: Any = self.animate_scale(self.spec.scale, duration)
         seq.ignore_paused = True
@@ -280,6 +286,8 @@ class Player(AnimatedEntity):
         self.state = PlayerState.NORMAL
         self.cheat_mode: bool = False
         self._empower_seq: Any = None
+        self.spawn_x = self.x
+        self.spawn_z = self.z
         self.spawn()
         if self._TAUNT_ANIM in self.actor.get_anim_names():
             invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
@@ -322,6 +330,11 @@ class Player(AnimatedEntity):
     def _end_stun(self) -> None:
         self.animate_scale(self.spec.scale, 0.2)
         self.state = PlayerState.UNTOUCHABLE
+        self.x = self.spawn_x
+        self.z = self.spawn_z
+
+        self._blink_loop(lambda: self.state is PlayerState.UNTOUCHABLE)
+
         invoke(self._reset_player_state, delay=C.PLAYER_INVINCIBILITY_DURATION)
 
     @_skip_if_destroyed
@@ -335,6 +348,7 @@ class Player(AnimatedEntity):
         seq.ignore_paused = True
 
     def _reset_player_state(self) -> None:
+        self.visible = True
         self.state = PlayerState.NORMAL
 
     def spawn(self) -> None:
@@ -428,17 +442,27 @@ class Ghost(AnimatedEntity):
         spec = random.choice([s for s in C.MODEL_SPECS if s.supported])
         super().__init__(spec=spec, maze=maze, speed=C.GHOST_SPEED_NORMAL)
         self.x, self.z = x, z
+        self.spawn_x = x
+        self.spawn_z = z
         self.ghost_index = index
         self.walk()
 
     def stun(self, duration: float = C.GHOST_RESPAWN_DELAY) -> None:
         self.is_stunned = True
+
+        self.x = self.spawn_x
+        self.z = self.spawn_z
+        self.update_grid_position()
         self.idle()
+
+        self._blink_loop(lambda: self.is_stunned)
+
         invoke(self._end_ghost_stun, delay=duration)
 
     @_skip_if_destroyed
     def _end_ghost_stun(self) -> None:
         self.is_stunned = False
+        self.visible = True
         self.walk()
 
     def _compute_best_dir(
