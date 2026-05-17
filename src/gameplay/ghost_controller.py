@@ -80,6 +80,13 @@ class GhostController:
             )
 
             ghost_entity = Ghost(i, x=world_x, z=world_z, maze=self.maze)
+            # Ghost.__init__ hérite game_state=NOT_STARTED via AnimatedEntity,
+            # peu importe l'état réel du jeu. Au level 1 ce n'est pas grave
+            # (start_game propage RUNNING via le setter qui appelle walk()),
+            # mais aux levels 2+, init_level ne change pas engine.game_state
+            # → le setter ne fire pas, ghost.game_state reste NOT_STARTED,
+            # update() force idle chaque frame. On propage manuellement ici.
+            ghost_entity.game_state = self._game_state
             ghosts.append(ghost_entity)
 
         return ghosts
