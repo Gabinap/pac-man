@@ -4,7 +4,7 @@ from typing import Callable
 
 from ursina import Text, Button, color
 
-from src.views.base import BaseView
+from src.ui.views.base import BaseView
 
 
 _SELECTED = color.rgba32(220, 175, 80, 200)

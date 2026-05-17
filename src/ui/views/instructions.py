@@ -3,7 +3,7 @@
 from ursina import Text, Button, color
 from typing import Callable
 
-from src.views.base import BaseView
+from src.ui.views.base import BaseView
 
 
 class InstructionsView(BaseView):

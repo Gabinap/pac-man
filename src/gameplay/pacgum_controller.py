@@ -13,10 +13,10 @@ from typing import Any
 from ursina import destroy
 from ursina import time as _ursina_time
 
-import src.constants as C
-from src.entities import Pacgum, Player, SuperPacgum
-from src.game_config import GameConfig
-from src.maze import Maze
+import src.config.constants as C
+from src.gameplay.entities import Pacgum, Player, SuperPacgum
+from src.config.game_config import GameConfig
+from src.gameplay.maze import Maze
 
 ursina_time: Any = _ursina_time
 

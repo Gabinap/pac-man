@@ -11,8 +11,8 @@ import json
 import sys
 from typing import Any
 
-from src import constants as C
-from src.game_config import GameConfig, LevelConfig
+from src.config import constants as C
+from src.config.game_config import GameConfig, LevelConfig
 
 
 def _strip_comments(text: str) -> str:

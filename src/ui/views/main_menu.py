@@ -4,10 +4,10 @@ from panda3d.core import TransparencyAttrib
 from ursina import Button, Text, color, application, Entity, Quad
 from typing import Callable
 
-from src.views.base import BaseView
-from src.highscores import Highscores
-from src.game_config import GameConfig
-import src.constants as C
+from src.ui.views.base import BaseView
+from src.utils.highscores import Highscores
+from src.config.game_config import GameConfig
+import src.config.constants as C
 
 # color.rgba expects 0-1 floats; color.rgba32 expects 0-255 ints.
 # Wes Anderson-inspired: dusty sage / powder blue / mustard / burgundy

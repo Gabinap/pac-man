@@ -4,8 +4,8 @@ from typing import Callable
 import string
 
 from ursina import Text, Button, InputField, color, application
-from src.views.base import BaseView
-from src.highscores import Highscores
+from src.ui.views.base import BaseView
+from src.utils.highscores import Highscores
 
 
 class GameOverView(BaseView):

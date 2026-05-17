@@ -7,10 +7,10 @@ Inky/Clyde) and propagates game state transitions to every ghost.
 from enum import Enum, auto
 
 
-import src.constants as C
-from src.entities import Ghost, Player, PlayerState
-from src.maze import Maze
-from src.utils import grid_to_world, world_to_grid
+import src.config.constants as C
+from src.gameplay.entities import Ghost, Player, PlayerState
+from src.gameplay.maze import Maze
+from src.utils.utils import grid_to_world, world_to_grid
 
 
 class GhostState(Enum):
