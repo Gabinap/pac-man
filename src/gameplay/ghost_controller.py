@@ -5,12 +5,16 @@ Inky/Clyde) and propagates game state transitions to every ghost.
 """
 
 from enum import Enum, auto
+from typing import TYPE_CHECKING
 
 
 import src.config.constants as C
 from src.gameplay.entities import Ghost, Player, PlayerState
 from src.gameplay.maze import Maze
 from src.utils.utils import grid_to_world, world_to_grid
+
+if TYPE_CHECKING:
+    from src.game_engine import GameEngine
 
 
 class GhostState(Enum):
@@ -23,16 +27,22 @@ class GhostController:
 
     def __init__(
         self,
+        engine: "GameEngine",
         player: Player,
         maze: Maze,
         game_state: C.EGameState,
         ghost_count: int = C.GHOST_COUNT,
     ) -> None:
+        self.engine = engine
         self._game_state = game_state
         self.player = player
         self.maze = maze
         self._ghost_count = ghost_count
         self.ghosts: list[Ghost] = self._init_ghosts()
+        self.ghosts_killed = 0
+
+        if self.engine and self.engine.hud:
+            self.engine.hud.update_ghosts_killed(self.ghosts_killed)
 
     @property
     def game_state(self) -> C.EGameState:
@@ -102,8 +112,15 @@ class GhostController:
                     if not ghost.is_stunned:
                         self.player.attack()
                         ghost.stun()
-                elif (self.player.state != PlayerState.UNTOUCHABLE
-                        and self.player.state != PlayerState.STUNNED):
+                        self.ghosts_killed += 1
+                        if self.engine and self.engine.hud:
+                            self.engine.hud.update_ghosts_killed(
+                                self.ghosts_killed
+                            )
+                elif (
+                    self.player.state != PlayerState.UNTOUCHABLE
+                    and self.player.state != PlayerState.STUNNED
+                ):
                     self.handle_attack(ghost, self.player)
             if not ghost.is_attacking and not ghost.is_stunned:
                 ghost.update_ai(target_x, target_z)
@@ -120,6 +137,8 @@ class GhostController:
         duration = attacker.attack()
         if not target.infinite_lives:
             target.health -= 1
+            if self.engine and self.engine.hud:
+                self.engine.hud.update_health(target.health)
         target.be_stunned(duration)
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
