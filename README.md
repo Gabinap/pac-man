@@ -1,28 +1,28 @@
 # pac-man
 
 ## Common space
+- implementer la vue fps (avec la minimap ?)
+- implementer la vue 3eme pers
+- faut mettre du son en sah
+
 - Dans les parametres
     - Si on laisse les animations des models
     - le son des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir)
     - des sections pour le son, le visuel, les commandes.
 
 
-- implementer la vue fps (avec la minimap ?)
-- implementer la vue 3eme pers
-- faut mettre du son en sah
-
-- faire des opti pour tout mais surtout pour que ca charge plus vite
-
-- norm
-- pep 257
-
-
 ## Gab space:
-- bugs danimations notament pour calibur
+- appuyer sur space une fois en pause doit remettre play
+- easy ne donne plus vie infini
+- si lon change la difficulté apres avoir deja chargé une game, la difficulté precedente reste de vigueur
+- doit gagner des points quand mange des ghosts
+- manque des models
 
 - mettre du contenue dans instructions
 - la palette de couleur doit etre appliquee partout
 
+- norm
+- pep 257 (avec tous les comm en anglais)
 
 ## Ali space:
 je m'occupe de la partie ghost le S

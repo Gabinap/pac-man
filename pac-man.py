@@ -29,7 +29,7 @@ def input(key: str) -> None:
     if key == "escape" or key == "q":
         application.quit()
     if key == "f" and _renderer is not None:
-        _renderer.toggle_fps()
+        _renderer.camera_effects.toggle_fps()
 
 
 def _setup_crash_logger() -> logging.Logger:
