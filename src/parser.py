@@ -108,7 +108,32 @@ def _parse_level(raw: Any, index: int) -> LevelConfig:
                 f" — valid: {known} — using random"
             )
 
-    return LevelConfig(width=width, height=height, ambiance=ambiance)
+    ghost_count: int | None = None
+    if "ghost_count" in raw:
+        ghost_count = _clamp_int(
+            raw["ghost_count"],
+            f"levels[{index}].ghost_count",
+            C.GHOST_COUNT,
+            C.MIN_GHOST_COUNT,
+            C.MAX_GHOST_COUNT,
+        )
+
+    level_max_time: int | None = None
+    if "level_max_time" in raw:
+        level_max_time = _clamp_int(
+            raw["level_max_time"],
+            f"levels[{index}].level_max_time",
+            90,
+            0,
+        )
+
+    return LevelConfig(
+        width=width,
+        height=height,
+        ambiance=ambiance,
+        ghost_count=ghost_count,
+        level_max_time=level_max_time,
+    )
 
 
 def load_config(path: str) -> GameConfig:

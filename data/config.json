@@ -6,35 +6,37 @@
     // Path to the highscore save file (relative to the working directory)
     "highscore_filename": "data/highscores.json",
 
-    # Number of lives the player starts with — must be between 1 and 9
-    "lives": 19,
+    // Number of lives the player starts with (1–19)
+    "lives": 3,
 
-    // Points awarded for eating a regular pacgum (small dot)
+    // Points awarded for eating a regular pacgum
     "points_per_pacgum": 10,
 
-    # Eating a super-pacgum (power pellet) triggers frightened mode on all ghosts
+    // Points awarded for eating a super-pacgum (also triggers frightened mode)
     "points_per_super_pacgum": 100,
 
-    // A frightened ghost eaten by the player rewards this many points
+    // Points awarded for eating a frightened ghost
     "points_per_ghost": 200,
 
-    # Fixed seed for the first level's maze — guarantees a reproducible starting layout
+    // Fixed seed for level 1 — guarantees a reproducible starting layout
+    "seed": 42,
 
     // Maximum time allowed per level in seconds; set to 0 to disable the timer
     "level_max_time": 90,
 
-    # Level list — each entry is passed to the A-Maze-ing generator.
-    # The first level uses the fixed seed above; subsequent levels are randomly seeded.
-    # Dimensions must be odd numbers so the generator can produce valid corridors.
-    # Optional "ambiance" key sets the visual theme; omit for a random pick each run.
-    # Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
+    // Level list — first level uses the fixed seed, subsequent levels are randomly seeded.
+    // Dimensions must be odd numbers so the generator can produce valid corridors.
+    // Valid ambiances: classic, dungeon, manor, forest, ruins, beach, meme
     "levels": [
-        {"width": 5, "height": 5},
-        {"width": 11, "height": 11, "difficulty": "medium", "lives": 9},
-        {"width": 11, "height": 11},
-        {"width": 15, "height": 15, "difficulty": "medium"},
-        {"width": 11, "height": 11},
-        {"width": 11, "height": 11},
-        {"width": 11, "height": 11}
+        {"width": 5,  "height": 5, "ghost_count": 2},
+        {"width": 7,  "height": 7,  "ambiance": "dungeon", "ghost_count": 3},
+        {"width": 9,  "height": 9,  "ambiance": "manor",   "ghost_count": 4},
+        {"width": 11, "height": 11, "ambiance": "forest",  "ghost_count": 5},
+        {"width": 11, "height": 11, "ambiance": "ruins",   "ghost_count": 6},
+        {"width": 13, "height": 13, "ambiance": "beach",   "ghost_count": 8},
+        {"width": 13, "height": 13, "ambiance": "meme",   "ghost_count": 10},
+        {"width": 15, "height": 15, "ambiance": "classic", "ghost_count": 12},
+        {"width": 17, "height": 17, "ghost_count": 14, "level_max_time": 120},
+        {"width": 19, "height": 19, "ghost_count": 16, "level_max_time": 120}
     ]
 }

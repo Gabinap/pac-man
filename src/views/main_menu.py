@@ -40,6 +40,8 @@ _CORNER_SEGMENTS = 16
 _PANEL_RADIUS = 0.35  # pronounced rounding, not a pill
 _PANEL_BORDER_PAD = 0.008
 
+_DIFFICULTIES = [C.EDifficulty.EASY, C.EDifficulty.MEDIUM, C.EDifficulty.HARD]
+
 
 class MainMenuView(BaseView):
     """Title screen with glassmorphism buttons and a highscores panel."""
@@ -51,6 +53,7 @@ class MainMenuView(BaseView):
         difficulty: C.EDifficulty,
         start_game: Callable[[], None],
         show_instructions: Callable[[], None],
+        set_difficulty: Callable[[C.EDifficulty], None] = lambda _: None,
     ) -> None:
         super().__init__()
 
@@ -59,6 +62,7 @@ class MainMenuView(BaseView):
         self.difficulty = difficulty
         self.config = config
         self.scores_manager = scores_manager
+        self._set_difficulty = set_difficulty
 
         self.title = self._make_outlined_text(
             "PAK-MAN",
@@ -138,7 +142,7 @@ class MainMenuView(BaseView):
 
     def _make_panel(
         self, x: float, y: float, w: float, h: float
-    ) -> Entity:
+    ) -> None:
         aspect = w / h if h > 0 else 1.0
         border = Entity(
             model=Quad(
@@ -160,7 +164,6 @@ class MainMenuView(BaseView):
             parent=self,
         )
         panel.setTransparency(TransparencyAttrib.MAlpha)
-        return panel
 
     def _make_button(self, text: str, y: float) -> Button:
         border = Entity(
@@ -233,10 +236,7 @@ class MainMenuView(BaseView):
             )
             return
 
-        for i, data in enumerate(scores_list[:10]):
-            name = data[0]
-            score = data[1]
-
+        for i, (name, score) in enumerate(scores_list[:10]):
             Text(
                 f"{i+1}. {name} - {score}",
                 parent=self,
@@ -270,11 +270,7 @@ class MainMenuView(BaseView):
             application.quit()
 
     def change_difficulty(self) -> None:
-        if self.difficulty == C.EDifficulty.EASY:
-            self.difficulty = C.EDifficulty.MEDIUM
-        elif self.difficulty == C.EDifficulty.MEDIUM:
-            self.difficulty = C.EDifficulty.HARD
-        elif self.difficulty == C.EDifficulty.HARD:
-            self.difficulty = C.EDifficulty.EASY
-
+        idx = _DIFFICULTIES.index(self.difficulty)
+        self.difficulty = _DIFFICULTIES[(idx + 1) % len(_DIFFICULTIES)]
+        self._set_difficulty(self.difficulty)
         self.btn_difficulty.text = f"Difficulty: {self.difficulty.value}"

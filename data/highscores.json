@@ -1,5 +1,13 @@
 [
     {
+        "name": "aaaaaaa",
+        "score": 1440
+    },
+    {
+        "name": "w",
+        "score": 1200
+    },
+    {
         "name": "ssssssssss",
         "score": 470
     },
@@ -8,12 +16,20 @@
         "score": 220
     },
     {
+        "name": "ssss",
+        "score": 150
+    },
+    {
         "name": "q",
         "score": 120
     },
     {
         "name": "ssssssssqw",
         "score": 110
+    },
+    {
+        "name": "aaaaaaaaaa",
+        "score": 10
     },
     {
         "name": "pp",
@@ -32,7 +48,11 @@
         "score": 0
     },
     {
-        "name": "ssss",
+        "name": "gsr",
+        "score": 0
+    },
+    {
+        "name": "at",
         "score": 150
     }
 ]

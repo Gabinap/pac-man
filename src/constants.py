@@ -10,10 +10,17 @@ from enum import Enum, auto
 from typing import NamedTuple
 
 
+class EViewMode(Enum):
+    TOPDOWN = auto()
+    FPS = auto()
+    THIRD_PERSON = auto()
+
+
 class EGameView(Enum):
     MENU = "menu"
     INSTRUCTIONS = "instructions"
     GAME_OVER = "game_over"
+    PAUSE = "pause"
 
 
 class EDifficulty(Enum):
@@ -27,7 +34,6 @@ class EGameState(Enum):
     RUNNING = auto()
     PAUSE = auto()
     GAME_OVER = auto()
-    WIN = auto()
 
 
 class PacgumSpec(NamedTuple):
@@ -37,8 +43,7 @@ class PacgumSpec(NamedTuple):
     rotation_x: float = 0.0
 
 
-# Super-pacgums use the same PacgumSpec as regular ones — only scaled up
-# at render time. Tweak this to make supers more (or less) prominent.
+# Super-pacgums share PacgumSpec with regular ones — scaled up at render time.
 SUPER_PACGUM_SCALE_MULTIPLIER: float = 2.25
 
 
@@ -54,7 +59,6 @@ class Ambiance(NamedTuple):
 DEFAULT_HIGHSCORE_FILE: str = "data/highscores.json"
 MIN_LIVES: int = 1
 MAX_LIVES: int = 19
-MIN_POINTS: int = 1
 MIN_LEVEL_DIM: int = 5
 MAX_LEVEL_DIM: int = 19
 DEFAULT_LEVEL_WIDTH: int = 11
@@ -63,6 +67,8 @@ MIN_LEVELS: int = 1
 
 # --- Gameplay ---
 GHOST_COUNT: int = 4
+MIN_GHOST_COUNT: int = 1
+MAX_GHOST_COUNT: int = 16
 
 # Movement speeds in cells per second
 PLAYER_SPEED: float = 2.0
@@ -71,10 +77,18 @@ GHOST_SPEED_FRIGHTENED: float = 2.0
 GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 
 # Durations in seconds
+CHEAT_SPEED_MULTIPLIER: float = 4.0
+
 FRIGHTENED_DURATION: float = 8.0  # frightened state after a super-pacgum
 GHOST_RESPAWN_DELAY: float = 3.0  # pause at spawn before re-entering maze
 PLAYER_RESPAWN_DELAY: float = 2.0  # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
+
+# Distances / thresholds (in maze cells)
+PICKUP_DISTANCE: float = 0.5      # Manhattan distance for pacgum + ghost collision
+GRID_ALIGN_SPEED: float = 15.0    # how quickly entities re-center on their lane
+AI_CENTER_THRESHOLD: float = 0.1  # ghost AI re-decides direction at cell center
+ROTATION_DURATION_PER_90: float = 0.15  # turn time for a 90° rotation
 
 
 # --- Assets ---
@@ -104,7 +118,6 @@ _CROCKIE = ModelSpec(
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
-    supported=False
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
@@ -119,7 +132,6 @@ _GROBBO = ModelSpec(
     anim_idle_rate=0.05,
     anim_walk_rate=0.6,
     anim_attack_rate=4.0,
-    supported=False
 )
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
@@ -135,7 +147,6 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_idle_rate=0.5,
     anim_walk_rate=1,
     anim_attack_rate=2.0,
-    supported=False
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -149,7 +160,6 @@ _OPHANIM_ANGEL = ModelSpec(
     anim_attack=0,
     attack_scale=0.28,
     anim_attack_rate=5,
-    supported=False
 )
 
 # Animations: ['ArmatureArmatureAction']
@@ -163,7 +173,6 @@ _SKULL_CRAWLER = ModelSpec(
     attack_scale=0.12,
     anim_idle_rate=0.5,
     anim_attack_rate=3,
-    supported=False
 )
 
 # Animations: ['Swim']
@@ -178,7 +187,6 @@ _TUNA_FISH = ModelSpec(
     attack_scale=0.3,
     anim_idle_rate=0.5,
     anim_attack_rate=2,
-    supported=False
 )
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
@@ -190,7 +198,7 @@ _CALIBUR = ModelSpec(
     rotation_x=90,
     anim_idle=7,  # Idle
     anim_walk=11,  # Walk
-    anim_attack=(0, 2),  # Attack1/Jump/Stabs/
+    anim_attack=(0, 2),  # Attack1, Stabs
     attack_scale=0.35
 )
 
