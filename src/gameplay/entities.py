@@ -551,6 +551,7 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
             position=(world_x, spec.hover_y, world_z),
             scale=spec.scale * self.SCALE_MULTIPLIER,
             rotation_x=spec.rotation_x,
+            ignore_paused=True
         )
         self.spec = spec
         self.grid_x = grid_x

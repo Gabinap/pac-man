@@ -1,14 +1,15 @@
 import random
-from typing import Any, Optional
-from ursina import destroy, application
+from typing import TYPE_CHECKING
+
+from ursina import destroy
 
 import src.config.constants as C
-from src.gameplay.maze import Maze
 from src.gameplay.entities import Player
 from src.gameplay.ghost_controller import GhostController
+from src.gameplay.maze import Maze
 from src.gameplay.pacgum_controller import PacgumController
 from src.utils.timer import Timer
-from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from src.game_engine import GameEngine
@@ -25,11 +26,11 @@ class GameSession:
         self.game_initialized: bool = False
 
         # Entités actives du niveau
-        self.maze: Optional[Maze] = None
-        self.player: Optional[Player] = None
-        self.ghost_controller: Optional[GhostController] = None
-        self.pacgum_controller: Optional[PacgumController] = None
-        self.timer: Optional[Timer] = None
+        self.maze: Maze | None = None
+        self.player: Player | None = None
+        self.ghost_controller: GhostController | None = None
+        self.pacgum_controller: PacgumController | None = None
+        self.timer: Timer | None = None
 
     def init_level(self) -> None:
         """Instancie la géométrie et les entités du niveau actuel."""
@@ -82,6 +83,7 @@ class GameSession:
             self.player,
             self.maze,
             self.engine.game_state,
+            self.add_score,
             ghost_count,
         )
         self.pacgum_controller = PacgumController(

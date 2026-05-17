@@ -12,11 +12,10 @@
 
 
 ## Gab space:
-- appuyer sur space une fois en pause doit remettre play
 - easy ne donne plus vie infini
 - si lon change la difficulté apres avoir deja chargé une game, la difficulté precedente reste de vigueur
-- doit gagner des points quand mange des ghosts
 - manque des models
+- le player doit attaquer avec sa scale actuelle
 
 - mettre du contenue dans instructions
 - la palette de couleur doit etre appliquee partout

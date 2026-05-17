@@ -5,7 +5,7 @@ Inky/Clyde) and propagates game state transitions to every ghost.
 """
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 
 import src.config.constants as C
@@ -31,6 +31,7 @@ class GhostController:
         player: Player,
         maze: Maze,
         game_state: C.EGameState,
+        add_score: Callable[[int], None],
         ghost_count: int = C.GHOST_COUNT,
     ) -> None:
         self.engine = engine
@@ -40,6 +41,7 @@ class GhostController:
         self._ghost_count = ghost_count
         self.ghosts: list[Ghost] = self._init_ghosts()
         self.ghosts_killed = 0
+        self._add_score = add_score
 
         if self.engine and self.engine.hud:
             self.engine.hud.update_ghosts_killed(self.ghosts_killed)
@@ -109,6 +111,7 @@ class GhostController:
                         self.player.attack()
                         ghost.stun()
                         self.ghosts_killed += 1
+                        self._add_score(C.GHOST_VALUE)
                         if self.engine and self.engine.hud:
                             self.engine.hud.update_ghosts_killed(
                                 self.ghosts_killed

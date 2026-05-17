@@ -281,8 +281,6 @@ class MainMenuView(BaseView):
             action = self.buttons[self.selected_index].on_click
             if action:
                 action()
-        elif key in ("q", "escape"):
-            application.quit()
 
     def change_difficulty(self) -> None:
         idx = _DIFFICULTIES.index(self.difficulty)

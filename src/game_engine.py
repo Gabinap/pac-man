@@ -16,7 +16,11 @@ from src.gameplay.session import GameSession
 class GameEngine(Entity):
     def __init__(self, config: GameConfig) -> None:
         self.app: Any = Ursina(development_mode=False)
-        super().__init__()
+        # ignore_paused=True : sinon Ursina coupe input()/update() de l'engine
+        # quand application.paused=True, et la touche space en pause ne fire
+        # plus le resume (handler centralisé ici depuis 01c8657). update() a
+        # déjà un guard `game_state != RUNNING` qui rend safe le tick passif.
+        super().__init__(ignore_paused=True)
         self.config = config
 
         # États généraux
