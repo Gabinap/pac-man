@@ -85,9 +85,11 @@ PLAYER_RESPAWN_DELAY: float = 2.0  # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
 
 # Distances / thresholds (in maze cells)
-PICKUP_DISTANCE: float = 0.5      # Manhattan distance for pacgum + ghost collision
-GRID_ALIGN_SPEED: float = 15.0    # how quickly entities re-center on their lane
-AI_CENTER_THRESHOLD: float = 0.1  # ghost AI re-decides direction at cell center
+PICKUP_DISTANCE: float = 0.5  # Manhattan distance for pacgum + ghost collision
+GRID_ALIGN_SPEED: float = 15.0  # how quickly entities re-center on their lane
+AI_CENTER_THRESHOLD: float = (
+    0.1  # ghost AI re-decides direction at cell center
+)
 ROTATION_DURATION_PER_90: float = 0.15  # turn time for a 90° rotation
 
 
@@ -149,18 +151,6 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_attack_rate=2.0,
 )
 
-# Animations: ['Armature.001Armature.002Action.002']
-_OPHANIM_ANGEL = ModelSpec(
-    path="models/ophanim_angel.glb",
-    scale=0.1,
-    rotation_x=-90,
-    spawn_y=0.75,
-    anim_idle=0,
-    anim_walk=0,
-    anim_attack=0,
-    attack_scale=0.28,
-    anim_attack_rate=5,
-)
 
 # Animations: ['ArmatureArmatureAction']
 _SKULL_CRAWLER = ModelSpec(
@@ -176,18 +166,6 @@ _SKULL_CRAWLER = ModelSpec(
 )
 
 # Animations: ['Swim']
-_TUNA_FISH = ModelSpec(
-    path="models/tuna_fish.glb",
-    scale=0.18,
-    rotation_x=90,
-    spawn_y=0.5,
-    anim_idle=0,
-    anim_walk=0,
-    anim_attack=0,
-    attack_scale=0.3,
-    anim_idle_rate=0.5,
-    anim_attack_rate=2,
-)
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
 # 'Attack_Stomp', 'Attack_TripleCombo', 'Backstep', 'Death', 'Idle', 'Stun',
@@ -199,7 +177,7 @@ _CALIBUR = ModelSpec(
     anim_idle=7,  # Idle
     anim_walk=11,  # Walk
     anim_attack=(0, 2),  # Attack1, Stabs
-    attack_scale=0.35
+    attack_scale=0.35,
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',
@@ -220,11 +198,9 @@ MODEL_SPECS: list[ModelSpec] = [
     _CROCKIE,  # 0
     _GROBBO,  # 1
     _HALLOWEEN_BAT,  # 2
-    _OPHANIM_ANGEL,  # 3
     _SKULL_CRAWLER,  # 4
-    _TUNA_FISH,  # 5
-    _CALIBUR,  # 6
-    _ARTOON_SKELETON,  # 7
+    _CALIBUR,  # 5
+    _ARTOON_SKELETON,  # 6
 ]
 
 # Pacgum specs. Loaded via `loader.loadModel` without animation. The split
@@ -232,9 +208,7 @@ MODEL_SPECS: list[ModelSpec] = [
 # a regular pacgum scores points, a super-pacgum also triggers the
 # frightened state on ghosts (and is rendered larger via the multiplier).
 _POTATO_CHIPS = PacgumSpec(path="pacgums/potato_chips_tube.glb", scale=1.3)
-_COFFEE_MUG = PacgumSpec(path="pacgums/coffee_mug.glb", scale=0.66)
 _SODA_CAN = PacgumSpec(path="pacgums/custom_thin_soda_can.glb", scale=0.04)
-_SWEDISH_HORSE = PacgumSpec(path="pacgums/dala_swedish_horse.glb")
 _DONUT_A = PacgumSpec(path="pacgums/donut_vcbjfbu_low.glb", scale=2.7)
 _DONUT_B = PacgumSpec(path="pacgums/donut_vcckafl_low.glb", scale=2.7)
 _BUOY = PacgumSpec(path="pacgums/inflatable_buoy.glb")
@@ -242,7 +216,6 @@ _RINGS = PacgumSpec(path="pacgums/inflatable_rings.glb", scale=0.05)
 _WATERMELON = PacgumSpec(path="pacgums/lowpoly_watermelon.glb")
 _PINK_DONUT = PacgumSpec(path="pacgums/pink_donut.glb", scale=0.1)
 _POMEGRANATE = PacgumSpec(path="pacgums/pomegranate_scan_lowpoly.glb")
-_POTATO = PacgumSpec(path="pacgums/potato_scan_lowpoly.glb")
 _ENERGY_CELL = PacgumSpec(path="pacgums/stylized_energy_cell.glb", scale=0.05)
 
 # Textures loaded relative to assets/ (Ursina default search path).
@@ -254,35 +227,35 @@ AMBIANCES: dict[str, Ambiance] = {
         wall="textures/wall_brick.jpg",
         floor="textures/floor_marble.jpg",
         pattern="textures/pattern_bathroom.jpg",
-        pacgums=(_DONUT_A, _DONUT_B, _COFFEE_MUG),
+        pacgums=(_DONUT_A, _DONUT_B),
         super_pacgums=(_PINK_DONUT,) * 4,
     ),
     "dungeon": Ambiance(
         wall="textures/wall_brick.jpg",
         floor="textures/floor_rubble.jpg",
         pattern="textures/wall_brick.jpg",
-        pacgums=(_POTATO, _POMEGRANATE),
+        pacgums=(_POMEGRANATE,),
         super_pacgums=(_ENERGY_CELL,) * 4,
     ),
     "manor": Ambiance(
         wall="textures/wall_fabric.jpg",
         floor="textures/floor_parquet.jpg",
         pattern="textures/wall_wood.jpg",
-        pacgums=(_COFFEE_MUG, _PINK_DONUT),
-        super_pacgums=(_SWEDISH_HORSE,) * 4,
+        pacgums=(_PINK_DONUT,),
+        super_pacgums=(_ENERGY_CELL,) * 4,
     ),
     "forest": Ambiance(
         wall="textures/wall_wood.jpg",
         floor="textures/floor_forest.jpg",
         pattern="textures/wall_wood.jpg",
-        pacgums=(_POMEGRANATE, _POTATO),
+        pacgums=(_POMEGRANATE,),
         super_pacgums=(_WATERMELON,) * 4,
     ),
     "ruins": Ambiance(
         wall="textures/wall_brick.jpg",
         floor="textures/floor_moss.jpg",
         pattern="textures/wall_brick.jpg",
-        pacgums=(_POTATO,),
+        pacgums=(_PINK_DONUT,),
         super_pacgums=(_POMEGRANATE,) * 4,
     ),
     "beach": Ambiance(
@@ -296,7 +269,7 @@ AMBIANCES: dict[str, Ambiance] = {
         wall="textures/wall_meme.jpg",
         floor="textures/floor_brick.png",
         pattern="textures/wall_meme.jpg",
-        pacgums=(_COFFEE_MUG, _PINK_DONUT, _ENERGY_CELL, _SWEDISH_HORSE),
+        pacgums=(_PINK_DONUT, _ENERGY_CELL),
         super_pacgums=(_RINGS,) * 4,
     ),
 }

@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
 ursina_time: Any = _ursina_time
 
+
 # Skip callbacks fired after the entity has been destroyed. `invoke` keeps
 # the closure alive, so without the guard we'd touch a zombie NodePath and
 # trigger AssertionError deep inside Panda3D.
@@ -35,6 +36,7 @@ def _skip_if_destroyed(method: Callable[..., Any]) -> Callable[..., Any]:
         if self.is_empty():
             return None
         return method(self, *args, **kwargs)
+
     return wrapped
 
 
@@ -223,12 +225,16 @@ class AnimatedEntity(Entity):
         scale_up: Any = self.animate_scale(self.spec.attack_scale, half / 2)
         scale_up.ignore_paused = True
         invoke(
-            self._restore_scale, half * 2,
-            delay=half / 2, ignore_paused=True,
+            self._restore_scale,
+            half * 2,
+            delay=half / 2,
+            ignore_paused=True,
         )
         self._oneshot_seq = invoke(
-            self._finish_oneshot, for_idle=False,
-            delay=duration, ignore_paused=True
+            self._finish_oneshot,
+            for_idle=False,
+            delay=duration,
+            ignore_paused=True,
         )
         return duration
 
@@ -264,12 +270,12 @@ class Player(AnimatedEntity):
         lives: int | None = None,
     ) -> None:
         super().__init__(
-            spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.MODEL_SPECS[5], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.config = config
         effective_lives = lives if lives is not None else config.lives
-        self.infinite_lives: bool = (effective_lives == 0)
+        self.infinite_lives: bool = effective_lives == 0
         self._health = effective_lives
         self.state = PlayerState.NORMAL
         self.cheat_mode: bool = False
