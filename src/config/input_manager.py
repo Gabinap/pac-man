@@ -83,8 +83,9 @@ class InputManager:
         """Déclenche un tremblement d'écran si on clique dans le vide du menu principal."""
         if key != "left mouse down":
             return
-        if self.engine.router.current != C.EGameView.MENU or getattr(
-            self.engine, "_fps_mode", False
+        if (
+            self.engine.router.current != C.EGameView.MENU
+            or self.engine.camera_effects.fps_mode
         ):
             return
         # Si on clique sur un vrai bouton du menu, on ne secoue pas l'écran

@@ -79,3 +79,11 @@ class ViewRouter:
         for view in self._views.values():
             view.disable()
         self.current = None
+
+    def exit_current(self) -> None:
+        """Désactive proprement la vue courante (on_exit + disable + clear)."""
+        if self.current and self.current in self._views:
+            view = self._views[self.current]
+            view.on_exit()
+            view.disable()
+        self.current = None

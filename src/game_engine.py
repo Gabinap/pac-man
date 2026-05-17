@@ -89,7 +89,7 @@ class GameEngine(Entity):
         application.paused = False
 
     def resume_game(self) -> None:
-        self.router.current = None
+        self.router.exit_current()
         self.game_state = C.EGameState.RUNNING
         application.paused = False
 
@@ -124,12 +124,9 @@ class GameEngine(Entity):
                 self.resume_game()
                 return
 
-        # Raccourci pour alterner la caméra (ex: Touche T)
-        if key == "t" and self.game_state == C.EGameState.RUNNING:
-            self.camera_effects.toggle_fps()
-            return
-
-        # Délégation des touches secondaires (triche, clics)
+        # Délégation des touches secondaires (triche, clics).
+        # FPS toggle géré par pac-man.py sur 'f' — ne PAS rebind 't' ici,
+        # ça intercepterait la dernière lettre de "cheat".
         self.input_manager.handle_input(key)
 
     def update(self) -> None:
