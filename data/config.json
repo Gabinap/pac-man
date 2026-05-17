@@ -30,7 +30,7 @@
     "levels": [
         {"width": 5,  "height": 5, "ghost_count": 2},
         {"width": 7,  "height": 7,  "ambiance": "dungeon", "ghost_count": 3},
-        {"width": 9,  "height": 9,  "ambiance": "manor",   "ghost_count": 4},
+        {"width": 9,  "height": 9,  "ambiance": "manor"},
         {"width": 11, "height": 11, "ambiance": "forest",  "ghost_count": 5},
         {"width": 11, "height": 11, "ambiance": "ruins",   "ghost_count": 6},
         {"width": 13, "height": 13, "ambiance": "beach",   "ghost_count": 8},
