@@ -7,8 +7,7 @@ GhostController) and removes any picked-up pacgum, calling the score hook.
 """
 
 import random
-from collections.abc import Callable
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from ursina import destroy
 from ursina import time as _ursina_time
@@ -18,6 +17,9 @@ from src.gameplay.entities import Pacgum, Player, SuperPacgum
 from src.config.game_config import GameConfig
 from src.gameplay.maze import Maze
 
+if TYPE_CHECKING:
+    from src.game_engine import GameEngine
+
 ursina_time: Any = _ursina_time
 
 
@@ -26,19 +28,20 @@ class PacgumController:
 
     def __init__(
         self,
+        engine: "GameEngine",
         player: Player,
         maze: Maze,
         ambiance: C.Ambiance,
         config: GameConfig,
-        on_score: Callable[[int], None],
-        on_level_complete: Callable[[], None]
     ) -> None:
+        self.engine = engine
         self.player = player
         self.maze = maze
         self.config = config
-        self.on_score = on_score
-        self.on_level_complete = on_level_complete
         self.pacgums: list[Pacgum] = []
+        self.pacgum_count = 0
+        self.super_count = 0
+
         self._w, self._h = self.maze.width, self.maze.height
         self._candidates = [
             (1, 1),
@@ -108,6 +111,7 @@ class PacgumController:
                     points=self.config.points_per_super_pacgum,
                 )
             )
+            self.super_count += 1
 
         eligible = [c for c in regular_cells if c not in super_set]
         for gx, gy in eligible:
@@ -121,6 +125,11 @@ class PacgumController:
                     points=self.config.points_per_pacgum,
                 )
             )
+            self.pacgum_count += 1
+
+        if self.engine and self.engine.hud:
+            self.engine.hud.update_pacgums(self.pacgum_count)
+            self.engine.hud.update_super_pacgums(self.super_count)
 
     def _picked_up(self, pacgum: Pacgum) -> bool:
         dx = abs(self.player.x - pacgum.x)
@@ -137,22 +146,31 @@ class PacgumController:
         for pacgum in self.pacgums:
             pacgum.rotation_y += spin
             if self._picked_up(pacgum):
-                self.on_score(pacgum.points)
+                self.engine.session.add_score(pacgum.points)
                 if pacgum.is_super:
                     self.player.empower()
+                    self.super_count -= 1
+                    self.engine.hud.update_super_pacgums(self.super_count)
+                else:
+                    self.pacgum_count -= 1
+                    self.engine.hud.update_pacgums(self.pacgum_count)
                 destroy(pacgum)
             else:
                 remaining.append(pacgum)
         self.pacgums = remaining
         if not self.pacgums:
-            self.on_level_complete()
+            self.engine.session.on_level_complete()
 
     def eat_all(self) -> None:
         for p in self.pacgums:
-            self.on_score(p.points)
+            self.engine.session.add_score(p.points)
             destroy(p)
+        self.pacgum_count = 0
+        self.super_count = 0
+        self.engine.hud.update_pacgums(0)
+        self.engine.hud.update_super_pacgums(0)
         self.pacgums = []
-        self.on_level_complete()
+        self.engine.session.on_level_complete()
 
     def destroy_all(self) -> None:
         for pacgum in self.pacgums:

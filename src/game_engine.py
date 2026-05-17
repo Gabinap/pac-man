@@ -37,15 +37,7 @@ class GameEngine(Entity):
         self._preload_assets()
 
         # Initialisation du HUD lié aux propriétés de la session dynamique
-        self.hud = HUD(
-            view_mode=C.EViewMode.TOPDOWN,
-            get_score=lambda: self.session.score,
-            get_health=self.session.get_health,
-            get_level=lambda: self.session.current_level_index + 1,
-            get_pacgums=self.session.get_pacgum_count,
-            get_super_pacgums=self.session.get_super_count,
-            get_ghosts_killed=lambda: 0,
-        )
+        self.hud = HUD(view_mode=C.EViewMode.TOPDOWN)
         self.hud.hide()
 
         # Premier amorçage
