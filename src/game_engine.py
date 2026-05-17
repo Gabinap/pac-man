@@ -149,8 +149,16 @@ class GameEngine(Entity):
         ):
             return
 
-        # Traitement de la défaite du joueur
-        if self.session.player and self.session.player.health <= 0:
+        # Traitement de la défaite du joueur — ignorer les invincibilités
+        # (infinite_lives en EASY, cheat_mode), sinon EASY trigger game-over
+        # immédiatement puisque les vies démarrent à 0.
+        player = self.session.player
+        if (
+            player
+            and player.health <= 0
+            and not player.infinite_lives
+            and not player.cheat_mode
+        ):
             self.game_state = C.EGameState.GAME_OVER
             self.router.switch_view(C.EGameView.GAME_OVER)
             return
