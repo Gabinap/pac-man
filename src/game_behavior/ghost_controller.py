@@ -6,7 +6,6 @@ Inky/Clyde) and propagates game state transitions to every ghost.
 
 from enum import Enum, auto
 
-from ursina import invoke
 
 import src.constants as C
 from src.entities import Ghost, Player, PlayerState
@@ -23,11 +22,16 @@ class GhostController:
     """Spawn, route, and collide all ghosts against the player."""
 
     def __init__(
-        self, player: Player, maze: Maze, game_state: C.EGameState
+        self,
+        player: Player,
+        maze: Maze,
+        game_state: C.EGameState,
+        ghost_count: int = C.GHOST_COUNT,
     ) -> None:
         self._game_state = game_state
         self.player = player
         self.maze = maze
+        self._ghost_count = ghost_count
         self.ghosts: list[Ghost] = self._init_ghosts()
 
     @property
@@ -59,7 +63,7 @@ class GhostController:
             (self.maze.width - 1, self.maze.height - 1),
         ]
 
-        for i in range(C.GHOST_COUNT):
+        for i in range(self._ghost_count):
             grid_x, grid_y = start_grid_indices[i % len(start_grid_indices)]
             world_x, world_z = grid_to_world(
                 grid_x, grid_y, self.maze.width, self.maze.height
@@ -86,14 +90,23 @@ class GhostController:
             elif ghost.ghost_index == 3:
                 target_x, target_z = self._calculate_clyde_target(ghost)
             else:
-                raise ValueError(
-                    f"Unexpected ghost index: {ghost.ghost_index}"
-                )
+                target_x = self.player.pos_gridx
+                target_z = self.player.pos_gridy
 
             if self.check_collision_with_player(ghost):
-                if self.player.state != PlayerState.UNTOUCHABLE:
-                    self.handle_collision(ghost)
-            ghost.update_ai(target_x, target_z)
+                can_eat = (
+                    self.player.state == PlayerState.EMPOWERED
+                    or self.player.cheat_mode
+                )
+                if can_eat:
+                    if not ghost.is_stunned:
+                        self.player.attack()
+                        ghost.stun()
+                elif (self.player.state != PlayerState.UNTOUCHABLE
+                        and self.player.state != PlayerState.STUNNED):
+                    self.handle_attack(ghost, self.player)
+            if not ghost.is_attacking and not ghost.is_stunned:
+                ghost.update_ai(target_x, target_z)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
         px, pz = self.player.x, self.player.z
@@ -101,16 +114,13 @@ class GhostController:
 
         distance_player_ghost = abs(px - gx) + abs(pz - gz)
 
-        return distance_player_ghost < 0.5
+        return distance_player_ghost < C.PICKUP_DISTANCE
 
-    def handle_collision(self, ghost: Ghost) -> None:
-        ghost.attack()
-        self.player.health -= 1
-        self.player.state = PlayerState.UNTOUCHABLE
-        invoke(
-            self.player._reset_player_state,
-            delay=C.PLAYER_INVINCIBILITY_DURATION,
-        )
+    def handle_attack(self, attacker: Ghost, target: Player) -> None:
+        duration = attacker.attack()
+        if not target.infinite_lives:
+            target.health -= 1
+        target.be_stunned(duration)
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(

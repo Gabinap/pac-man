@@ -1,34 +1,35 @@
 # pac-man
 
-# Common space
-- Dans les parametres avant le jeu on doit aussi pouvoir choisir le player quon veut ainsi que les ghosts (Il faudra les representer par des gif), choisir lambiance quon veut (default (le niveau en json), ou un precise), Si on laisse les animations des models, le song des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir) avec des sections pour le song, le visuel, les commandes.
+## Common space
+- Dans les parametres
+    -pouvoir choisir le player quon veut ainsi que les ghosts (Il faudra les representer par des gif)
+    - choisir lambiance quon veut (default (le niveau en json), ou un precise)
+    - Si on laisse les animations des models
+    - le son des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir)
+    - des sections pour le son, le visuel, les commandes.
 
-- deja definir les super pouvoirs des superpacgum
-- comment faire pour le cheatmod
-- pouvoir choisir le player dans un menu
-- timer, vie, score
-- hud en jeu
-- pouvoir mettre pause
+- ghosts
+    - meilleures routines
+    - doit pouvoir fuir
+    - peut respawn
 
-- meilleure routine des ghosts
-- pouvoir mettre jusqua 16 ghosts
-
-- implementer la vue fps avec la minimap et hud
+- implementer la vue fps (avec la minimap ?)
+- implementer la vue 3eme pers
 - faut mettre du son en sah
 
-- mettre du contenue dans instructions ?
+- faire des opti pour tout mais surtout pour que ca charge plus vite
 
-# Gab space:
-- refaire le parsing pour inclure tout ce quil faut
+- norm
+- pep 257
 
-- Facil (replay a linfini chaque niveau) Normal (nombre de vie defini par la config) Hard (une seule vie au total) (avec petites img cool)
-- replay le dernier lvl sans crash
-- shaker doit fonctionner en allant et venant dans le main menu
+
+## Gab space:
+- bugs danimations notament pour calibur
+
+- mettre du contenue dans instructions
 - la palette de couleur doit etre appliquee partout
 
-- quand player est attaque il doit etre stunt pendant le temps de lanim et le ghost doit attaquer sans changer de position (donc une methode avec (attaquant et attaqué))
 
-- passer d'un niveau a l'autre allegrement en pouvant skip avec 'p' (tous les points)
-
-# Ali space:
+## Ali space:
 - mets sque tu veux mon sang
+- jai carrement pas envie de moccuper de la partie ghost pr linstant jsp si toi tu veux

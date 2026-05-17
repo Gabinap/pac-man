@@ -1,4 +1,4 @@
-"""Game-over screen: name input, score submission, replay/menu buttons."""
+"""End-of-run screen: name input, score submission, replay/menu buttons."""
 
 from typing import Callable
 import string
@@ -17,23 +17,24 @@ class GameOverView(BaseView):
         score_callback: Callable[[], int],
         menu_callback: Callable[[], None],
         replay_callback: Callable[[], None],
+        get_is_win: Callable[[], bool],
     ) -> None:
         super().__init__()
         self.scores_manager = scores_manager
         self.score_callback = score_callback
         self.menu_callback = menu_callback
         self.replay_callback = replay_callback
+        self.get_is_win = get_is_win
 
         self.has_submitted = False
         allowed_chars = string.ascii_letters + string.digits + " "
 
         self.title = Text(
-            "GAME OVER",
+            "",
             parent=self,
             scale=4,
             origin=(0, 0),
             y=0.3,
-            color=color.red,
             z=-1,
             ignore_paused=True,
         )
@@ -104,6 +105,12 @@ class GameOverView(BaseView):
         self.selected_index = 0
 
     def on_enter(self) -> None:
+        if self.get_is_win():
+            self.title.text = "SUCCESS"
+            self.title.color = color.gold
+        else:
+            self.title.text = "GAME OVER"
+            self.title.color = color.red
         self.name_input.text = ""
         self.input_error.text = ""
         self.selected_index = 0

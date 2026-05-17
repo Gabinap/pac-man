@@ -7,12 +7,14 @@ These classes are consumed by game_behavior and visualization.
 """
 
 import random
+from collections.abc import Callable
 from enum import Enum, auto
+from functools import wraps
 from typing import Any, TYPE_CHECKING
 
 from direct.actor.Actor import Actor
 from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
-from ursina import Entity, application, held_keys, invoke, Text
+from ursina import Entity, application, held_keys, invoke
 from ursina import time as _ursina_time
 
 import src.constants as C
@@ -24,9 +26,28 @@ if TYPE_CHECKING:
 
 ursina_time: Any = _ursina_time
 
+# Skip callbacks fired after the entity has been destroyed. `invoke` keeps
+# the closure alive, so without the guard we'd touch a zombie NodePath and
+# trigger AssertionError deep inside Panda3D.
+def _skip_if_destroyed(method: Callable[..., Any]) -> Callable[..., Any]:
+    @wraps(method)
+    def wrapped(self: Entity, *args: Any, **kwargs: Any) -> Any:
+        if self.is_empty():
+            return None
+        return method(self, *args, **kwargs)
+    return wrapped
+
 
 def _pick_anim(spec: int | tuple[int, ...]) -> int:
     return random.choice(spec) if isinstance(spec, tuple) else spec
+
+
+# Per-spec caches: once we've fixed the metallic factor / materials / bounds
+# for a given GLB path, every subsequent instance is free — Panda3D's loader
+# reuses the underlying Geom data, so these mutations persist across loads.
+_METALLIC_FIXED: set[str] = set()
+_MATERIALS_FIXED: set[str] = set()
+_BOUNDS_CACHE: dict[str, tuple[float, float, float]] = {}
 
 
 class AnimatedEntity(Entity):
@@ -74,6 +95,8 @@ class AnimatedEntity(Entity):
         self.game_state: C.EGameState = C.EGameState.NOT_STARTED
         self.maze = maze
         self.speed = speed
+        self.is_attacking: bool = False
+        self.is_stunned: bool = False
         self._grid_direction: tuple[int, int] = (0, 0)
         self._facing: tuple[int, int] = (0, 0)
         self.pos_gridx: int
@@ -103,7 +126,7 @@ class AnimatedEntity(Entity):
         raw = self._DIR_TO_ROT_Y.get((dir_x, dir_y))
         if raw is not None:
             delta = (raw - self.rotation_y + 180) % 360 - 180
-            duration = 0.15 * abs(delta) / 90
+            duration = C.ROTATION_DURATION_PER_90 * abs(delta) / 90
             self.animate_rotation_y(self.rotation_y + delta, duration)
 
     def update_grid_position(self) -> None:
@@ -124,10 +147,10 @@ class AnimatedEntity(Entity):
             self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height
         )
         cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
-        align_speed = 15.0
+        align = C.GRID_ALIGN_SPEED * ursina_time.dt
 
         if dir_x != 0:
-            self.z += (center_z - self.z) * align_speed * ursina_time.dt
+            self.z += (center_z - self.z) * align
             self.x += dir_x * self.speed * ursina_time.dt
             if dir_x == 1 and (cell_value & 2):
                 self.x = min(self.x, center_x)
@@ -135,7 +158,7 @@ class AnimatedEntity(Entity):
                 self.x = max(self.x, center_x)
 
         elif dir_y != 0:
-            self.x += (center_x - self.x) * align_speed * ursina_time.dt
+            self.x += (center_x - self.x) * align
             self.z -= dir_y * self.speed * ursina_time.dt
             if dir_y == -1 and (cell_value & 1):
                 self.z = min(self.z, center_z)
@@ -143,12 +166,15 @@ class AnimatedEntity(Entity):
                 self.z = max(self.z, center_z)
 
     def _fix_metallic(self) -> None:
+        if self.spec.path in _METALLIC_FIXED:
+            return
         for actor in self._actors:
             for np in actor.find_all_matches("**/+GeomNode"):
                 for i in range(np.node().get_num_geoms()):
                     ma = np.node().get_geom_state(i).get_attrib(MaterialAttrib)
                     if ma and ma.get_material():
                         ma.get_material().set_metallic(0.0)
+        _METALLIC_FIXED.add(self.spec.path)
 
     def _play_on_all(self, anim: str, rate: float, loop: bool = True) -> None:
         if self._current_anim == anim:
@@ -172,6 +198,7 @@ class AnimatedEntity(Entity):
 
     def _finish_oneshot(self, for_idle: bool = True) -> None:
         self._oneshot_seq = None
+        self.is_attacking = False
         for actor in self._actors:
             actor.stop()
         self._current_anim = None
@@ -180,9 +207,10 @@ class AnimatedEntity(Entity):
         else:
             self.walk()
 
-    def attack(self) -> None:
+    def attack(self) -> float:
         if self._oneshot_seq:
             self._oneshot_seq.pause()
+        self.is_attacking = True
         anim = self._anims[_pick_anim(self.spec.anim_attack)]
         raw = self.actor.get_duration(anim)
         rate = self.spec.anim_attack_rate
@@ -202,7 +230,9 @@ class AnimatedEntity(Entity):
             self._finish_oneshot, for_idle=False,
             delay=duration, ignore_paused=True
         )
+        return duration
 
+    @_skip_if_destroyed
     def _restore_scale(self, duration: float) -> None:
         seq: Any = self.animate_scale(self.spec.scale, duration)
         seq.ignore_paused = True
@@ -218,6 +248,7 @@ class PlayerState(Enum):
     NORMAL = auto()
     UNTOUCHABLE = auto()
     EMPOWERED = auto()
+    STUNNED = auto()
 
 
 class Player(AnimatedEntity):
@@ -230,17 +261,19 @@ class Player(AnimatedEntity):
         maze: "Maze",
         config: GameConfig,
         game_state: C.EGameState,
-        health_text_entity: Text,
+        lives: int | None = None,
     ) -> None:
         super().__init__(
             spec=C.MODEL_SPECS[7], maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.config = config
-        self._health = config.lives
-        self.health_text_entity = health_text_entity
-        self.health_text_entity.text = f"lives: {self.health}"
+        effective_lives = lives if lives is not None else config.lives
+        self.infinite_lives: bool = (effective_lives == 0)
+        self._health = effective_lives
         self.state = PlayerState.NORMAL
+        self.cheat_mode: bool = False
+        self._empower_seq: Any = None
         self.spawn()
         if self._TAUNT_ANIM in self.actor.get_anim_names():
             invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
@@ -252,7 +285,48 @@ class Player(AnimatedEntity):
     @health.setter
     def health(self, value) -> None:
         self._health = value
-        self.health_text_entity.text = f"lives: {self.health}"
+
+    def empower(self) -> None:
+        if self._empower_seq:
+            self._empower_seq.pause()
+        self.state = PlayerState.EMPOWERED
+        self.animate_scale(self.spec.scale * 2, duration=0.2)
+        self._empower_seq = invoke(
+            self._end_empower, delay=C.FRIGHTENED_DURATION
+        )
+
+    @_skip_if_destroyed
+    def _end_empower(self) -> None:
+        self._empower_seq = None
+        self.state = PlayerState.NORMAL
+        self.animate_scale(self.spec.scale, duration=0.3)
+
+    def be_stunned(self, duration: float) -> None:
+        if self._oneshot_seq:
+            self._oneshot_seq.pause()
+            self._oneshot_seq = None
+        for actor in self._actors:
+            actor.stop()
+        self._current_anim = None
+        self.state = PlayerState.STUNNED
+        self.animate_scale(self.spec.scale * 0.5, 0.1)
+        invoke(self._end_stun, delay=duration)
+
+    @_skip_if_destroyed
+    def _end_stun(self) -> None:
+        self.animate_scale(self.spec.scale, 0.2)
+        self.state = PlayerState.UNTOUCHABLE
+        invoke(self._reset_player_state, delay=C.PLAYER_INVINCIBILITY_DURATION)
+
+    @_skip_if_destroyed
+    def _restore_scale(self, duration: float) -> None:
+        target = (
+            self.spec.scale * 2
+            if self.state == PlayerState.EMPOWERED
+            else self.spec.scale
+        )
+        seq: Any = self.animate_scale(target, duration)
+        seq.ignore_paused = True
 
     def _reset_player_state(self) -> None:
         self.state = PlayerState.NORMAL
@@ -296,6 +370,16 @@ class Player(AnimatedEntity):
             if not self._oneshot_seq:
                 self.idle()
             return
+        if self.state == PlayerState.STUNNED:
+            return
+        base = (
+            C.PLAYER_SPEED * C.CHEAT_SPEED_MULTIPLIER
+            if self.cheat_mode and held_keys["shift"]
+            else C.PLAYER_SPEED
+        )
+        self.speed = (
+            base * 1.5 if self.state == PlayerState.EMPOWERED else base
+        )
         moving = False
 
         if held_keys["w"] or held_keys["up arrow"]:
@@ -312,14 +396,16 @@ class Player(AnimatedEntity):
             moving = True
 
         if moving:
-            if self._oneshot_seq:
+            if self._oneshot_seq and not self.is_attacking:
                 self._oneshot_seq.pause()
                 self._oneshot_seq = None
-            self.walk()
-        else:
-            self.grid_direction = (0, 0)
-            if not self._oneshot_seq:
-                self.idle()
+        if not self.is_attacking:
+            if moving:
+                self.walk()
+            else:
+                self.grid_direction = (0, 0)
+                if not self._oneshot_seq:
+                    self.idle()
 
         self.update_grid_position()
 
@@ -337,6 +423,16 @@ class Ghost(AnimatedEntity):
         super().__init__(spec=spec, maze=maze, speed=C.GHOST_SPEED_NORMAL)
         self.x, self.z = x, z
         self.ghost_index = index
+        self.walk()
+
+    def stun(self, duration: float = C.GHOST_RESPAWN_DELAY) -> None:
+        self.is_stunned = True
+        self.idle()
+        invoke(self._end_ghost_stun, delay=duration)
+
+    @_skip_if_destroyed
+    def _end_ghost_stun(self) -> None:
+        self.is_stunned = False
         self.walk()
 
     def _compute_best_dir(
@@ -376,11 +472,12 @@ class Ghost(AnimatedEntity):
         )
         cell_value = self.maze.grid[self.pos_gridy][self.pos_gridx]
         dist_to_center = abs(self.x - center_x) + abs(self.z - center_z)
+        at_center = dist_to_center < C.AI_CENTER_THRESHOLD
 
-        if dist_to_center < 0.1 or self.grid_direction == (0, 0):
+        if at_center or self.grid_direction == (0, 0):
             best_dir = self._compute_best_dir(target_x, target_y, cell_value)
             self._rotate_toward(*best_dir)
-            if dist_to_center < 0.1 or self.grid_direction == (0, 0):
+            if at_center or self.grid_direction == (0, 0):
                 self.grid_direction = best_dir
 
         self.move_in_direction(self.grid_direction[0], self.grid_direction[1])
@@ -436,7 +533,12 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
            Panda3D shows `diffuse`, not `base_color`. For each geom without
            a texture, copy `base_color` onto a flat `ColorAttrib` so the
            color factor actually shows up.
+
+        Geom data is shared by Panda3D's loader cache, so this only needs
+        to run once per GLB path — all subsequent instances inherit it.
         """
+        if self.spec.path in _MATERIALS_FIXED:
+            return
         model: Any = self.model
         if not model:
             return
@@ -455,28 +557,32 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
                     base = mat.get_base_color()
                     new_state = state.set_attrib(ColorAttrib.make_flat(base))
                     gn.set_geom_state(i, new_state)
+        _MATERIALS_FIXED.add(self.spec.path)
 
     def _recenter_model(self) -> None:
         """Shift the loaded mesh so its visual center sits on the entity's
         pivot. Without this, GLBs whose geometry is offset from the file's
         origin trace a circle when we rotate around Y (orbit) instead of
-        spinning in place.
+        spinning in place. The per-instance ``set_pos`` is necessary (each
+        Entity owns its own NodePath transform) but the bounds computation
+        is cached per GLB path.
         """
         model: Any = self.model
         if not model:
             return
-        bounds = model.get_tight_bounds()
-        if bounds is None:
-            return
-        mins, maxs = bounds
-        model.set_pos(
-            -(mins.x + maxs.x) * 0.5,
-            -(mins.y + maxs.y) * 0.5,
-            -(mins.z + maxs.z) * 0.5,
-        )
-
-    def update(self) -> None:
-        self.rotation_y += self.SPIN_SPEED * ursina_time.dt
+        cached = _BOUNDS_CACHE.get(self.spec.path)
+        if cached is None:
+            bounds = model.get_tight_bounds()
+            if bounds is None:
+                return
+            mins, maxs = bounds
+            cached = (
+                -(mins.x + maxs.x) * 0.5,
+                -(mins.y + maxs.y) * 0.5,
+                -(mins.z + maxs.z) * 0.5,
+            )
+            _BOUNDS_CACHE[self.spec.path] = cached
+        model.set_pos(*cached)
 
 
 class SuperPacgum(Pacgum):

@@ -7,16 +7,18 @@ GhostController) and removes any picked-up pacgum, calling the score hook.
 """
 
 import random
-from typing import Callable
+from collections.abc import Callable
+from typing import Any
 
 from ursina import destroy
+from ursina import time as _ursina_time
 
 import src.constants as C
 from src.entities import Pacgum, Player, SuperPacgum
 from src.game_config import GameConfig
 from src.maze import Maze
 
-_PICKUP_DISTANCE: float = 0.5
+ursina_time: Any = _ursina_time
 
 
 class PacgumController:
@@ -29,11 +31,13 @@ class PacgumController:
         ambiance: C.Ambiance,
         config: GameConfig,
         on_score: Callable[[int], None],
+        on_level_complete: Callable[[], None]
     ) -> None:
         self.player = player
         self.maze = maze
         self.config = config
         self.on_score = on_score
+        self.on_level_complete = on_level_complete
         self.pacgums: list[Pacgum] = []
         self._w, self._h = self.maze.width, self.maze.height
         self._candidates = [
@@ -58,21 +62,25 @@ class PacgumController:
     ) -> list[tuple[int, int]]:
         chosen: list[tuple[int, int]] = []
         for cx, cy in self._candidates:
-            if (cx, cy) in open_cells:
-                chosen.append((cx, cy))
-                continue
-            # walk inward until we hit an open cell
-            for dx in range(self._w):
-                for dy in range(self._h):
-                    fx = min(max(cx + dx, 0), self._w - 1)
-                    fy = min(max(cy + dy, 0), self._h - 1)
-                    if (fx, fy) in open_cells and (fx, fy) not in chosen:
-                        chosen.append((fx, fy))
-                        break
-                else:
-                    continue
-                break
+            spot = self._find_open_near(cx, cy, open_cells, chosen)
+            if spot is not None:
+                chosen.append(spot)
         return chosen
+
+    def _find_open_near(
+        self,
+        cx: int,
+        cy: int,
+        open_cells: set[tuple[int, int]],
+        taken: list[tuple[int, int]],
+    ) -> tuple[int, int] | None:
+        for dx in range(self._w):
+            for dy in range(self._h):
+                fx = min(max(cx + dx, 0), self._w - 1)
+                fy = min(max(cy + dy, 0), self._h - 1)
+                if (fx, fy) in open_cells and (fx, fy) not in taken:
+                    return (fx, fy)
+        return None
 
     def _spawn(self, ambiance: C.Ambiance) -> None:
         rng = random.Random(self.config.seed)
@@ -101,9 +109,8 @@ class PacgumController:
                 )
             )
 
-        for gx, gy in regular_cells:
-            if (gx, gy) in super_set:
-                continue
+        eligible = [c for c in regular_cells if c not in super_set]
+        for gx, gy in eligible:
             spec = rng.choice(ambiance.pacgums)
             self.pacgums.append(
                 Pacgum(
@@ -118,17 +125,34 @@ class PacgumController:
     def _picked_up(self, pacgum: Pacgum) -> bool:
         dx = abs(self.player.x - pacgum.x)
         dz = abs(self.player.z - pacgum.z)
-        return bool((dx + dz) < _PICKUP_DISTANCE)
+        return bool((dx + dz) < C.PICKUP_DISTANCE)
 
     def update(self) -> None:
+        if not self.pacgums:
+            return
+        # Centralized spin: one tight Python loop instead of N Entity.update
+        # callbacks dispatched by Ursina every frame.
+        spin = Pacgum.SPIN_SPEED * ursina_time.dt
         remaining: list[Pacgum] = []
         for pacgum in self.pacgums:
+            pacgum.rotation_y += spin
             if self._picked_up(pacgum):
                 self.on_score(pacgum.points)
+                if pacgum.is_super:
+                    self.player.empower()
                 destroy(pacgum)
             else:
                 remaining.append(pacgum)
         self.pacgums = remaining
+        if not self.pacgums:
+            self.on_level_complete()
+
+    def eat_all(self) -> None:
+        for p in self.pacgums:
+            self.on_score(p.points)
+            destroy(p)
+        self.pacgums = []
+        self.on_level_complete()
 
     def destroy_all(self) -> None:
         for pacgum in self.pacgums:

@@ -14,14 +14,26 @@ class Timer(Entity):
 
         self.text_entity = Text(
             text="",
-            origin=(0, 0),
-            position=(0.2, 0.45),
+            origin=(0.5, 0),
+            position=(0.85, 0.31),
             scale=2,
         )
         self._update_text()
+        self.hide()
+
+    def show(self) -> None:
+        if self.initial_duration > 0:
+            self.text_entity.enabled = True
+
+    def hide(self) -> None:
+        self.text_entity.enabled = False
 
     def launch_timer(self) -> None:
+        if self.initial_duration == 0:
+            self.text_entity.text = ""
+            return
         self.duration = self.initial_duration
+        self.show()
         if not self.is_running:
             self.is_running = True
             self._update_text()
