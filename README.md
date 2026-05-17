@@ -8,10 +8,6 @@
     - le son des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir)
     - des sections pour le son, le visuel, les commandes.
 
-- ghosts
-    - meilleures routines
-    - doit pouvoir fuir
-    - peut respawn
 
 - implementer la vue fps (avec la minimap ?)
 - implementer la vue 3eme pers
@@ -32,4 +28,12 @@
 
 ## Ali space:
 - mets sque tu veux mon sang
-- jai carrement pas envie de moccuper de la partie ghost pr linstant jsp si toi tu veux
+je m'occupe de la partie ghost le S
+- ghosts
+    - meilleures routines
+    - doit pouvoir fuir
+
+Ca je suis chaud -> -pouvoir choisir le player quon veut ainsi que les ghosts (Il faudra les representer par des gif)
+    - choisir lambiance quon veut (default (le niveau en json), ou un precise)
+
+mais si tu veux le faire pas de soucis je m'en occupe demain
