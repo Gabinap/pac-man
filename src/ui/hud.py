@@ -4,7 +4,7 @@ from typing import Callable
 
 from ursina import Text, time
 
-import src.constants as C
+import src.config.constants as C
 
 _L = -0.85  # left column x anchor
 _R = 0.85   # right column x anchor

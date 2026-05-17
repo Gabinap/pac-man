@@ -7,9 +7,9 @@ become two textured meshes parented under a single Maze entity.
 from ursina import Entity, Mesh
 
 from mazegenerator.mazegenerator import MazeGenerator
-from src.constants import Ambiance
-from src.entities import Floor
-from src.game_config import LevelConfig
+from src.config.constants import Ambiance
+from src.gameplay.entities import Floor
+from src.config.game_config import LevelConfig
 
 NORTH, EAST, SOUTH, WEST = 1, 2, 4, 8
 

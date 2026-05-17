@@ -17,7 +17,7 @@ class LevelConfig:
     width: int = 11
     height: int = 11
     ambiance: str | None = None
-    ghost_count: int | None = None    # None → use GameConfig default (4)
+    ghost_count: int | None = None  # None → use GameConfig default (4)
     level_max_time: int | None = None  # None → use GameConfig default (90)
 
 
@@ -32,6 +32,4 @@ class GameConfig:
     points_per_ghost: int = 200
     seed: int = random.randint(0, 1000)
     level_max_time: int = 90
-    levels: list[LevelConfig] = field(
-        default_factory=lambda: [LevelConfig()]
-    )
+    levels: list[LevelConfig] = field(default_factory=lambda: [LevelConfig()])

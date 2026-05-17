@@ -17,12 +17,12 @@ from panda3d.core import ColorAttrib, MaterialAttrib, TextureAttrib
 from ursina import Entity, application, held_keys, invoke
 from ursina import time as _ursina_time
 
-import src.constants as C
-from src.game_config import GameConfig
-from src.utils import grid_to_world, world_to_grid
+import src.config.constants as C
+from src.config.game_config import GameConfig
+from src.utils.utils import grid_to_world, world_to_grid
 
 if TYPE_CHECKING:
-    from src.maze import Maze
+    from src.gameplay.maze import Maze
 
 ursina_time: Any = _ursina_time
 

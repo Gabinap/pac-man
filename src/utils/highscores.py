@@ -8,7 +8,7 @@ unbounded over a long-running save profile.
 
 import json
 
-from src.game_config import GameConfig
+from src.config.game_config import GameConfig
 
 _MAX_ENTRIES: int = 100
 
