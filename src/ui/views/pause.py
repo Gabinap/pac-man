@@ -75,9 +75,8 @@ class PauseView(BaseView):
     def input(self, key: str) -> None:
         if not self.enabled:
             return
-        if key == "space":
-            self.resume_callback()
-        elif key == "up arrow":
+        # 'space' → resume est géré centralement dans GameEngine.input
+        if key == "up arrow":
             self.selected_index = (
                 self.selected_index - 1
             ) % len(self.buttons)

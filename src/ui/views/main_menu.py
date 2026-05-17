@@ -1,7 +1,7 @@
 """Main menu view: title, navigation buttons, and highscores panel."""
 
 from panda3d.core import TransparencyAttrib
-from ursina import Button, Text, color, application, Entity, Quad
+from ursina import Button, Text, color, application, Entity, Quad, destroy
 from typing import Callable
 
 from src.ui.views.base import BaseView
@@ -103,7 +103,13 @@ class MainMenuView(BaseView):
         ]
         self.selected_index = 0
         self.update_highlight()
+        self._score_entries: list[Entity] = []
         self._render_highscores()
+
+    def on_enter(self) -> None:
+        # Re-render dynamic scores each time the menu is shown, so a fresh
+        # high score submitted from the game-over screen appears immediately.
+        self._render_score_entries()
 
     def _make_outlined_text(
         self,
@@ -219,40 +225,49 @@ class MainMenuView(BaseView):
             scale=1.5,
             color=_SCORES_TITLE_COLOR,
         )
+        self._render_score_entries()
+
+    def _render_score_entries(self) -> None:
+        for entry in self._score_entries:
+            destroy(entry)
+        self._score_entries.clear()
 
         scores_list = self.scores_manager.get_top_scores()
-
         start_y = 0.3
 
         if not scores_list:
-            Text(
-                "No scores yet...",
-                parent=self,
-                origin=(-0.5, 0),
-                x=-0.8,
-                y=start_y,
-                scale=0.8,
-                color=_EMPTY_SCORE_COLOR,
+            self._score_entries.append(
+                Text(
+                    "No scores yet...",
+                    parent=self,
+                    origin=(-0.5, 0),
+                    x=-0.8,
+                    y=start_y,
+                    scale=0.8,
+                    color=_EMPTY_SCORE_COLOR,
+                )
             )
             return
 
         for i, (name, score) in enumerate(scores_list[:10]):
-            Text(
-                f"{i+1}. {name} - {score}",
-                parent=self,
-                origin=(-0.5, 0),
-                x=-0.8,
-                y=start_y - (i * 0.08),
-                scale=0.8,
-                color=_SCORE_ENTRY_COLOR,
+            self._score_entries.append(
+                Text(
+                    f"{i+1}. {name} - {score}",
+                    parent=self,
+                    origin=(-0.5, 0),
+                    x=-0.8,
+                    y=start_y - (i * 0.08),
+                    scale=0.8,
+                    color=_SCORE_ENTRY_COLOR,
+                )
             )
 
     def input(self, key: str) -> None:
         if not self.enabled:
             return
-        if key == "space":
-            self.start_game()
-        elif key == "up arrow":
+        # Note: 'space' → start_game est géré centralement dans
+        # GameEngine.input pour éviter les courses avec la logique pause.
+        if key == "up arrow":
             self.selected_index = (
                 self.selected_index - 1
             ) % len(self.buttons)

@@ -5,9 +5,9 @@ import src.config.constants as C
 
 
 class InputManager:
-    """Gère le tampon des touches pour les cheat codes, les raccourcis de triche
+    """Gère le tampon des cheat codes et les clics souris du menu.
 
-    et les interactions spécifiques aux clics de souris (comme le Screen Shake).
+    Couvre les raccourcis de triche et l'effet Screen Shake.
     """
 
     def __init__(self, engine: Any) -> None:
@@ -27,13 +27,13 @@ class InputManager:
         )
 
     def handle_input(self, key: str) -> None:
-        """Méthode principale appelée à chaque événement d'entrée clavier/souris."""
+        """Point d'entrée pour chaque événement clavier/souris."""
         self._update_cheat_buffer(key)
         self._handle_cheat_keys(key)
         self._handle_menu_mouse_click(key)
 
     def _update_cheat_buffer(self, key: str) -> None:
-        """Enregistre les lettres tapées pour détecter l'activation/désactivation de la triche."""
+        """Détecte l'activation/désactivation de la triche au clavier."""
         if len(key) != 1 or not key.isalpha():
             return
 
@@ -46,7 +46,7 @@ class InputManager:
             self.set_cheat_mode(False)
 
     def set_cheat_mode(self, enabled: bool) -> None:
-        """Bascule l'état du mode triche et met à jour l'interface graphique."""
+        """Bascule le mode triche et met à jour l'UI."""
         if self.cheat_mode == enabled:
             return
 
@@ -56,13 +56,19 @@ class InputManager:
         # On synchronise l'état avec le joueur actuel s'il est en vie
         if self.engine.session.player:
             self.engine.session.player.cheat_mode = enabled
+        # Reflète immédiatement le passage en vies infinies dans le HUD
+        if self.engine.hud:
+            self.engine.hud.update_health(
+                self.engine.session.get_health()
+            )
 
     def _handle_cheat_keys(self, key: str) -> None:
-        """Exécute les commandes secrètes si le mode triche est actif en jeu."""
+        """Exécute les commandes secrètes si le mode triche est actif."""
         if not self.cheat_mode:
             return
 
-        # On n'autorise la triche que si la partie est active et aucun menu n'est ouvert
+        # Triche autorisée uniquement en partie active sans menu ouvert
+
         if (
             self.engine.game_state != C.EGameState.RUNNING
             or self.engine.router.current is not None
@@ -80,7 +86,7 @@ class InputManager:
                 self.engine.session.player.empower()
 
     def _handle_menu_mouse_click(self, key: str) -> None:
-        """Déclenche un tremblement d'écran si on clique dans le vide du menu principal."""
+        """Screen-shake sur clic dans le vide du menu principal."""
         if key != "left mouse down":
             return
         if (
