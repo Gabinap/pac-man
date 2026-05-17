@@ -69,6 +69,7 @@ MIN_LEVELS: int = 1
 GHOST_COUNT: int = 4
 MIN_GHOST_COUNT: int = 1
 MAX_GHOST_COUNT: int = 16
+GHOST_VALUE: int = 50
 
 # Movement speeds in cells per second
 PLAYER_SPEED: float = 2.0

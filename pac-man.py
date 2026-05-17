@@ -25,9 +25,7 @@ _renderer: "GameEngine | None" = None
 
 
 def input(key: str) -> None:
-    """Global key bindings: escape/q to quit, f to toggle FPS view."""
-    if key == "escape" or key == "q":
-        application.quit()
+    """Global key bindings: f to toggle FPS view."""
     if key == "f" and _renderer is not None:
         _renderer.camera_effects.toggle_fps()
 
