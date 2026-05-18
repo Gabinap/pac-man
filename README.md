@@ -10,15 +10,14 @@
     - le son des entites (comme dans un vrai jeu avec des cases a cocher et/ou un pourcentage a definir)
     - des sections pour le son, le visuel, les commandes.
 
+- crash des fois en changeant de vue (jai pas reussi a le reproduire)
+
+- mettre du contenue dans instructions (une fois que tout le hud et les pov seront la)
 
 ## Gab space:
-- easy ne donne plus vie infini
-- si lon change la difficulté apres avoir deja chargé une game, la difficulté precedente reste de vigueur
+- manque des models de ghosts (y en 7 de base)
+- le player doit attaquer avec sa scale actuelle sans revenir a sa taille initiale
 
-- manque des models
-- le player doit attaquer avec sa scale actuelle
-
-- mettre du contenue dans instructions
 - la palette de couleur doit etre appliquee partout
 
 - norm
