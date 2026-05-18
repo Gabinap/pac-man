@@ -15,7 +15,6 @@
 - mettre du contenue dans instructions (une fois que tout le hud et les pov seront la)
 
 ## Gab space:
-- manque des models de ghosts (y en 7 de base)
 - le player doit attaquer avec sa scale actuelle sans revenir a sa taille initiale
 
 - la palette de couleur doit etre appliquee partout
