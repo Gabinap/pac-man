@@ -1,16 +1,23 @@
-RUN_ARGS ?="data/config.json"
+PYTHON_VERSION := $(shell cat .python-version)
+RUN_ARGS       ?= "data/config.json"
 
-CONVERTER := .venv/lib/python3.13/site-packages/gltf/_converter.py
+# Bypass pyenv shims: locate the actual uv binary
+_UV_DIRECT := $(wildcard $(HOME)/.local/bin/uv $(HOME)/.cargo/bin/uv /usr/local/bin/uv)
+UV := $(if $(_UV_DIRECT),$(firstword $(_UV_DIRECT)),\
+      $(shell find $(HOME)/.pyenv/versions -maxdepth 3 -name uv -type f 2>/dev/null | head -1))
+
+ifeq ($(UV),)
+$(error uv not found. Install it: curl -LsSf https://astral.sh/uv/install.sh | sh)
+endif
 
 install:
-	uv python install
-	rm -f uv.lock
-	uv add mazegenerator-2.0.1-py3-none-any.whl
-	uv sync
+	pyenv install --skip-existing $(PYTHON_VERSION)
+	$(UV) python install
+	$(UV) sync --frozen
 	@$(MAKE) patch
 
 patch:
-	@python3 scripts/apply_patches.py
+	@$(UV) run python scripts/apply_patches.py
 	@$(MAKE) clean-model-cache
 
 clean-model-cache:
@@ -28,7 +35,7 @@ run:
 	rm -f ~/.cache/panda3d/ophanim_angel.boo \
 	~/.cache/panda3d/tuna_fish.boo \
 	~/.cache/panda3d/index_name.txt 2>/dev/null
-	uv run python pac-man.py $(RUN_ARGS)
+	$(UV) run python pac-man.py $(RUN_ARGS)
 
 debug:
 	@echo "   Starting debugger..."
@@ -40,15 +47,15 @@ debug:
 	@echo "   l (list)       - Show source code"
 	@echo "   q (quit)       - Quit debugger"
 	@echo ""
-	uv run python -m pdb pac-man.py $(RUN_ARGS)
+	$(UV) run python -m pdb pac-man.py $(RUN_ARGS)
 
 lint:
-	@uv run flake8 . --extend-exclude=.venv,__pycache__
-	@uv run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	@$(UV) run flake8 . --extend-exclude=.venv,__pycache__
+	@$(UV) run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	@uv run flake8 . --extend-exclude=.venv,__pycache__
-	@uv run mypy . --strict
+	@$(UV) run flake8 . --extend-exclude=.venv,__pycache__
+	@$(UV) run mypy . --strict
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
