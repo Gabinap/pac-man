@@ -6,7 +6,7 @@ Inky/Clyde) and propagates game state transitions to every ghost.
 
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Callable
-
+from collections import deque
 
 import src.config.constants as C
 from src.gameplay.entities import Ghost, Player, PlayerState
@@ -93,13 +93,37 @@ class GhostController:
 
         return ghosts
 
-    def update_ghosts(self) -> None:
+def update_ghosts(self) -> None:
         if self.game_state != C.EGameState.RUNNING:
             return
+
         for ghost in self.ghosts:
             if ghost.is_stunned:
                 continue
+
             target_x, target_z = self._get_target_for_ghost(ghost)
+            ghost.update_grid_position()
+            
+            ghost_grid = (ghost.pos_gridx, ghost.pos_gridy)
+            target_grid = (target_x, target_z)
+
+            if not hasattr(ghost, "_bfs_path"):
+                ghost._bfs_path = []
+                ghost._last_target = None
+
+            if ghost._last_target != target_grid or (not ghost._bfs_path and ghost_grid != target_grid):
+                ghost._last_target = target_grid
+                ghost._bfs_path = self._bfs_find_path(ghost_grid, target_grid)
+                if ghost._bfs_path:
+                    ghost._bfs_path.pop(0)
+
+            if ghost._bfs_path and ghost_grid == ghost._bfs_path[0]:
+                ghost._bfs_path.pop(0)
+
+            if ghost._bfs_path:
+                next_x, next_y = ghost._bfs_path[0]
+            else:
+                next_x, next_y = target_x, target_z
 
             if self.check_collision_with_player(ghost):
                 can_eat = (
@@ -122,10 +146,11 @@ class GhostController:
                 ):
                     self.handle_attack(ghost, self.player)
             if not ghost.is_attacking and not ghost.is_stunned:
-                ghost.update_ai(target_x, target_z)
+                ghost.update_ai(next_x, next_y)
 
     def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
-        """Dispatch each ghost to its targeting strategy."""
+        if self.player.state == PlayerState.EMPOWERED:
+            return self._calculate_flee_target()
         if ghost.ghost_index == 1:
             return self._calculate_pinky_target()
         if ghost.ghost_index == 2:
@@ -151,6 +176,59 @@ class GhostController:
             if self.engine and self.engine.hud:
                 self.engine.hud.update_health(target.health)
         target.be_stunned(duration)
+
+    def _calculate_flee_target(self) -> tuple[int, int]:
+        p_x, p_y = self.player.pos_gridx, self.player.pos_gridy
+
+        corners = [
+            (0, 0),
+            (self.maze.width - 1, 0),
+            (0, self.maze.height - 1),
+            (self.maze.width - 1, self.maze.height - 1),
+        ]
+
+        best_corner = corners[0]
+        max_dist = -1
+
+        for cx, cy in corners:
+            dist = (cx - p_x) ** 2 + (cy - p_y) ** 2
+            if dist > max_dist:
+                max_dist = dist
+                best_corner = (cx, cy)
+
+        return best_corner
+
+    def _bfs_find_path(
+        self, start: tuple[int, int], target: tuple[int, int]
+    ) -> list[tuple[int, int]]:
+        """Calcule le chemin le plus court sur la grille à l'aide d'un BFS."""
+        if start == target:
+            return [start]
+
+        queue = deque([[start]])
+        visited = {start}
+
+        dirs = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
+
+        while queue:
+            path = queue.popleft()
+            cx, cy = path[-1]
+
+            if (cx, cy) == target:
+                return path
+
+            cell_value = self.maze.grid[cy][cx]
+            for dx, dy, wall_flag in dirs:
+                if cell_value & wall_flag:
+                    continue
+
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < self.maze.width and 0 <= ny < self.maze.height:
+                    if (nx, ny) not in visited:
+                        visited.add((nx, ny))
+                        queue.append(path + [(nx, ny)])
+
+        return []
 
     def _calculate_pinky_target(self) -> tuple[int, int]:
         p_grid_x, p_grid_y = world_to_grid(
@@ -196,7 +274,7 @@ class GhostController:
             p_grid_y - c_grid_y
         ) ** 2
 
-        if square_distance > 64:
+        if square_distance > 15:
             raw_x, raw_y = p_grid_x, p_grid_y
         else:
             raw_x, raw_y = 0, self.maze.height - 1
