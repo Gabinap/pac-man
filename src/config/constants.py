@@ -109,7 +109,7 @@ class ModelSpec(NamedTuple):
     anim_idle_rate: float = 1.0
     anim_walk_rate: float = 1.0
     anim_attack_rate: float = 1.0
-    supported: bool = False
+    supported: bool = True
 
 
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']

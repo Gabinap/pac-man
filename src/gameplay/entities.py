@@ -275,9 +275,7 @@ class Player(AnimatedEntity):
         game_state: C.EGameState,
         lives: int | None = None,
     ) -> None:
-        super().__init__(
-            spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED
-        )
+        super().__init__(spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED)
         self.game_state = game_state
         self.config = config
         effective_lives = lives if lives is not None else config.lives
@@ -545,7 +543,7 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
             position=(world_x, spec.hover_y, world_z),
             scale=spec.scale * self.SCALE_MULTIPLIER,
             rotation_x=spec.rotation_x,
-            ignore_paused=True
+            ignore_paused=True,
         )
         self.spec = spec
         self.grid_x = grid_x
