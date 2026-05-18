@@ -23,6 +23,10 @@ def _find_converter() -> Path | None:
 PATCHES: list[tuple[str, str]] = [
     # Bug 1: multiple skins sharing the same skeleton root → previous skinid is
     # overwritten in self.skeletons, losing characters. Fix: store a list.
+    # Patches below jump directly from the upstream form to the *final* form
+    # (after Bug 5a/5b refinements are factored in), so re-runs against a fully
+    # patched file see `new in text` and report cleanly as "already present"
+    # instead of false-positive "missing" warnings.
     (
         "        self.skeletons[root_nodeid] = skinid",
         "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
@@ -42,7 +46,7 @@ PATCHES: list[tuple[str, str]] = [
         "                    charinfo.character.set_transform("
         "get_node_transform(gltf_node))\n"
         "                    self.build_character("
-        "charinfo, nodeid, gltf_data, recurse=True)\n"
+        "charinfo, nodeid, gltf_data, recurse=True, skinid=skinid)\n"
         "                    self.characters[skinid] = charinfo",
     ),
     (
@@ -50,14 +54,20 @@ PATCHES: list[tuple[str, str]] = [
         "            charinfo = self.characters.get(skinid, None)",
         "            skinids = self.skeletons.get(nodeid, None)\n"
         "            skinid = skinids[0] if skinids is not None else None\n"
-        "            charinfo = self.characters.get(skinid, None)",
+        "            charinfo = self.characters.get(skinid, None)\n"
+        "            if skinids is not None:\n"
+        "                for _sid in skinids[1:]:\n"
+        "                    _ci = self.characters.get(_sid)\n"
+        "                    if _ci is not None:\n"
+        "                        _ci.nodepath.reparent_to(root)",
     ),
     (
         "        if nodeid in self.skeletons:\n"
         "            skinid = self.skeletons[nodeid]\n"
         "            gltf_skin = gltf_data['skins'][skinid]",
         "        if nodeid in self.skeletons:\n"
-        "            skinid = self.skeletons[nodeid][0]\n"
+        "            if skinid is None:\n"
+        "                skinid = self.skeletons[nodeid][0]\n"
         "            gltf_skin = gltf_data['skins'][skinid]",
     ),
     # Bug 2: accessors without bufferView crash the sort by KeyError.
@@ -149,62 +159,41 @@ PATCHES: list[tuple[str, str]] = [
     # Bug 5: multiple skins sharing the same LCA (Sketchfab/FAB exports with
     # separate meshes for body / eyes / weapon). After Bug 1, build_characters
     # creates one CharInfo per skinid, but build_character internally hardcodes
-    # `skinid = self.skeletons[nodeid][0]`, so all CharInfos are clones of
-    # skin[0]. Also add_node only reparents skinids[0]'s character to the scene
-    # graph and attaches every mesh to that same character — so meshes for the
-    # other skins are skinned by joints belonging to orphan characters that
-    # never receive animation updates, and they appear static.
-    # Fix 5a: thread the loop's skinid through build_character so each CharInfo
-    # is built with its own skin's joints/animations.
+    # `skinid = self.skeletons[nodeid][0]`, so all CharInfos were clones of
+    # skin[0]. The body of the fix (threading skinid through the for-loop, the
+    # `if skinid is None` fallback inside build_character, and reparenting all
+    # extra characters in add_node) is folded into the Bug 1 patches above so
+    # the script's old/new substring checks remain stable. Only the function
+    # signature patch is independent and stays here.
     (
         "    def build_character(self, charinfo: CharInfo, nodeid,"
         " gltf_data, recurse=True):",
         "    def build_character(self, charinfo: CharInfo, nodeid,"
         " gltf_data, recurse=True, skinid=None):",
     ),
+    # Fix 5c: attach skinned meshes under their character's nodepath (not the
+    # generic scene node). Without this, multi-skin GLBs end up with every
+    # skinned mesh at the scene-node level next to multiple CharInfo siblings,
+    # and Panda3D's joint resolution picks the wrong character → wrong scale /
+    # orientation and joint-bind errors at animation load. This patch was
+    # removed in e9c068c ("fix: texture by deleting .boo files in panda3d
+    # cache") under the assumption that the cache deletion alone was enough,
+    # but the real-world effect on cloned envs is broken renders. Restored.
     (
-        "        if nodeid in self.skeletons:\n"
-        "            skinid = self.skeletons[nodeid][0]\n"
-        "            gltf_skin = gltf_data['skins'][skinid]",
-        "        if nodeid in self.skeletons:\n"
-        "            if skinid is None:\n"
-        "                skinid = self.skeletons[nodeid][0]\n"
-        "            gltf_skin = gltf_data['skins'][skinid]",
-    ),
-    (
-        "            if nodeid in self.skeletons:\n"
-        "                for skinid in self.skeletons[nodeid]:\n"
-        "                    charinfo = CharInfo(node_name)\n"
-        "                    charinfo.character.set_transform("
-        "get_node_transform(gltf_node))\n"
-        "                    self.build_character("
-        "charinfo, nodeid, gltf_data, recurse=True)\n"
-        "                    self.characters[skinid] = charinfo",
-        "            if nodeid in self.skeletons:\n"
-        "                for skinid in self.skeletons[nodeid]:\n"
-        "                    charinfo = CharInfo(node_name)\n"
-        "                    charinfo.character.set_transform("
-        "get_node_transform(gltf_node))\n"
-        "                    self.build_character("
-        "charinfo, nodeid, gltf_data, recurse=True, skinid=skinid)\n"
-        "                    self.characters[skinid] = charinfo",
-    ),
-    # Fix 5b: in add_node, reparent ALL characters sharing this LCA to the
-    # scene graph (not just skinids[0]), and attach each skinned mesh under
-    # its own skin's character so the joints driving its vertices actually
-    # belong to a character that's in the scene and receives animation.
-    (
-        "            skinids = self.skeletons.get(nodeid, None)\n"
-        "            skinid = skinids[0] if skinids is not None else None\n"
-        "            charinfo = self.characters.get(skinid, None)",
-        "            skinids = self.skeletons.get(nodeid, None)\n"
-        "            skinid = skinids[0] if skinids is not None else None\n"
-        "            charinfo = self.characters.get(skinid, None)\n"
-        "            if skinids is not None:\n"
-        "                for _sid in skinids[1:]:\n"
-        "                    _ci = self.characters.get(_sid)\n"
-        "                    if _ci is not None:\n"
-        "                        _ci.nodepath.reparent_to(root)",
+        "                else:\n"
+        "                    np.attach_new_node(mesh)\n"
+        "                    if charinfo:\n"
+        "                        self.combine_mesh_skin(mesh, charinfo)\n"
+        "                        self.combine_mesh_morphs("
+        "mesh, meshid, charinfo)",
+        "                else:\n"
+        "                    if charinfo:\n"
+        "                        charinfo.nodepath.attach_new_node(mesh)\n"
+        "                        self.combine_mesh_skin(mesh, charinfo)\n"
+        "                        self.combine_mesh_morphs("
+        "mesh, meshid, charinfo)\n"
+        "                    else:\n"
+        "                        np.attach_new_node(mesh)",
     ),
 ]
 
