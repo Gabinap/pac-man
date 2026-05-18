@@ -82,12 +82,12 @@ class GhostController:
             )
 
             ghost_entity = Ghost(i, x=world_x, z=world_z, maze=self.maze)
-            # Ghost.__init__ hérite game_state=NOT_STARTED via AnimatedEntity,
-            # peu importe l'état réel du jeu. Au level 1 ce n'est pas grave
-            # (start_game propage RUNNING via le setter qui appelle walk()),
-            # mais aux levels 2+, init_level ne change pas engine.game_state
-            # → le setter ne fire pas, ghost.game_state reste NOT_STARTED,
-            # update() force idle chaque frame. On propage manuellement ici.
+            # Ghost.__init__ inherits game_state=NOT_STARTED via AnimatedEntity
+            # regardless of actual state. On level 1 this is fine
+            # (start_game flips RUNNING via the setter, which calls walk()),
+            # but on level 2+ init_level does not touch engine.game_state, so
+            # the setter never fires, ghost.update() forces idle every frame.
+            # Propagate it explicitly here.
             ghost_entity.game_state = self._game_state
             ghosts.append(ghost_entity)
 
@@ -125,7 +125,7 @@ class GhostController:
                 ghost.update_ai(target_x, target_z)
 
     def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
-        """Centralise et distribue les stratégies de ciblage des fantômes."""
+        """Dispatch each ghost to its targeting strategy."""
         if ghost.ghost_index == 1:
             return self._calculate_pinky_target()
         if ghost.ghost_index == 2:
@@ -133,7 +133,7 @@ class GhostController:
         if ghost.ghost_index == 3:
             return self._calculate_clyde_target(ghost)
 
-        # Par défaut (Blinky / Index 0 / Sécurité), on cible directement le joueur
+        # Blinky (index 0) and any extra ghosts: chase the player directly.
         return (self.player.pos_gridx, self.player.pos_gridy)
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:

@@ -265,8 +265,8 @@ class MainMenuView(BaseView):
     def input(self, key: str) -> None:
         if not self.enabled:
             return
-        # Note: 'space' → start_game est géré centralement dans
-        # GameEngine.input pour éviter les courses avec la logique pause.
+        # 'space' → start_game is handled centrally in GameEngine.input to
+        # avoid a race with the pause logic.
         if key == "up arrow":
             self.selected_index = (
                 self.selected_index - 1
@@ -292,9 +292,6 @@ class MainMenuView(BaseView):
         return f"Difficulty: {self.difficulty.value} ({lives_str})"
 
     def change_difficulty(self) -> None:
-        # _set_difficulty est branché sur GameEngine.set_difficulty qui
-        # délègue à GameSession.apply_difficulty_to_player — c'est lui qui
-        # met à jour player.infinite_lives / player.health et pousse au HUD.
         idx = _DIFFICULTIES.index(self.difficulty)
         self.difficulty = _DIFFICULTIES[(idx + 1) % len(_DIFFICULTIES)]
         self._set_difficulty(self.difficulty)

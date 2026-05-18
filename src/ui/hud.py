@@ -16,7 +16,6 @@ class HUD:
     def __init__(self, view_mode: C.EViewMode) -> None:
         self._view_mode = view_mode
 
-        # left column
         self._level_text = self._left("Lv.1", 0.45, scale=2)
         self._health_text = self._left("Lives: 0", 0.38, scale=2)
         self._pacgums_text = self._left("Pacgums: 0", 0.26, scale=1.5)
@@ -26,13 +25,9 @@ class HUD:
             "Move: WASD / Arrows", -0.42, scale=1.3
         )
 
-        # right column
         self._fps_text = self._right("FPS: 0", 0.45, scale=2)
         self._score_text = self._right("Score: 0", 0.38, scale=2)
 
-        # Cached last-rendered values: skip the property write when the
-        # string hasn't changed. Stored as strings so we compare with the
-        # already-formatted text and avoid one branch.
         self._fps_avg: float = 0.0
 
     @staticmethod

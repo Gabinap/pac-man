@@ -1,11 +1,11 @@
 import random
 from typing import Any
-from ursina import camera, scene, mouse, held_keys, time, invoke, Button
+from ursina import camera, scene, mouse, held_keys, time, invoke
 from panda3d.core import Shader, Texture
 
 
 class CameraEffectsManager:
-    """Gère les modes de vue (Topdown / FPS), la distorsion et les secousses de la caméra."""
+    """View modes (Topdown / FPS), barrel distortion, and camera shake."""
 
     def __init__(self, engine: Any) -> None:
         self.engine = engine
@@ -19,7 +19,7 @@ class CameraEffectsManager:
         self.setup_barrel()
 
     def setup_barrel(self) -> None:
-        """Initialise le shader barrel de Panda3D."""
+        """Install the Panda3D barrel-distortion shader."""
         from direct.filter.FilterManager import FilterManager
 
         if self._manager is not None:
@@ -110,7 +110,7 @@ class CameraEffectsManager:
         step()
 
     def update_fps_controls(self) -> None:
-        """Gère les mouvements verticaux spécifiques au mode FPS."""
+        """Handle vertical movement keys in FPS mode."""
         if self.fps_mode and self.fps_ctrl:
             speed = 5
             if held_keys["space"]:
