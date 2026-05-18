@@ -241,7 +241,7 @@ class AnimatedEntity(Entity):
     @_skip_if_destroyed
     def _blink_loop(self, condition_callable: Callable[[], bool]) -> None:
         if condition_callable():
-            self.visible = not self.visible
+            self.visible: bool = not self.visible
             invoke(self._blink_loop, condition_callable, delay=0.15)
 
     @_skip_if_destroyed
@@ -276,7 +276,7 @@ class Player(AnimatedEntity):
         lives: int | None = None,
     ) -> None:
         super().__init__(
-            spec=C.MODEL_SPECS[5], maze=maze, speed=C.PLAYER_SPEED
+            spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED
         )
         self.game_state = game_state
         self.config = config
@@ -297,7 +297,7 @@ class Player(AnimatedEntity):
         return self._health
 
     @health.setter
-    def health(self, value) -> None:
+    def health(self, value: int) -> None:
         self._health = value
 
     def empower(self) -> None:
