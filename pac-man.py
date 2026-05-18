@@ -13,7 +13,6 @@ import sys
 import logging
 import traceback
 from pathlib import Path
-from ursina import application
 
 from src.parser.parser import load_config
 from src.game_engine import GameEngine
