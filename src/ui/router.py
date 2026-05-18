@@ -51,7 +51,6 @@ class ViewRouter:
 
         self.current = target
 
-        # 2. Gérer les états globaux du jeu selon la vue cible
         if target == C.EGameView.GAME_OVER:
             application.paused = True
             if self.engine.hud:
@@ -69,19 +68,18 @@ class ViewRouter:
             if self.engine.session.timer:
                 self.engine.session.timer.stop()
 
-        # 3. Entrer dans la nouvelle vue
         new_view = self._views[target]
         new_view.enable()
         new_view.on_enter()
 
     def disable_all(self) -> None:
-        """Masque absolument toutes les vues (utile quand la partie commence)."""
+        """Hide every view (used when starting a game)."""
         for view in self._views.values():
             view.disable()
         self.current = None
 
     def exit_current(self) -> None:
-        """Désactive proprement la vue courante (on_exit + disable + clear)."""
+        """Cleanly exit the current view (on_exit + disable + clear)."""
         if self.current and self.current in self._views:
             view = self._views[self.current]
             view.on_exit()

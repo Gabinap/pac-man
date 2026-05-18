@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class GameSession:
-    """Gère les données dynamiques d'une partie en cours, les niveaux et les entités 3D."""
+    """Dynamic state of a running game: levels, score, 3D entities."""
 
     def __init__(self, engine: "GameEngine") -> None:
         self.engine = engine
@@ -25,7 +25,6 @@ class GameSession:
         self.is_win: bool = False
         self.game_initialized: bool = False
 
-        # Entités actives du niveau
         self.maze: Maze | None = None
         self.player: Player | None = None
         self.ghost_controller: GhostController | None = None
@@ -33,7 +32,7 @@ class GameSession:
         self.timer: Timer | None = None
 
     def init_level(self) -> None:
-        """Instancie la géométrie et les entités du niveau actuel."""
+        """Build geometry and entities for the current level."""
         level = self.engine.config.levels[self.current_level_index]
         ambiance = (
             C.AMBIANCES[level.ambiance]
@@ -49,7 +48,6 @@ class GameSession:
             level.level_max_time or self.engine.config.level_max_time
         )
 
-        # Minuteurs & Labyrinthe
         self.timer = Timer(level_max_time)
         seed = (
             self.engine.config.seed
@@ -58,10 +56,8 @@ class GameSession:
         )
         self.maze = Maze(level=level, seed=seed, ambiance=ambiance)
 
-        # Application de la vue caméra
         self.engine.camera_effects.set_topdown()
 
-        # Création des acteurs autonomes
         self.player = Player(
             self.maze,
             self.engine.config,
@@ -94,14 +90,13 @@ class GameSession:
             self.engine.hud.update_health(self.get_health())
 
     def on_level_complete(self) -> None:
-        """Passage au niveau supérieur ou écran de victoire."""
+        """Advance to the next level or show the victory screen."""
         if self.timer and self.timer.is_running:
             self.timer.stop()
             self.add_score(self.timer.duration)
 
         self.current_level_index += 1
 
-        # Condition de victoire générale
         if self.current_level_index >= len(self.engine.config.levels):
             self.is_win = True
             self.engine.game_state = C.EGameState.GAME_OVER
@@ -116,7 +111,7 @@ class GameSession:
             self.timer.launch_timer()
 
     def destroy_entities(self) -> None:
-        """Nettoie proprement la mémoire avant de changer de niveau ou de quitter."""
+        """Release level-scoped entities before changing level or quitting."""
         if not self.game_initialized:
             return
 
@@ -139,10 +134,10 @@ class GameSession:
         self.engine.hud.update_score(self.score)
 
     def lives_for_current_difficulty(self) -> int:
-        """Vies de départ correspondant à la difficulté courante.
+        """Starting lives for the current difficulty.
 
-        EASY → 0 (interprété par Player comme infinite_lives), HARD → 1,
-        MEDIUM → la valeur configurée (`config.lives`).
+        EASY → 0 (Player interprets this as infinite_lives), HARD → 1,
+        MEDIUM → the configured value (`config.lives`).
         """
         if self.engine.difficulty == C.EDifficulty.EASY:
             return 0
@@ -151,12 +146,11 @@ class GameSession:
         return self.engine.config.lives
 
     def apply_difficulty_to_player(self) -> None:
-        """Recale `player.infinite_lives` et `player.health` sur la
-        difficulté courante, et pousse le résultat au HUD.
+        """Re-align `player.infinite_lives` and `player.health` to the current
+        difficulty and push the result to the HUD.
 
-        Permet de changer la difficulté depuis le menu sans avoir à
-        recréer le Player (il est instancié une fois dans
-        ``GameEngine.__init__``).
+        Lets the menu change difficulty without recreating the Player (which
+        is instantiated once in ``GameEngine.__init__``).
         """
         if self.player is None:
             return

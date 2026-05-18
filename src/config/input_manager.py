@@ -5,18 +5,13 @@ import src.config.constants as C
 
 
 class InputManager:
-    """Gère le tampon des cheat codes et les clics souris du menu.
-
-    Couvre les raccourcis de triche et l'effet Screen Shake.
-    """
+    """Cheat-code buffer, cheat key actions, and menu screen-shake on click."""
 
     def __init__(self, engine: Any) -> None:
-        # Référence vers l'orchestrateur parent (GameEngine)
         self.engine = engine
         self._key_buffer: str = ""
         self.cheat_mode: bool = False
 
-        # La barre rouge de triche est maintenant isolée ici !
         self._cheat_bar: Entity = Entity(
             parent=camera.ui,
             model="quad",
@@ -27,17 +22,14 @@ class InputManager:
         )
 
     def handle_input(self, key: str) -> None:
-        """Point d'entrée pour chaque événement clavier/souris."""
         self._update_cheat_buffer(key)
         self._handle_cheat_keys(key)
         self._handle_menu_mouse_click(key)
 
     def _update_cheat_buffer(self, key: str) -> None:
-        """Détecte l'activation/désactivation de la triche au clavier."""
         if len(key) != 1 or not key.isalpha():
             return
 
-        # On garde uniquement les 6 derniers caractères saisis
         self._key_buffer = (self._key_buffer + key)[-6:]
 
         if self._key_buffer.endswith("cheat"):
@@ -46,28 +38,22 @@ class InputManager:
             self.set_cheat_mode(False)
 
     def set_cheat_mode(self, enabled: bool) -> None:
-        """Bascule le mode triche et met à jour l'UI."""
         if self.cheat_mode == enabled:
             return
 
         self.cheat_mode = enabled
         self._cheat_bar.enabled = enabled
 
-        # On synchronise l'état avec le joueur actuel s'il est en vie
         if self.engine.session.player:
             self.engine.session.player.cheat_mode = enabled
-        # Reflète immédiatement le passage en vies infinies dans le HUD
         if self.engine.hud:
             self.engine.hud.update_health(
                 self.engine.session.get_health()
             )
 
     def _handle_cheat_keys(self, key: str) -> None:
-        """Exécute les commandes secrètes si le mode triche est actif."""
         if not self.cheat_mode:
             return
-
-        # Triche autorisée uniquement en partie active sans menu ouvert
 
         if (
             self.engine.game_state != C.EGameState.RUNNING
@@ -75,18 +61,16 @@ class InputManager:
         ):
             return
 
-        # [Triche 'P'] : Mange toutes les pacgums
         if key == "p" and self.engine.session.pacgum_controller:
             if hasattr(self.engine.session.pacgum_controller, "eat_all"):
                 self.engine.session.pacgum_controller.eat_all()
 
-        # [Triche 'O'] : Donne les super-pouvoirs au joueur
         elif key == "o" and self.engine.session.player:
             if hasattr(self.engine.session.player, "empower"):
                 self.engine.session.player.empower()
 
     def _handle_menu_mouse_click(self, key: str) -> None:
-        """Screen-shake sur clic dans le vide du menu principal."""
+        """Screen-shake on click in the main-menu void (not on a button)."""
         if key != "left mouse down":
             return
         if (
@@ -94,10 +78,8 @@ class InputManager:
             or self.engine.camera_effects.fps_mode
         ):
             return
-        # Si on clique sur un vrai bouton du menu, on ne secoue pas l'écran
         if isinstance(mouse.hovered_entity, Button):
             return
 
-        # Appel de l'effet visuel sur le parent
         if hasattr(self.engine, "_shake_screen"):
             self.engine._shake_screen()

@@ -6,7 +6,6 @@ from src.config.game_config import GameConfig
 from src.utils.highscores import Highscores
 from src.ui.hud import HUD
 
-# Importation de nos 4 Managers Spécialisés
 from src.ui.router import ViewRouter
 from src.config.input_manager import InputManager
 from src.config.camera_effects import CameraEffectsManager
@@ -16,36 +15,30 @@ from src.gameplay.session import GameSession
 class GameEngine(Entity):
     def __init__(self, config: GameConfig) -> None:
         self.app: Any = Ursina(development_mode=False)
-        # ignore_paused=True : sinon Ursina coupe input()/update() de l'engine
-        # quand application.paused=True, et la touche space en pause ne fire
-        # plus le resume (handler centralisé ici depuis 01c8657). update() a
-        # déjà un guard `game_state != RUNNING` qui rend safe le tick passif.
+        # ignore_paused=True: otherwise Ursina drops input()/update() while
+        # application.paused=True, so 'space' in pause can no longer fire
+        # resume. update() already guards on `game_state != RUNNING`, so
+        # ticking while paused is safe.
         super().__init__(ignore_paused=True)
         self.config = config
 
-        # États généraux
         self._game_state = C.EGameState.NOT_STARTED
         self.difficulty = C.EDifficulty.MEDIUM
         self.scores_manager = Highscores(self.config)
 
-        # Instanciation des gestionnaires autonomes
         self.camera_effects = CameraEffectsManager(engine=self)
         self.session = GameSession(engine=self)
         self.router = ViewRouter(engine=self)
         self.input_manager = InputManager(engine=self)
 
-        # Configuration cosmétique de la fenêtre — deep forest-navy de la
-        # palette Wes-Anderson (cohérent avec les panneaux du menu).
         window.color = color.rgb32(30, 45, 50)
         window.exit_button.enabled = False
 
         self._preload_assets()
 
-        # Initialisation du HUD lié aux propriétés de la session dynamique
         self.hud = HUD(view_mode=C.EViewMode.TOPDOWN)
         self.hud.hide()
 
-        # Premier amorçage
         self.session.init_level()
         self.router.switch_view(C.EGameView.MENU)
 
@@ -75,10 +68,8 @@ class GameEngine(Entity):
                 loader.loadModel(f"assets/{p_spec.path}")
 
     def start_game(self) -> None:
-        """Lancé via les boutons de l'UI."""
         self.router.disable_all()
 
-        # Si Replay après un Game Over, on reset entièrement la session de jeu
         if self.game_state == C.EGameState.GAME_OVER:
             self.session.destroy_entities()
             self.session.score = 0
@@ -109,21 +100,18 @@ class GameEngine(Entity):
         self.router.switch_view(C.EGameView.MENU)
 
     def _shake_screen(self) -> None:
-        """Passerelle pour l'input manager."""
         self.camera_effects.shake_screen()
 
     def set_difficulty(self, difficulty: C.EDifficulty) -> None:
-        """Change la difficulté ET applique le nouveau nombre de vies au
-        player existant (créé une fois pour toutes dans __init__)."""
+        """Change difficulty and re-apply the matching lives count to the
+        existing player (Player is instantiated once in __init__)."""
         self.difficulty = difficulty
         self.session.apply_difficulty_to_player()
 
     def input(self, key: str) -> None:
-        # Espace : un seul handler centralisé pour éviter les courses entre
-        # MainMenuView et l'engine (start → pause immédiat sur le même press).
+        # 'space' is handled centrally here to avoid a race between
+        # MainMenuView and the engine (start → pause on the same press).
         if key == "space":
-            # Depuis le menu, peu importe l'état (NOT_STARTED ou GAME_OVER
-            # quand on revient d'une partie), space relance une partie.
             if self.router.current == C.EGameView.MENU and (
                 self.game_state == C.EGameState.NOT_STARTED
                 or self.game_state == C.EGameState.GAME_OVER
@@ -144,13 +132,11 @@ class GameEngine(Entity):
                 self.resume_game()
                 return
 
-        # Délégation des touches secondaires (triche, clics).
-        # FPS toggle géré par pac-man.py sur 'f' — ne PAS rebind 't' ici,
-        # ça intercepterait la dernière lettre de "cheat".
+        # FPS toggle lives in pac-man.py on 'f' — do NOT rebind 't' here,
+        # it would intercept the last letter of "cheat".
         self.input_manager.handle_input(key)
 
     def update(self) -> None:
-        """Cadence d'horloge globale d'Ursina."""
         self.camera_effects.update_fps_controls()
 
         if (
@@ -159,9 +145,9 @@ class GameEngine(Entity):
         ):
             return
 
-        # Traitement de la défaite du joueur — ignorer les invincibilités
-        # (infinite_lives en EASY, cheat_mode), sinon EASY trigger game-over
-        # immédiatement puisque les vies démarrent à 0.
+        # Skip defeat check when the player is currently invincible
+        # (infinite_lives in EASY, cheat_mode); otherwise EASY would
+        # game-over on frame 1 since lives start at 0.
         player = self.session.player
         if (
             player
@@ -173,7 +159,6 @@ class GameEngine(Entity):
             self.router.switch_view(C.EGameView.GAME_OVER)
             return
 
-        # Mise à jour des sous-systèmes de jeu indépendants
         if self.session.ghost_controller:
             self.session.ghost_controller.update_ghosts()
         if self.session.pacgum_controller:

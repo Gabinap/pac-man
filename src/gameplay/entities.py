@@ -1,10 +1,4 @@
-"""Game entity dataclasses.
-
-Defines pure data structures representing game objects:
-Player, Ghost, Pacgum, SuperPacgum, and Level.
-No game logic or rendering — only structured state.
-These classes are consumed by game_behavior and visualization.
-"""
+"""Game entity classes: Player, Ghost, Pacgum, SuperPacgum, Floor."""
 
 import random
 from collections.abc import Callable
@@ -180,9 +174,9 @@ class AnimatedEntity(Entity):
 
     def _play_on_all(self, anim: str, rate: float, loop: bool = True) -> None:
         if self._current_anim == anim:
-            # Même clip pour idle/walk sur certains modèles (Grobbo, Bat,
-            # Skull_Crawler) — mettre à jour le rate pour que la transition
-            # idle ↔ walk soit visible, sans relancer la playback.
+            # Same clip is reused for idle and walk on some models (Grobbo,
+            # Bat, Skull_Crawler). Update the play rate so the idle ↔ walk
+            # transition is visible without restarting playback.
             for actor in self._actors:
                 if anim in actor.get_anim_names():
                     actor.set_play_rate(rate, anim)
