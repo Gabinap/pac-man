@@ -109,7 +109,7 @@ class ModelSpec(NamedTuple):
     anim_idle_rate: float = 1.0
     anim_walk_rate: float = 1.0
     anim_attack_rate: float = 1.0
-    supported: bool = True
+    supported: bool = False
 
 
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
@@ -121,24 +121,6 @@ _CROCKIE = ModelSpec(
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
-)
-
-# Animations: ['005_attack', 'monster_hit', 'monster_death', '002_crit',
-# '002_attack', '001_attack', '001_AOE_twohanded', '004_attack', '002_AOE_all',
-# '003_crit', '003_attack', '001_victory_all', '009_attack_x3_ogre_01',
-# '009_attack_x3_ogre_02', '009_attack_x3_ogre_03', '008_attack_heavyweapon',
-# '007_attack_x3_01', '007_attack_x3_02', '005_buff_ogre', 'monster_idle',
-# 'monster_run', '001_stun_sleep', 'monster_idle_HeroScene',
-# 'idle_interruption2', 'idle_interruption1']
-_CROCODILE = ModelSpec(
-    path="models/crocodile.glb",
-    scale=1.0,
-    rotation_x=0,
-    anim_idle=19,  # monster_idle
-    anim_walk=20,  # monster_run
-    anim_attack=(0, 4, 5, 7, 10, 15),  # 005/002/001/004/003_attack + heavy
-    attack_scale=0.9,
-    supported=False,  # crashes on this clone — needs investigation
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
@@ -207,19 +189,6 @@ _TUNA_FISH = ModelSpec(
     attack_scale=0.9,
 )
 
-# Animations: ['idle', 'run', 'runVariation', 'walk', 'walkVariation',
-# 'walkSpellEarthquake', 'spellWalkSheild', 'death']
-_VOLCANO_INFERNO = ModelSpec(
-    path="models/volcano_inferno.glb",
-    scale=1.0,
-    rotation_x=0,
-    anim_idle=0,  # idle
-    anim_walk=(1, 2, 3, 4),  # run, runVariation, walk, walkVariation
-    anim_attack=(5, 6),  # walkSpellEarthquake, spellWalkSheild
-    attack_scale=0.9,
-    supported=False,  # crashes on this clone — needs investigation
-)
-
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
 # 'Attack_Stomp', 'Attack_TripleCombo', 'Backstep', 'Death', 'Idle', 'Stun',
 # 'Stun_Super', 'Taunt', 'Walk']
@@ -253,13 +222,11 @@ _ARTOON_SKELETON = ModelSpec(
 # ghost pool via supported=False on _ARTOON_SKELETON.
 MODEL_SPECS: list[ModelSpec] = [
     _CROCKIE,
-    _CROCODILE,
     _GROBBO,
     _HALLOWEEN_BAT,
     _OPHANIM_ANGEL,
     _SKULL_CRAWLER,
     _TUNA_FISH,
-    _VOLCANO_INFERNO,
     _CALIBUR,
     _ARTOON_SKELETON,
 ]
