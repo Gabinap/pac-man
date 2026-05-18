@@ -61,20 +61,12 @@ class GameSession:
         # Application de la vue caméra
         self.engine.camera_effects.set_topdown()
 
-        # Difficultés & Vies
-        if self.engine.difficulty == C.EDifficulty.EASY:
-            effective_lives = 0
-        elif self.engine.difficulty == C.EDifficulty.HARD:
-            effective_lives = 1
-        else:
-            effective_lives = self.engine.config.lives
-
         # Création des acteurs autonomes
         self.player = Player(
             self.maze,
             self.engine.config,
             self.engine.game_state,
-            lives=effective_lives,
+            lives=self.lives_for_current_difficulty(),
         )
         self.player.cheat_mode = self.engine.input_manager.cheat_mode
 
@@ -145,6 +137,34 @@ class GameSession:
     def add_score(self, points: int) -> None:
         self.score += points
         self.engine.hud.update_score(self.score)
+
+    def lives_for_current_difficulty(self) -> int:
+        """Vies de départ correspondant à la difficulté courante.
+
+        EASY → 0 (interprété par Player comme infinite_lives), HARD → 1,
+        MEDIUM → la valeur configurée (`config.lives`).
+        """
+        if self.engine.difficulty == C.EDifficulty.EASY:
+            return 0
+        if self.engine.difficulty == C.EDifficulty.HARD:
+            return 1
+        return self.engine.config.lives
+
+    def apply_difficulty_to_player(self) -> None:
+        """Recale `player.infinite_lives` et `player.health` sur la
+        difficulté courante, et pousse le résultat au HUD.
+
+        Permet de changer la difficulté depuis le menu sans avoir à
+        recréer le Player (il est instancié une fois dans
+        ``GameEngine.__init__``).
+        """
+        if self.player is None:
+            return
+        lives = self.lives_for_current_difficulty()
+        self.player.infinite_lives = lives == 0
+        self.player.health = lives
+        if self.engine.hud:
+            self.engine.hud.update_health(self.get_health())
 
     def get_health(self) -> int:
         if self.player is None:

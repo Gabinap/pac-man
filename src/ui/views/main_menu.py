@@ -85,7 +85,7 @@ class MainMenuView(BaseView):
         self.btn_start.on_click = self.start_game
 
         self.btn_difficulty = self._make_button(
-            f"Difficulty: {self.difficulty.value}", y=0.0
+            self._difficulty_label(), y=0.0
         )
         self.btn_difficulty.on_click = self.change_difficulty
 
@@ -282,8 +282,20 @@ class MainMenuView(BaseView):
             if action:
                 action()
 
+    def _difficulty_label(self) -> str:
+        if self.difficulty == C.EDifficulty.EASY:
+            lives_str = "∞ lives"
+        elif self.difficulty == C.EDifficulty.HARD:
+            lives_str = "1 life"
+        else:
+            lives_str = f"{self.config.lives} lives"
+        return f"Difficulty: {self.difficulty.value} ({lives_str})"
+
     def change_difficulty(self) -> None:
+        # _set_difficulty est branché sur GameEngine.set_difficulty qui
+        # délègue à GameSession.apply_difficulty_to_player — c'est lui qui
+        # met à jour player.infinite_lives / player.health et pousse au HUD.
         idx = _DIFFICULTIES.index(self.difficulty)
         self.difficulty = _DIFFICULTIES[(idx + 1) % len(_DIFFICULTIES)]
         self._set_difficulty(self.difficulty)
-        self.btn_difficulty.text = f"Difficulty: {self.difficulty.value}"
+        self.btn_difficulty.text = self._difficulty_label()

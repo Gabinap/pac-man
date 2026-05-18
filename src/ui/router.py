@@ -26,7 +26,7 @@ class ViewRouter:
             show_instructions=lambda: self.switch_view(
                 C.EGameView.INSTRUCTIONS
             ),
-            set_difficulty=lambda d: setattr(self.engine, "difficulty", d),
+            set_difficulty=self.engine.set_difficulty,
         )
         self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
             back_callback=lambda: self.switch_view(C.EGameView.MENU),

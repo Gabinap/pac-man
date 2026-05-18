@@ -112,6 +112,12 @@ class GameEngine(Entity):
         """Passerelle pour l'input manager."""
         self.camera_effects.shake_screen()
 
+    def set_difficulty(self, difficulty: C.EDifficulty) -> None:
+        """Change la difficulté ET applique le nouveau nombre de vies au
+        player existant (créé une fois pour toutes dans __init__)."""
+        self.difficulty = difficulty
+        self.session.apply_difficulty_to_player()
+
     def input(self, key: str) -> None:
         # Espace : un seul handler centralisé pour éviter les courses entre
         # MainMenuView et l'engine (start → pause immédiat sur le même press).
