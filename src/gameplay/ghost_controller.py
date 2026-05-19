@@ -39,6 +39,12 @@ class GhostController:
         self.player = player
         self.maze = maze
         self._ghost_count = ghost_count
+        self.start_grid_indices = [
+            (0, 0),
+            (self.maze.width - 1, 0),
+            (0, self.maze.height - 1),
+            (self.maze.width - 1, self.maze.height - 1),
+        ]
         self.ghosts: list[Ghost] = self._init_ghosts()
         self.ghosts_killed = 0
         self._add_score = add_score
@@ -68,15 +74,11 @@ class GhostController:
 
     def _init_ghosts(self) -> list[Ghost]:
         ghosts: list[Ghost] = []
-        start_grid_indices = [
-            (0, 0),
-            (self.maze.width - 1, 0),
-            (0, self.maze.height - 1),
-            (self.maze.width - 1, self.maze.height - 1),
-        ]
 
         for i in range(self._ghost_count):
-            grid_x, grid_y = start_grid_indices[i % len(start_grid_indices)]
+            grid_x, grid_y = self.start_grid_indices[
+                i % len(self.start_grid_indices)
+            ]
             world_x, world_z = grid_to_world(
                 grid_x, grid_y, self.maze.width, self.maze.height
             )
@@ -149,8 +151,14 @@ def update_ghosts(self) -> None:
                 ghost.update_ai(next_x, next_y)
 
     def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
+<<<<<<< HEAD
         if self.player.state == PlayerState.EMPOWERED:
             return self._calculate_flee_target()
+=======
+        if self.player.state is PlayerState.EMPOWERED:
+            return self._calculate_flee_target()
+
+>>>>>>> c44a536 (refacto: entities.py to entity folder with a .py file for each entity class)
         if ghost.ghost_index == 1:
             return self._calculate_pinky_target()
         if ghost.ghost_index == 2:
@@ -158,8 +166,19 @@ def update_ghosts(self) -> None:
         if ghost.ghost_index == 3:
             return self._calculate_clyde_target(ghost)
 
-        # Blinky (index 0) and any extra ghosts: chase the player directly.
         return (self.player.pos_gridx, self.player.pos_gridy)
+
+    def _calculate_flee_target(self) -> tuple[int, int]:
+        max_dist: int = -1
+        best_corner = (0, 0)
+        for corner_x, corner_y in self.start_grid_indices:
+            dist = ((corner_x - self.player.pos_gridx) ** 2) + (
+                (corner_y - self.player.pos_gridy) ** 2
+            )
+            if dist > max_dist:
+                max_dist = dist
+                best_corner = (corner_x, corner_y)
+        return best_corner
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
         px, pz = self.player.x, self.player.z
