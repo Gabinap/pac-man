@@ -101,6 +101,7 @@ class Player(AnimatedEntity):
         seq: Any = self.animate_scale(target, duration)
         seq.ignore_paused = True
 
+    @_skip_if_destroyed
     def _reset_player_state(self) -> None:
         self.visible = True
         self.state = PlayerState.NORMAL

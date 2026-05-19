@@ -1,13 +1,15 @@
-from typing import Any
+from typing import TYPE_CHECKING
 from ursina import color, Entity, camera, mouse, Button
-
 import src.config.constants as C
+
+if TYPE_CHECKING:
+    from src.game_engine import GameEngine
 
 
 class InputManager:
     """Cheat-code buffer, cheat key actions, and menu screen-shake on click."""
 
-    def __init__(self, engine: Any) -> None:
+    def __init__(self, engine: 'GameEngine') -> None:
         self.engine = engine
         self._key_buffer: str = ""
         self.cheat_mode: bool = False
@@ -47,9 +49,7 @@ class InputManager:
         if self.engine.session.player:
             self.engine.session.player.cheat_mode = enabled
         if self.engine.hud:
-            self.engine.hud.update_health(
-                self.engine.session.get_health()
-            )
+            self.engine.hud.update_health(self.engine.session.get_health())
 
     def _handle_cheat_keys(self, key: str) -> None:
         if not self.cheat_mode:

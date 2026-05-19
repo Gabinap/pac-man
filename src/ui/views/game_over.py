@@ -3,9 +3,14 @@
 from typing import Callable
 import string
 
-from ursina import Text, Button, InputField, color, application
+from ursina import Text, InputField, color, application
 from src.ui.views.base import BaseView
 from src.utils.highscores import Highscores
+from src.utils.views_utils import (
+    handle_menu_input,
+    make_button,
+    update_menu_highlight,
+)
 
 
 class GameOverView(BaseView):
@@ -68,34 +73,20 @@ class GameOverView(BaseView):
             ignore_paused=True,
         )
 
-        self.btn_register = Button(
-            text="Register score",
-            parent=self,
-            y=-0.1,
-            scale=(0.3, 0.05),
-            on_click=self._on_register,
-            z=-1,
-            ignore_paused=True,
+        self.btn_register = make_button(
+            self, "Register score", y=-0.1, z=-1, ignore_paused=True
         )
-        self.btn_replay = Button(
-            text="Replay",
-            parent=self,
-            y=-0.2,
-            scale=(0.3, 0.05),
-            on_click=self.replay_callback,
-            z=-1,
-            ignore_paused=True,
+        self.btn_register.on_click = self._on_register
+        self.btn_replay = make_button(
+            self, "Replay", y=-0.2, z=-1, ignore_paused=True
         )
-        self.btn_menu = Button(
-            text="Main menu",
-            parent=self,
-            y=-0.3,
-            scale=(0.3, 0.05),
-            on_click=self.menu_callback,
-            z=-1,
-            ignore_paused=True,
+        self.btn_replay.on_click = self.replay_callback
+        self.btn_menu = make_button(
+            self, "Main menu", y=-0.3, z=-1, ignore_paused=True
         )
+        self.btn_menu.on_click = self.menu_callback
 
+        self.name_input.on_click = self._on_register
         self.elements = [
             self.name_input,
             self.btn_register,
@@ -132,41 +123,17 @@ class GameOverView(BaseView):
             self.has_submitted = True
 
     def update_highlight(self) -> None:
-        self.name_input.color = color.black
-        self.btn_register.color = color.azure
-        self.btn_replay.color = color.azure
-        self.btn_menu.color = color.azure
-
-        current = self.elements[self.selected_index]
-        current.color = color.orange
-
-        if isinstance(current, InputField):
-            current.active = True
-        else:
-            self.name_input.active = False
+        update_menu_highlight(self.elements, self.selected_index)
 
     def input(self, key: str) -> None:
         if not self.enabled:
             return
 
-        if key in ("down arrow", "tab"):
-            self.selected_index = (self.selected_index + 1) % len(
-                self.elements
-            )
-            self.update_highlight()
-
-        elif key in ("up arrow", "shift+tab"):
-            self.selected_index = (self.selected_index - 1) % len(
-                self.elements
-            )
-            self.update_highlight()
-
-        elif key == "enter":
-            current = self.elements[self.selected_index]
-            if isinstance(current, InputField):
-                self._on_register()
-            elif hasattr(current, "on_click") and current.on_click:
-                current.on_click()
-
-        elif key == "escape":
+        if key == "escape":
             application.quit()
+            return
+
+        self.selected_index = handle_menu_input(
+            key, self.elements, self.selected_index
+        )
+        self.update_highlight()

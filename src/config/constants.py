@@ -55,6 +55,16 @@ class Ambiance(NamedTuple):
     super_pacgums: tuple[PacgumSpec, ...]
 
 
+# --- Loading image paths ---
+LOADING_IMAGES_PATHS: list[str] = [
+    "assets/menu/layeddown.png",
+    "assets/menu/menu1.png",
+    "assets/menu/popping.png",
+    "assets/menu/rebel.png",
+]
+
+LOADING_PROGRESS_PATH = "assets/menu/happy-cute-puree.png"
+
 # --- Config validation bounds ---
 DEFAULT_HIGHSCORE_FILE: str = "data/highscores.json"
 MIN_LIVES: int = 1
