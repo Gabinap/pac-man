@@ -95,6 +95,7 @@ class GameSession:
             self.timer.stop()
             self.add_score(self.timer.duration)
 
+        was_fps = self.engine.camera_effects.fps_mode
         self.current_level_index += 1
 
         if self.current_level_index >= len(self.engine.config.levels):
@@ -106,6 +107,10 @@ class GameSession:
         self.destroy_entities()
         self.init_level()
         self.engine.hud.update_level(self.current_level_index)
+
+        if was_fps:
+            self.engine.camera_effects.fps_mode = True
+            self.engine.camera_effects.set_fps()
 
         if self.timer:
             self.timer.launch_timer()

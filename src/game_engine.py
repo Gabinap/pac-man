@@ -137,8 +137,6 @@ class GameEngine(Entity):
         self.input_manager.handle_input(key)
 
     def update(self) -> None:
-        self.camera_effects.update_fps_controls()
-
         if (
             not self.session.game_initialized
             or self.game_state != C.EGameState.RUNNING
@@ -165,3 +163,5 @@ class GameEngine(Entity):
             self.session.pacgum_controller.update()
         if self.hud:
             self.hud.update()
+        if self.camera_effects.fps_mode:
+            self.camera_effects.update_fps_camera()
