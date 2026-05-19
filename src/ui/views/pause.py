@@ -2,13 +2,14 @@
 
 from typing import Callable
 
-from ursina import Text, Button, color
+from ursina import Text, color
 
 from src.ui.views.base import BaseView
-
-
-_SELECTED = color.rgba32(220, 175, 80, 200)
-_NORMAL = color.rgba32(80, 80, 80, 200)
+from src.utils.views_utils import (
+    handle_menu_input,
+    make_button,
+    update_menu_highlight,
+)
 
 
 class PauseView(BaseView):
@@ -42,31 +43,20 @@ class PauseView(BaseView):
             z=-1,
             ignore_paused=True,
         )
-        self.btn_resume = Button(
-            text="Resume",
-            parent=self,
-            scale=(0.25, 0.06),
-            y=-0.1,
-            on_click=resume_callback,
-            z=-1,
-            ignore_paused=True,
+        self.btn_resume = make_button(
+            self, "Resume", y=-0.1, z=-1, ignore_paused=True
         )
-        self.btn_menu = Button(
-            text="Main menu",
-            parent=self,
-            scale=(0.25, 0.06),
-            y=-0.2,
-            on_click=menu_callback,
-            z=-1,
-            ignore_paused=True,
+        self.btn_resume.on_click = resume_callback
+        self.btn_menu = make_button(
+            self, "Main menu", y=-0.2, z=-1, ignore_paused=True
         )
+        self.btn_menu.on_click = menu_callback
         self.buttons = [self.btn_resume, self.btn_menu]
         self.selected_index = 0
         self._update_highlight()
 
     def _update_highlight(self) -> None:
-        for i, btn in enumerate(self.buttons):
-            btn.color = _SELECTED if i == self.selected_index else _NORMAL
+        update_menu_highlight(self.buttons, self.selected_index)
 
     def on_enter(self) -> None:
         self.selected_index = 0
@@ -76,17 +66,7 @@ class PauseView(BaseView):
         if not self.enabled:
             return
         # 'space' → resume is handled centrally in GameEngine.input.
-        if key == "up arrow":
-            self.selected_index = (
-                self.selected_index - 1
-            ) % len(self.buttons)
-            self._update_highlight()
-        elif key == "down arrow":
-            self.selected_index = (
-                self.selected_index + 1
-            ) % len(self.buttons)
-            self._update_highlight()
-        elif key == "enter":
-            action = self.buttons[self.selected_index].on_click
-            if action:
-                action()
+        self.selected_index = handle_menu_input(
+            key, self.buttons, self.selected_index
+        )
+        self._update_highlight()
