@@ -8,6 +8,7 @@ dependencies = [
     "flake8>=7.3.0",
     "mazegenerator",
     "mypy>=1.20.2",
+    "pygltflib>=1.16.5",
     "ursina>=8.3.0",
 ]
 

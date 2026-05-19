@@ -11,9 +11,6 @@
 - mettre du contenue dans instructions (une fois que tout le hud et les pov seront la)
 
 ## Gab space:
-- opti ? (avoir 40fps min avec la plus grande map en tdp)
-    - downscale les textures de pacgum
-
 - la palette de couleur doit etre appliquee partout avec un bel hud et menus
     - info de hud et menus corrects
     - placement adequat
