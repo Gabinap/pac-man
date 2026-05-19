@@ -29,6 +29,7 @@ class HUD:
         self._score_text = self._right("Score: 0", 0.38, scale=2)
 
         self._fps_avg: float = 0.0
+        self.visible = False
 
     @staticmethod
     def _left(text: str, y: float, scale: float = 1.5) -> Text:
@@ -51,10 +52,12 @@ class HUD:
     def show(self) -> None:
         for entity in self._all_entities():
             entity.enabled = True
+        self.visible = True
 
     def hide(self) -> None:
         for entity in self._all_entities():
             entity.enabled = False
+        self.visible = False
 
     def _all_entities(self) -> list:
         return [
@@ -72,7 +75,7 @@ class HUD:
         self._score_text.text = f"Score: {score}"
 
     def update_level(self, level: int) -> None:
-        self._level_text.text = f"Lv.{level}"
+        self._level_text.text = f"Lv.{level + 1}"
 
     def update_health(self, health: int) -> None:
         self._health_text.text = (

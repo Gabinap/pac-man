@@ -64,6 +64,9 @@ def _parse_args() -> str:
 def main() -> None:
     """Run the full game lifecycle: config → menu → game loop → cleanup."""
     global _renderer
+    from ursina import window
+
+    window.show_ursina_splash = False
     config = load_config(_parse_args())
     _renderer = GameEngine(config)
     _renderer.app.run()

@@ -95,7 +95,7 @@ class GhostController:
 
         return ghosts
 
-def update_ghosts(self) -> None:
+    def update_ghosts(self) -> None:
         if self.game_state != C.EGameState.RUNNING:
             return
 
@@ -105,7 +105,7 @@ def update_ghosts(self) -> None:
 
             target_x, target_z = self._get_target_for_ghost(ghost)
             ghost.update_grid_position()
-            
+
             ghost_grid = (ghost.pos_gridx, ghost.pos_gridy)
             target_grid = (target_x, target_z)
 
@@ -113,7 +113,9 @@ def update_ghosts(self) -> None:
                 ghost._bfs_path = []
                 ghost._last_target = None
 
-            if ghost._last_target != target_grid or (not ghost._bfs_path and ghost_grid != target_grid):
+            if ghost._last_target != target_grid or (
+                not ghost._bfs_path and ghost_grid != target_grid
+            ):
                 ghost._last_target = target_grid
                 ghost._bfs_path = self._bfs_find_path(ghost_grid, target_grid)
                 if ghost._bfs_path:
@@ -151,14 +153,8 @@ def update_ghosts(self) -> None:
                 ghost.update_ai(next_x, next_y)
 
     def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
-<<<<<<< HEAD
         if self.player.state == PlayerState.EMPOWERED:
             return self._calculate_flee_target()
-=======
-        if self.player.state is PlayerState.EMPOWERED:
-            return self._calculate_flee_target()
-
->>>>>>> c44a536 (refacto: entities.py to entity folder with a .py file for each entity class)
         if ghost.ghost_index == 1:
             return self._calculate_pinky_target()
         if ghost.ghost_index == 2:
@@ -195,27 +191,6 @@ def update_ghosts(self) -> None:
             if self.engine and self.engine.hud:
                 self.engine.hud.update_health(target.health)
         target.be_stunned(duration)
-
-    def _calculate_flee_target(self) -> tuple[int, int]:
-        p_x, p_y = self.player.pos_gridx, self.player.pos_gridy
-
-        corners = [
-            (0, 0),
-            (self.maze.width - 1, 0),
-            (0, self.maze.height - 1),
-            (self.maze.width - 1, self.maze.height - 1),
-        ]
-
-        best_corner = corners[0]
-        max_dist = -1
-
-        for cx, cy in corners:
-            dist = (cx - p_x) ** 2 + (cy - p_y) ** 2
-            if dist > max_dist:
-                max_dist = dist
-                best_corner = (cx, cy)
-
-        return best_corner
 
     def _bfs_find_path(
         self, start: tuple[int, int], target: tuple[int, int]
