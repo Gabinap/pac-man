@@ -10,7 +10,6 @@ from src.gameplay.maze import Maze
 from src.gameplay.pacgum_controller import PacgumController
 from src.utils.timer import Timer
 
-
 if TYPE_CHECKING:
     from src.game_engine import GameEngine
 
@@ -85,7 +84,7 @@ class GameSession:
         self.game_initialized = True
 
         if self.engine and self.engine.hud:
-            self.engine.hud.update_level(self.current_level_index + 1)
+            self.engine.hud.update_level(self.current_level_index)
             self.engine.hud.update_score(self.score)
             self.engine.hud.update_health(self.get_health())
 
