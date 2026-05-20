@@ -24,8 +24,8 @@ _renderer: "GameEngine | None" = None
 
 
 def input(key: str) -> None:
-    """Global key bindings: f to toggle FPS view."""
-    if key == "f" and _renderer is not None:
+    """Global key bindings: configurable FPS toggle."""
+    if _renderer is not None and key == _renderer.controls.toggle_fps:
         _renderer.camera_effects.toggle_fps()
 
 

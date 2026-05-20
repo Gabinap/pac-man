@@ -62,6 +62,7 @@ class GameSession:
             self.engine.config,
             self.engine.game_state,
             lives=self.lives_for_current_difficulty(),
+            controls=self.engine.controls,
         )
         self.player.cheat_mode = self.engine.input_manager.cheat_mode
 

@@ -7,6 +7,7 @@ from src.ui.views.main_menu import MainMenuView
 from src.ui.views.instructions import InstructionsView
 from src.ui.views.game_over import GameOverView
 from src.ui.views.pause import PauseView
+from src.ui.views.settings import SettingsView
 
 
 class ViewRouter:
@@ -26,7 +27,12 @@ class ViewRouter:
             show_instructions=lambda: self.switch_view(
                 C.EGameView.INSTRUCTIONS
             ),
+            show_settings=lambda: self.switch_view(C.EGameView.SETTINGS),
             set_difficulty=self.engine.set_difficulty,
+        )
+        self._views[C.EGameView.SETTINGS] = SettingsView(
+            controls=self.engine.controls,
+            back_callback=lambda: self.switch_view(C.EGameView.MENU),
         )
         self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
             back_callback=lambda: self.switch_view(C.EGameView.MENU),

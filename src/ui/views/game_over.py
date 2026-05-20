@@ -9,6 +9,7 @@ from src.utils.highscores import Highscores
 from src.utils.views_utils import (
     handle_menu_input,
     make_button,
+    make_panel,
     update_menu_highlight,
 )
 
@@ -33,6 +34,8 @@ class GameOverView(BaseView):
 
         self.has_submitted = False
         allowed_chars = string.ascii_letters + string.digits + " "
+
+        make_panel(self, x=0, y=0.0, w=0.60, h=0.82)
 
         self.title = Text(
             "",

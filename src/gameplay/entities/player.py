@@ -4,6 +4,7 @@ from typing import Any, TYPE_CHECKING
 from ursina import held_keys, invoke, mouse
 
 import src.config.constants as C
+from src.config.controls import ControlsConfig
 from src.config.game_config import GameConfig
 from .animated_entity import AnimatedEntity, _pick_anim, _skip_if_destroyed
 
@@ -38,10 +39,12 @@ class Player(AnimatedEntity):
         config: GameConfig,
         game_state: C.EGameState,
         lives: int | None = None,
+        controls: ControlsConfig | None = None,
     ) -> None:
         super().__init__(spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED)
         self.game_state = game_state
         self.config = config
+        self._controls = controls if controls is not None else ControlsConfig()
         effective_lives = lives if lives is not None else config.lives
         self.infinite_lives: bool = effective_lives == 0
         self._health = effective_lives
@@ -167,35 +170,36 @@ class Player(AnimatedEntity):
         )
         moving = False
 
+        c = self._controls
         if self.fps_mode:
             self.rotation_y += mouse.velocity[0] * self._FPS_SENSITIVITY
             self.visible = False
             forward = _rotation_to_grid_dir(self.rotation_y)
             right = _rotation_to_grid_dir(self.rotation_y - 90)
             dir_x, dir_y = 0, 0
-            if held_keys["w"] or held_keys["up arrow"]:
+            if held_keys[c.move_up] or held_keys["up arrow"]:
                 dir_x, dir_y = -forward[0], -forward[1]
-            elif held_keys["s"] or held_keys["down arrow"]:
+            elif held_keys[c.move_down] or held_keys["down arrow"]:
                 dir_x, dir_y = forward
-            elif held_keys["d"] or held_keys["right arrow"]:
+            elif held_keys[c.move_right] or held_keys["right arrow"]:
                 dir_x, dir_y = right
-            elif held_keys["a"] or held_keys["left arrow"]:
+            elif held_keys[c.move_left] or held_keys["left arrow"]:
                 dir_x, dir_y = -right[0], -right[1]
             if dir_x != 0 or dir_y != 0:
                 self.move_in_direction(dir_x, dir_y)
                 moving = True
         else:
             self.visible = True
-            if held_keys["w"] or held_keys["up arrow"]:
+            if held_keys[c.move_up] or held_keys["up arrow"]:
                 self.move_in_direction(0, -1)
                 moving = True
-            elif held_keys["s"] or held_keys["down arrow"]:
+            elif held_keys[c.move_down] or held_keys["down arrow"]:
                 self.move_in_direction(0, 1)
                 moving = True
-            elif held_keys["a"] or held_keys["left arrow"]:
+            elif held_keys[c.move_left] or held_keys["left arrow"]:
                 self.move_in_direction(-1, 0)
                 moving = True
-            elif held_keys["d"] or held_keys["right arrow"]:
+            elif held_keys[c.move_right] or held_keys["right arrow"]:
                 self.move_in_direction(1, 0)
                 moving = True
 

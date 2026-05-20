@@ -3,6 +3,7 @@ from ursina import Entity, Ursina, window, color, application, Text, camera
 
 import src.config.constants as C
 from src.config.game_config import GameConfig
+from src.config.controls import ControlsConfig
 from src.utils.highscores import Highscores
 from src.ui.hud import HUD
 import random
@@ -24,6 +25,7 @@ class GameEngine(Entity):
 
         self._game_state = C.EGameState.NOT_STARTED
         self.difficulty = C.EDifficulty.MEDIUM
+        self.controls = ControlsConfig()
         self.scores_manager = Highscores(self.config)
 
         self.camera_effects = CameraEffectsManager(engine=self)
@@ -155,7 +157,7 @@ class GameEngine(Entity):
 
     def input(self, key: str) -> None:
 
-        if key == "space":
+        if key == self.controls.pause:
             if self.router.current == C.EGameView.MENU and (
                 self.game_state == C.EGameState.NOT_STARTED
                 or self.game_state == C.EGameState.GAME_OVER
@@ -175,7 +177,7 @@ class GameEngine(Entity):
             ):
                 self.resume_game()
                 return
-        if key == "h" or key == "H":
+        if key == self.controls.toggle_hud or key == self.controls.toggle_hud.upper():
             if self.game_state is C.EGameState.RUNNING:
                 if self.hud.visible:
                     self.hud.hide()

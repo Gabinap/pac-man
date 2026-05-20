@@ -34,12 +34,14 @@ class MainMenuView(BaseView):
         difficulty: C.EDifficulty,
         start_game: Callable[[], None],
         show_instructions: Callable[[], None],
+        show_settings: Callable[[], None] = lambda: None,
         set_difficulty: Callable[[C.EDifficulty], None] = lambda _: None,
     ) -> None:
         super().__init__()
 
         self.start_game = start_game
         self.show_instructions = show_instructions
+        self.show_settings = show_settings
         self.difficulty = difficulty
         self.config = config
         self.scores_manager = scores_manager
@@ -47,12 +49,11 @@ class MainMenuView(BaseView):
 
         self.title = make_outlined_text(
             self,
-            "PAK-MAN",
+            "PAC-MAN",
             y=0.32,
             scale=6,
             fill=TITLE_COLOR,
             outline=TITLE_OUTLINE,
-            thickness=0.008,
         )
         self.start_text = Text(
             text="Press SPACE to play",
@@ -74,6 +75,13 @@ class MainMenuView(BaseView):
         self.btn_instructions = make_button(self, "Instructions", y=-0.1)
         self.btn_instructions.on_click = self.show_instructions
 
+        self.btn_settings = make_button(
+            self, "設定", y=0.4, x=0.6, w=0.10, h=0.10
+        )
+        if self.btn_settings.text_entity is not None:
+            self.btn_settings.text_entity.font = "DroidSansFallbackFull.ttf"
+        self.btn_settings.on_click = self.show_settings
+
         self.btn_exit = make_button(self, "Exit", y=-0.2)
         self.btn_exit.on_click = application.quit
 
@@ -81,6 +89,7 @@ class MainMenuView(BaseView):
             self.btn_start,
             self.btn_difficulty,
             self.btn_instructions,
+            self.btn_settings,
             self.btn_exit,
         ]
         self.selected_index = 0
