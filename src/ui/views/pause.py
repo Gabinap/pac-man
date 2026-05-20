@@ -8,6 +8,7 @@ from src.ui.views.base import BaseView
 from src.utils.views_utils import (
     handle_menu_input,
     make_button,
+    make_panel,
     update_menu_highlight,
 )
 
@@ -22,6 +23,8 @@ class PauseView(BaseView):
     ) -> None:
         super().__init__()
         self.resume_callback = resume_callback
+
+        make_panel(self, x=0, y=0.02, w=0.55, h=0.54)
 
         Text(
             text="PAUSED",

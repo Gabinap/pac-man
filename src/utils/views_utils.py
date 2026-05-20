@@ -23,27 +23,34 @@ BTN_W, BTN_H = 0.42, 0.085
 BTN_SCALE = (BTN_W, BTN_H)
 BTN_ASPECT = BTN_W / BTN_H
 BORDER_PAD = 0.006
-CORNER_RADIUS = 0.5
+CORNER_RADIUS = 0.20
 CORNER_SEGMENTS = 16
-PANEL_RADIUS = 0.35
+PANEL_RADIUS = 0.15
 PANEL_BORDER_PAD = 0.008
 
 DIFFICULTIES = [C.EDifficulty.EASY, C.EDifficulty.MEDIUM, C.EDifficulty.HARD]
 
 
-def make_button(parent: Entity, text: str, y: float, **kwargs) -> Button:
+def make_button(
+    parent: Entity,
+    text: str,
+    y: float,
+    x: float = 0,
+    w: float | None = None,
+    h: float | None = None,
+    **kwargs,
+) -> Button:
+    bw = w if w is not None else BTN_W
+    bh = h if h is not None else BTN_H
+    btn_aspect = bw / bh
+    brd_aspect = (bw + BORDER_PAD) / (bh + BORDER_PAD)
     border = Entity(
         model=Quad(
-            radius=CORNER_RADIUS,
-            segments=CORNER_SEGMENTS,
-            aspect=BTN_ASPECT,
+            radius=CORNER_RADIUS, segments=CORNER_SEGMENTS, aspect=brd_aspect
         ),
         color=BORDER,
-        scale=(
-            BTN_SCALE[0] + BORDER_PAD,
-            BTN_SCALE[1] + BORDER_PAD,
-        ),
-        position=(0, y, 0.001),
+        scale=(bw + BORDER_PAD, bh + BORDER_PAD),
+        position=(x, y, 0.001),
         parent=parent,
     )
     border.setTransparency(TransparencyAttrib.MAlpha)
@@ -51,14 +58,13 @@ def make_button(parent: Entity, text: str, y: float, **kwargs) -> Button:
     btn_args = {
         "text": text,
         "model": Quad(
-            radius=CORNER_RADIUS,
-            segments=CORNER_SEGMENTS,
-            aspect=BTN_ASPECT,
+            radius=CORNER_RADIUS, segments=CORNER_SEGMENTS, aspect=btn_aspect
         ),
         "color": GLASS,
         "highlight_color": GLASS_HOVER,
         "pressed_color": GLASS_HOVER,
-        "scale": BTN_SCALE,
+        "scale": (bw, bh),
+        "x": x,
         "y": y,
         "parent": parent,
     }
@@ -70,10 +76,15 @@ def make_button(parent: Entity, text: str, y: float, **kwargs) -> Button:
     return btn
 
 
-def make_panel(parent: Entity, x: float, y: float, w: float, h: float) -> None:
-    aspect = w / h if h > 0 else 1.0
+def make_panel(
+    parent: Entity, x: float, y: float, w: float, h: float
+) -> tuple:
+    pnl_aspect = w / h if h > 0 else 1.0
+    brd_aspect = (
+        (w + PANEL_BORDER_PAD) / (h + PANEL_BORDER_PAD) if h > 0 else 1.0
+    )
     border = Entity(
-        model=Quad(radius=PANEL_RADIUS, segments=12, aspect=aspect),
+        model=Quad(radius=PANEL_RADIUS, segments=16, aspect=brd_aspect),
         color=PANEL_BORDER,
         scale=(w + PANEL_BORDER_PAD, h + PANEL_BORDER_PAD),
         position=(x, y, 0.02),
@@ -81,13 +92,50 @@ def make_panel(parent: Entity, x: float, y: float, w: float, h: float) -> None:
     )
     border.setTransparency(TransparencyAttrib.MAlpha)
     panel = Entity(
-        model=Quad(radius=PANEL_RADIUS, segments=12, aspect=aspect),
+        model=Quad(radius=PANEL_RADIUS, segments=16, aspect=pnl_aspect),
         color=PANEL_COLOR,
         scale=(w, h),
         position=(x, y, 0.019),
         parent=parent,
     )
     panel.setTransparency(TransparencyAttrib.MAlpha)
+    return border, panel
+
+
+def make_section_divider(parent: Entity, y: float, label: str) -> None:
+    """Centered label flanked by a horizontal rule and diamond accents."""
+    Text(
+        label,
+        origin=(0, 0),
+        x=0,
+        y=y,
+        scale=1.5,
+        color=SCORES_TITLE_COLOR,
+        parent=parent,
+    )
+    _INNER = 0.095
+    _OUTER = 0.275
+    _LINE_W = _OUTER - _INNER
+    _LINE_CX = (_INNER + _OUTER) / 2
+    _D_X = _OUTER + 0.014
+    _D_SIZE = 0.013
+    for sign in (-1, 1):
+        line = Entity(
+            model="quad",
+            color=PANEL_BORDER,
+            scale=(_LINE_W, 0.003),
+            position=(sign * _LINE_CX, y, 0.001),
+            parent=parent,
+        )
+        line.setTransparency(TransparencyAttrib.MAlpha)
+        Entity(
+            model="quad",
+            color=SCORES_TITLE_COLOR,
+            scale=(_D_SIZE, _D_SIZE),
+            rotation_z=45,
+            position=(sign * _D_X, y, 0.001),
+            parent=parent,
+        )
 
 
 def make_outlined_text(
@@ -97,7 +145,7 @@ def make_outlined_text(
     scale: float,
     fill: object,
     outline: object,
-    thickness: float = 0.008,
+    thickness: float = 0.004,
     **kwargs,
 ) -> Text:
     offsets = [

@@ -1,8 +1,9 @@
 """HUD overlay: split into left and right columns to keep the map clear."""
 
-from ursina import Text, time
+from ursina import Text, time, camera
 
 import src.config.constants as C
+from src.utils.views_utils import make_panel
 
 _L = -0.85  # left column x anchor
 _R = 0.85  # right column x anchor
@@ -16,14 +17,19 @@ class HUD:
     def __init__(self, view_mode: C.EViewMode) -> None:
         self._view_mode = view_mode
 
+        # Background pills — created before text so they sit behind (z=0.019).
+        self._bg_panels: list = [
+            # Left cluster: Lv / Lives / Pacgums / Super / Ghosts
+            *make_panel(camera.ui, x=-0.645, y=0.285, w=0.44, h=0.42),
+            # Right cluster: FPS / Score
+            *make_panel(camera.ui, x=0.672, y=0.415, w=0.42, h=0.175),
+        ]
+
         self._level_text = self._left("Lv.1", 0.45, scale=2)
         self._health_text = self._left("Lives: 0", 0.38, scale=2)
         self._pacgums_text = self._left("Pacgums: 0", 0.26, scale=1.5)
         self._super_text = self._left("Super: 0", 0.19, scale=1.5)
         self._ghosts_text = self._left("Ghosts: 0", 0.12, scale=1.5)
-        self._controls_text = self._left(
-            "Move: WASD / Arrows", -0.42, scale=1.3
-        )
 
         self._fps_text = self._right("FPS: 0", 0.45, scale=2)
         self._score_text = self._right("Score: 0", 0.38, scale=2)
@@ -61,12 +67,12 @@ class HUD:
 
     def _all_entities(self) -> list:
         return [
+            *self._bg_panels,
             self._level_text,
             self._health_text,
             self._pacgums_text,
             self._super_text,
             self._ghosts_text,
-            self._controls_text,
             self._fps_text,
             self._score_text,
         ]
