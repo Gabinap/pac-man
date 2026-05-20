@@ -1,7 +1,7 @@
 import random
 from enum import Enum, auto
 from typing import Any, TYPE_CHECKING
-from ursina import held_keys, invoke
+from ursina import held_keys, invoke, mouse
 
 import src.config.constants as C
 from src.config.game_config import GameConfig
@@ -9,6 +9,14 @@ from .animated_entity import AnimatedEntity, _pick_anim, _skip_if_destroyed
 
 if TYPE_CHECKING:
     from src.gameplay.maze import Maze
+
+
+_FPS_DIRS: tuple[tuple[int, int], ...] = ((0, 1), (-1, 0), (0, -1), (1, 0))
+
+
+def _rotation_to_grid_dir(angle: float) -> tuple[int, int]:
+    """Snap a rotation_y angle to the nearest cardinal grid direction."""
+    return _FPS_DIRS[int((angle % 360 + 45) / 90) % 4]
 
 
 class PlayerState(Enum):
@@ -22,6 +30,7 @@ class Player(AnimatedEntity):
     _TAUNT_ANIM = "skeleton-skeleton|taunt"
     _TAUNT_INTERVAL = 5.0
     _TAUNT_CHANCE = 1 / 3
+    _FPS_SENSITIVITY: float = 40.0
 
     def __init__(
         self,
@@ -38,6 +47,7 @@ class Player(AnimatedEntity):
         self._health = effective_lives
         self.state = PlayerState.NORMAL
         self.cheat_mode: bool = False
+        self.fps_mode: bool = False
         self._empower_seq: Any = None
         self.spawn_x = self.x
         self.spawn_z = self.z
@@ -157,18 +167,37 @@ class Player(AnimatedEntity):
         )
         moving = False
 
-        if held_keys["w"] or held_keys["up arrow"]:
-            self.move_in_direction(0, -1)
-            moving = True
-        elif held_keys["s"] or held_keys["down arrow"]:
-            self.move_in_direction(0, 1)
-            moving = True
-        elif held_keys["a"] or held_keys["left arrow"]:
-            self.move_in_direction(-1, 0)
-            moving = True
-        elif held_keys["d"] or held_keys["right arrow"]:
-            self.move_in_direction(1, 0)
-            moving = True
+        if self.fps_mode:
+            self.rotation_y += mouse.velocity[0] * self._FPS_SENSITIVITY
+            self.visible = False
+            forward = _rotation_to_grid_dir(self.rotation_y)
+            right = _rotation_to_grid_dir(self.rotation_y - 90)
+            dir_x, dir_y = 0, 0
+            if held_keys["w"] or held_keys["up arrow"]:
+                dir_x, dir_y = -forward[0], -forward[1]
+            elif held_keys["s"] or held_keys["down arrow"]:
+                dir_x, dir_y = forward
+            elif held_keys["d"] or held_keys["right arrow"]:
+                dir_x, dir_y = right
+            elif held_keys["a"] or held_keys["left arrow"]:
+                dir_x, dir_y = -right[0], -right[1]
+            if dir_x != 0 or dir_y != 0:
+                self.move_in_direction(dir_x, dir_y)
+                moving = True
+        else:
+            self.visible = True
+            if held_keys["w"] or held_keys["up arrow"]:
+                self.move_in_direction(0, -1)
+                moving = True
+            elif held_keys["s"] or held_keys["down arrow"]:
+                self.move_in_direction(0, 1)
+                moving = True
+            elif held_keys["a"] or held_keys["left arrow"]:
+                self.move_in_direction(-1, 0)
+                moving = True
+            elif held_keys["d"] or held_keys["right arrow"]:
+                self.move_in_direction(1, 0)
+                moving = True
 
         if moving:
             if self._oneshot_seq and not self.is_attacking:

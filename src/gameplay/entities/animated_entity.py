@@ -93,6 +93,8 @@ class AnimatedEntity(Entity):
         self._grid_direction = value
 
     def _rotate_toward(self, dir_x: int, dir_y: int) -> None:
+        if getattr(self, "fps_mode", False):
+            return
         if (dir_x, dir_y) == self._facing:
             return
         self._facing = (dir_x, dir_y)
@@ -196,8 +198,11 @@ class AnimatedEntity(Entity):
             actor.stop()
         self._current_anim = None
         self._play_on_all(anim, rate, loop=False)
-        scale_up: Any = self.animate_scale(self.spec.attack_scale, half / 2)
-        scale_up.ignore_paused = True
+        if self.spec.supported:
+            scale_up: Any = self.animate_scale(
+                self.spec.attack_scale, half / 2
+            )
+            scale_up.ignore_paused = True
         invoke(
             self._restore_scale,
             half * 2,

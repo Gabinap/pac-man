@@ -11,8 +11,7 @@ $(error uv not found. Install it: curl -LsSf https://astral.sh/uv/install.sh | s
 endif
 
 install:
-	pyenv install --skip-existing $(PYTHON_VERSION)
-	$(UV) python install
+	$(UV) python install $(PYTHON_VERSION)
 	$(UV) sync --frozen
 	@$(MAKE) patch
 
