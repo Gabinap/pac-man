@@ -174,19 +174,6 @@ _OPHANIM_ANGEL = ModelSpec(
     attack_scale=0.9,
 )
 
-# Animations: ['ArmatureArmatureAction']
-_SKULL_CRAWLER = ModelSpec(
-    path="models/skull_crawler.glb",
-    scale=0.07,
-    rotation_x=90,
-    anim_idle=0,
-    anim_walk=0,
-    anim_attack=0,
-    attack_scale=0.12,
-    anim_idle_rate=0.5,
-    anim_attack_rate=3,
-)
-
 # Animations: ['Swim']
 _TUNA_FISH = ModelSpec(
     path="models/tuna_fish.glb",
@@ -235,7 +222,6 @@ MODEL_SPECS: list[ModelSpec] = [
     _GROBBO,
     _HALLOWEEN_BAT,
     _OPHANIM_ANGEL,
-    _SKULL_CRAWLER,
     _TUNA_FISH,
     _CALIBUR,
     _ARTOON_SKELETON,
