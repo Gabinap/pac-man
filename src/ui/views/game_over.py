@@ -46,6 +46,15 @@ class GameOverView(BaseView):
             z=-1,
             ignore_paused=True,
         )
+        self.score_text = Text(
+            f"Score: {score_callback()}",
+            parent=self,
+            origin=(0, 0),
+            y=0.2,
+            color=color.white,
+            z=-1,
+            ignore_paused=True,
+        )
 
         self.input_label = Text(
             "Enter your name:",
@@ -105,6 +114,8 @@ class GameOverView(BaseView):
         else:
             self.title.text = "GAME OVER"
             self.title.color = color.red
+
+        self.score_text.text = f"Score: {self.score_callback()}"
         self.name_input.text = ""
         self.input_error.text = ""
         self.selected_index = 0

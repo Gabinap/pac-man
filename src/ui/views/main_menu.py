@@ -89,8 +89,8 @@ class MainMenuView(BaseView):
             self.btn_start,
             self.btn_difficulty,
             self.btn_instructions,
-            self.btn_settings,
             self.btn_exit,
+            self.btn_settings,
         ]
         self.selected_index = 0
         self.update_highlight()

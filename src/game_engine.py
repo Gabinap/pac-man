@@ -177,7 +177,10 @@ class GameEngine(Entity):
             ):
                 self.resume_game()
                 return
-        if key == self.controls.toggle_hud or key == self.controls.toggle_hud.upper():
+        if (
+            key == self.controls.toggle_hud
+            or key == self.controls.toggle_hud.upper()
+        ):
             if self.game_state is C.EGameState.RUNNING:
                 if self.hud.visible:
                     self.hud.hide()
