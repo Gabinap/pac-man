@@ -1,5 +1,6 @@
 from typing import Callable, Optional
 from ursina import Entity, Text, destroy, invoke
+import src.config.constants as C
 
 
 class Timer(Entity):

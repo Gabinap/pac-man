@@ -60,7 +60,7 @@ class CameraEffectsManager:
         camera.rotation_x = 80
         camera.rotation_y = 0
         camera.rotation_z = 0
-        camera.fov = 110
+        camera.fov = 120
 
         mouse.locked = False
         mouse.visible = True

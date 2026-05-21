@@ -72,14 +72,19 @@ class Player(AnimatedEntity):
         self.state = PlayerState.EMPOWERED
         self.animate_scale(self.spec.scale * 2, duration=0.2)
         self._empower_seq = invoke(
-            self._end_empower, delay=C.FRIGHTENED_DURATION
+            self._end_empower, delay=C.FRIGHTENED_DURATION - 0.3
         )
 
     @_skip_if_destroyed
     def _end_empower(self) -> None:
         self._empower_seq = None
-        self.state = PlayerState.NORMAL
         self.animate_scale(self.spec.scale, duration=0.3)
+
+        def _make_vulnerable() -> None:
+            if self._empower_seq is None:
+                self.state = PlayerState.NORMAL
+
+        invoke(_make_vulnerable, delay=0.3)
 
     def be_stunned(self, duration: float) -> None:
         if self._oneshot_seq:
@@ -189,7 +194,8 @@ class Player(AnimatedEntity):
                 self.move_in_direction(dir_x, dir_y)
                 moving = True
         else:
-            self.visible = True
+            if self.state is not PlayerState.UNTOUCHABLE:
+                self.visible = True
             if held_keys[c.move_up] or held_keys["up arrow"]:
                 self.move_in_direction(0, -1)
                 moving = True

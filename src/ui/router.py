@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, TYPE_CHECKING
 from ursina import application
 
 import src.config.constants as C
@@ -8,10 +8,14 @@ from src.ui.views.instructions import InstructionsView
 from src.ui.views.game_over import GameOverView
 from src.ui.views.pause import PauseView
 from src.ui.views.settings import SettingsView
+from src.ui.views.next_level import NextLevelView
+
+if TYPE_CHECKING:
+    from src.game_engine import GameEngine
 
 
 class ViewRouter:
-    def __init__(self, engine: Any) -> None:
+    def __init__(self, engine: "GameEngine") -> None:
         self.engine = engine
         self._views: Dict[C.EGameView, BaseView] = {}
         self.current: C.EGameView | None = None
@@ -48,6 +52,11 @@ class ViewRouter:
             resume_callback=self.engine.resume_game,
             menu_callback=self.engine.quit_to_menu,
         )
+        self._views[C.EGameView.NEXT_LEVEL] = NextLevelView(
+            menu_callback=self.engine.quit_to_menu,
+            level_callback=lambda: self.engine.session.get_level(),
+            go_next_level_callback=self.go_to_next_level,
+        )
 
     def switch_view(self, target: C.EGameView) -> None:
         if self.current and self.current in self._views:
@@ -68,15 +77,34 @@ class ViewRouter:
             application.paused = True
 
         elif target == C.EGameView.MENU:
-            application.paused = False
+            application.paused = True
             if self.engine.hud:
                 self.engine.hud.hide()
             if self.engine.session.timer:
                 self.engine.session.timer.stop()
+        elif target == C.EGameView.NEXT_LEVEL:
+            application.paused = True
 
         new_view = self._views[target]
         new_view.enable()
         new_view.on_enter()
+
+    def go_to_next_level(self) -> None:
+        self.engine.session.destroy_entities()
+        self.engine.session.init_level()
+        self.engine.hud.update_level(self.engine.session.current_level_index)
+        was_fps = self.engine.camera_effects.fps_mode
+        if was_fps:
+            self.engine.camera_effects.fps_mode = True
+            self.engine.camera_effects.set_fps()
+
+        if self.engine.session.timer:
+            self.engine.session.timer.launch_timer()
+
+        self.exit_current()
+        application.paused = False
+        if self.engine.hud:
+            self.engine.hud.show()
 
     def disable_all(self) -> None:
         """Hide every view (used when starting a game)."""

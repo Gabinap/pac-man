@@ -30,6 +30,10 @@ class GameSession:
         self.pacgum_controller: PacgumController | None = None
         self.timer: Timer | None = None
 
+    def timer_over_action(self) -> None:
+        self.engine.game_state = C.EGameState.GAME_OVER
+        self.engine.router.switch_view(C.EGameView.GAME_OVER)
+
     def init_level(self) -> None:
         """Build geometry and entities for the current level."""
         level = self.engine.config.levels[self.current_level_index]
@@ -47,7 +51,7 @@ class GameSession:
             level.level_max_time or self.engine.config.level_max_time
         )
 
-        self.timer = Timer(level_max_time)
+        self.timer = Timer(level_max_time, self.timer_over_action)
         seed = (
             self.engine.config.seed
             if self.current_level_index == 0
@@ -95,7 +99,6 @@ class GameSession:
             self.timer.stop()
             self.add_score(self.timer.duration)
 
-        was_fps = self.engine.camera_effects.fps_mode
         self.current_level_index += 1
 
         if self.current_level_index >= len(self.engine.config.levels):
@@ -103,17 +106,8 @@ class GameSession:
             self.engine.game_state = C.EGameState.GAME_OVER
             self.engine.router.switch_view(C.EGameView.GAME_OVER)
             return
-
-        self.destroy_entities()
-        self.init_level()
-        self.engine.hud.update_level(self.current_level_index)
-
-        if was_fps:
-            self.engine.camera_effects.fps_mode = True
-            self.engine.camera_effects.set_fps()
-
-        if self.timer:
-            self.timer.launch_timer()
+        else:
+            self.engine.router.switch_view(C.EGameView.NEXT_LEVEL)
 
     def destroy_entities(self) -> None:
         """Release level-scoped entities before changing level or quitting."""
@@ -173,6 +167,9 @@ class GameSession:
         ):
             return -1
         return self.player.health
+
+    def get_level(self) -> int:
+        return self.current_level_index + 1
 
     def get_pacgum_count(self) -> int:
         if self.pacgum_controller is None:
