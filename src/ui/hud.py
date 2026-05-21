@@ -16,11 +16,8 @@ class HUD:
     def __init__(self, view_mode: C.EViewMode) -> None:
         self._view_mode = view_mode
 
-        # Background pills — created before text so they sit behind (z=0.019).
         self._bg_panels: list = [
-            # Left cluster: Lv / Lives / Pacgums / Super / Ghosts
             *make_panel(camera.ui, x=-0.645, y=0.285, w=0.44, h=0.42),
-            # Right cluster: FPS / Score
             *make_panel(camera.ui, x=0.672, y=0.415, w=0.42, h=0.175),
         ]
 
