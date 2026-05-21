@@ -72,7 +72,7 @@ class Player(AnimatedEntity):
         self.state = PlayerState.EMPOWERED
         self.animate_scale(self.spec.scale * 2, duration=0.2)
         self._empower_seq = invoke(
-            self._end_empower, delay=C.FRIGHTENED_DURATION
+            self._end_empower, delay=C.FRIGHTENED_DURATION - 0.3
         )
 
     @_skip_if_destroyed

@@ -1,7 +1,6 @@
 """HUD overlay: split into left and right columns to keep the map clear."""
 
-from ursina import Text, time, camera
-
+from ursina import Text, time, camera, Entity, color, curve, invoke
 import src.config.constants as C
 from src.utils.views_utils import make_panel
 
@@ -33,6 +32,22 @@ class HUD:
 
         self._fps_text = self._right("FPS: 0", 0.45, scale=2)
         self._score_text = self._right("Score: 0", 0.38, scale=2)
+        self._empowered_bar_text = self._right(
+            "Empowered", 0.20, scale=1, enabled=False
+        )
+        self._empowered_bar = Entity(
+            model="quad",
+            parent=camera.ui,
+            color=color.yellow,
+            origin=(0.5, 0),
+            position=(_R, 0.15),
+            scale=(
+                0.18,
+                0.02,
+            ),
+            enabled=False,
+        )
+        self._hide_bar_seq = None
 
         self._fps_avg: float = 0.0
         self.visible = False
@@ -47,12 +62,9 @@ class HUD:
         )
 
     @staticmethod
-    def _right(text: str, y: float, scale: float = 1.5) -> Text:
+    def _right(text: str, y: float, scale: float = 1.5, **kwargs) -> Text:
         return Text(
-            text=text,
-            origin=(0.5, 0),
-            position=(_R, y),
-            scale=scale,
+            text=text, origin=(0.5, 0), position=(_R, y), scale=scale, **kwargs
         )
 
     def show(self) -> None:
@@ -96,6 +108,25 @@ class HUD:
 
     def update_ghosts_killed(self, count: int) -> None:
         self._ghosts_text.text = f"Ghosts killed: {count}"
+
+    def show_empowered_bar(self) -> None:
+        self._empowered_bar.enable()
+        self._empowered_bar_text.enable()
+        if self._hide_bar_seq:
+            self._hide_bar_seq.pause()
+            self._hide_bar_seq = None
+        self._empowered_bar.scale_x = 0.18
+        self._empowered_bar.animate(
+            "scale_x", 0, duration=C.FRIGHTENED_DURATION, curve=curve.linear
+        )
+
+        self._hide_bar_seq = invoke(
+            self._hide_empowered_bar, delay=C.FRIGHTENED_DURATION
+        )
+
+    def _hide_empowered_bar(self) -> None:
+        self._empowered_bar.disable()
+        self._empowered_bar_text.disable()
 
     def update(self) -> None:
         if time.dt > 0:
