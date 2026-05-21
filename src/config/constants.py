@@ -22,6 +22,7 @@ class EGameView(Enum):
     GAME_OVER = "game_over"
     PAUSE = "pause"
     SETTINGS = "settings"
+    NEXT_LEVEL = "next_level"
 
 
 class EDifficulty(Enum):
