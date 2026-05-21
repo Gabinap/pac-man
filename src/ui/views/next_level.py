@@ -14,23 +14,39 @@ from src.utils.views_utils import (
 
 class NextLevelView(BaseView):
 
-    def __init__(self, back_callback: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        menu_callback: Callable[[], None],
+        level_callback: Callable[[], int],
+        go_next_level_callback,
+    ) -> None:
         super().__init__()
 
-        self.back_callback = back_callback
+        self.menu_callback = menu_callback
+        self.level_callback = level_callback
+        self.go_next_level_callback = go_next_level_callback
         Text(
-            text="- Instructions -",
+            text="Well done !",
             origin=(0, 0),
             y=0.35,
             scale=3,
-            color=color.yellow,
+            color=color.azure,
             parent=self,
         )
+        self.level_text = Text(
+            text=f"Level {level_callback()} completed",
+            origin=(0, 0),
+            y=0.25,
+            scale=3,
+            color=color.gold,
+            parent=self,
+        )
+        self.next_btn = make_button(self, "Next", y=-0.3)
+        self.next_btn.on_click = self.go_next_level_callback
+        self.btn_back = make_button(self, "Back to menu", y=-0.4)
+        self.btn_back.on_click = self.menu_callback
 
-        self.btn_back = make_button(self, "Back", y=-0.4)
-        self.btn_back.on_click = self.back_callback
-
-        self.elements = [self.btn_back]
+        self.elements = [self.next_btn, self.btn_back]
         self.selected_index = 0
         self.update_highlight()
 
@@ -42,10 +58,13 @@ class NextLevelView(BaseView):
             return
 
         if key in ("backspace", "escape", "space"):
-            self.back_callback()
+            self.menu_callback()
             return
 
         self.selected_index = handle_menu_input(
             key, self.elements, self.selected_index
         )
         self.update_highlight()
+
+    def on_enter(self) -> None:
+        self.level_text.text = f"Level {self.level_callback() - 1} completed"
