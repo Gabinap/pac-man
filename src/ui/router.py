@@ -38,10 +38,11 @@ class ViewRouter:
         self._views[C.EGameView.SETTINGS] = SettingsView(
             controls=self.engine.controls,
             back_callback=lambda: self.switch_view(C.EGameView.MENU),
+            engine=self.engine,
         )
         self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
             back_callback=lambda: self.switch_view(C.EGameView.MENU),
-            game_config=self.engine.config,  # Remplacer 'self.config' par la variable contenant ton dictionnaire de configuration
+            game_config=self.engine.config,
         )
         self._views[C.EGameView.GAME_OVER] = GameOverView(
             scores_manager=self.engine.scores_manager,

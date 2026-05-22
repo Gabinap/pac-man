@@ -32,9 +32,9 @@ class GameEngine(Entity):
 
         self.camera_effects = CameraEffectsManager(engine=self)
         self.session = GameSession(engine=self)
+        self.audio_manager = AudioManager()
         self.router = ViewRouter(engine=self)
         self.input_manager = InputManager(engine=self)
-        self.audio_manager = AudioManager()
         self.audio_manager.play_ambient_music()
         window.color = WINDOW_BG
         window.exit_button.enabled = False
@@ -145,6 +145,7 @@ class GameEngine(Entity):
     def quit_to_menu(self) -> None:
         self.session.destroy_entities()
         self.session.score = 0
+        self.hud._hide_empowered_bar()
         self.session.current_level_index = 0
         self.session.is_win = False
         self.game_state = C.EGameState.NOT_STARTED
