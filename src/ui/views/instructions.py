@@ -45,8 +45,4 @@ class InstructionsView(BaseView):
         if key in ("backspace", "escape", "space"):
             self.back_callback()
             return
-
-        self.selected_index = handle_menu_input(
-            key, self.elements, self.selected_index
-        )
         self.update_highlight()
