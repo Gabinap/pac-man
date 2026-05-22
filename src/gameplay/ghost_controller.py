@@ -139,7 +139,7 @@ class GhostController:
                         self.player.attack()
                         ghost.stun()
                         self.ghosts_killed += 1
-                        self._add_score(C.GHOST_VALUE)
+                        self._add_score(self.engine.config.points_per_ghost)
                         if self.engine and self.engine.hud:
                             self.engine.hud.update_ghosts_killed(
                                 self.ghosts_killed

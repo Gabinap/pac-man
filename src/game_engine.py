@@ -40,6 +40,7 @@ class GameEngine(Entity):
         self.assets_to_load = self._get_assets_to_load()
         self.total_assets = len(self.assets_to_load)
         self.is_loading = True
+        self.is_model_loading = False
         self.frames_to_wait = 4
 
     @property
@@ -194,7 +195,7 @@ class GameEngine(Entity):
 
         self.input_manager.handle_input(key)
 
-    def preloading_assets(self) -> None:
+    def update_loading_ui(self) -> None:
         loaded = self.total_assets - len(self.assets_to_load)
         progress = (
             int((loaded / self.total_assets) * 100)
@@ -203,7 +204,7 @@ class GameEngine(Entity):
         )
         self.loading_text.text = f"Loading... {progress}%"
 
-        step = int(time.time() * 3) % 4
+        step = int(time.time() * 2) % 4
 
         for i, img in enumerate(self.loading_progress_images):
             if i < step:
@@ -211,19 +212,24 @@ class GameEngine(Entity):
             else:
                 img.enabled = False
 
-        if not self.assets_to_load:
-            self.is_loading = False
+    def _on_model_loaded(self, model) -> None:
+        self.is_model_loading = False
 
+    def preloading_assets(self) -> None:
+        self.update_loading_ui()
+        if self.is_model_loading:
+            return
+        if self.assets_to_load:
+            self.is_model_loading = True
+            path = self.assets_to_load.pop(0)
+            self.app.loader.loadModel(path, callback=self._on_model_loaded)
+        else:
+            self.is_loading = False
             self.loading_text.disable()
             self.loading_image.disable()
             for img in self.loading_progress_images:
                 img.disable()
-
             self._post_load_init()
-            return
-
-        path = self.assets_to_load.pop(0)
-        self.app.loader.loadModel(path)
 
     def update(self) -> None:
         if self.is_loading:

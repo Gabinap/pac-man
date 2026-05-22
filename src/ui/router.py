@@ -2,6 +2,7 @@ from typing import Dict, Any, TYPE_CHECKING
 from ursina import application
 
 import src.config.constants as C
+from src.gameplay.entities.player import PlayerState
 from src.ui.views.base import BaseView
 from src.ui.views.main_menu import MainMenuView
 from src.ui.views.instructions import InstructionsView
@@ -40,11 +41,12 @@ class ViewRouter:
         )
         self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
             back_callback=lambda: self.switch_view(C.EGameView.MENU),
+            game_config=self.engine.config,  # Remplacer 'self.config' par la variable contenant ton dictionnaire de configuration
         )
         self._views[C.EGameView.GAME_OVER] = GameOverView(
             scores_manager=self.engine.scores_manager,
             score_callback=lambda: self.engine.session.score,
-            menu_callback=lambda: self.switch_view(C.EGameView.MENU),
+            menu_callback=self.engine.quit_to_menu,
             replay_callback=self.engine.start_game,
             get_is_win=lambda: self.engine.session.is_win,
         )
@@ -67,6 +69,7 @@ class ViewRouter:
         self.current = target
 
         if target == C.EGameView.GAME_OVER:
+            self.engine.game_state = C.EGameState.GAME_OVER
             application.paused = True
             if self.engine.hud:
                 self.engine.hud.hide()
@@ -74,15 +77,18 @@ class ViewRouter:
                 self.engine.session.timer.stop()
 
         elif target == C.EGameView.PAUSE:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
 
         elif target == C.EGameView.MENU:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
             if self.engine.hud:
                 self.engine.hud.hide()
             if self.engine.session.timer:
                 self.engine.session.timer.stop()
         elif target == C.EGameView.NEXT_LEVEL:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
 
         new_view = self._views[target]
@@ -100,6 +106,9 @@ class ViewRouter:
 
         if self.engine.session.timer:
             self.engine.session.timer.launch_timer()
+
+        self.engine.hud._hide_empowered_bar()
+        self.engine.game_state = C.EGameState.RUNNING
 
         self.exit_current()
         application.paused = False

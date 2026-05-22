@@ -1,7 +1,6 @@
 # pac-man
 
 ## Common space
-- faut mettre du son en sah (et le lier aux instructions)
 
 ## Gab space:
 - la palette de couleur doit etre appliquee partout avec un bel hud et menus
@@ -19,4 +18,4 @@
 
  
 ## Ali space:
-- mettre du contenue dans instructions
+- faut mettre du son en sah (et le lier aux instructions)
