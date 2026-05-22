@@ -44,7 +44,7 @@ class ViewRouter:
         self._views[C.EGameView.GAME_OVER] = GameOverView(
             scores_manager=self.engine.scores_manager,
             score_callback=lambda: self.engine.session.score,
-            menu_callback=lambda: self.switch_view(C.EGameView.MENU),
+            menu_callback=self.engine.quit_to_menu,
             replay_callback=self.engine.start_game,
             get_is_win=lambda: self.engine.session.is_win,
         )
