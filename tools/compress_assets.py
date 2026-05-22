@@ -33,7 +33,7 @@ def _compress_glb(path: Path) -> tuple[int, int]:
     json_len, json_type = struct.unpack_from("<II", raw, 12)
     if json_type != 0x4E4F534A:
         return old_size, old_size
-    gltf = json.loads(raw[20 : 20 + json_len])
+    gltf = json.loads(raw[20:20 + json_len])
 
     # BIN chunk (optional)
     bin_start = 12 + 8 + json_len
@@ -42,7 +42,7 @@ def _compress_glb(path: Path) -> tuple[int, int]:
     bin_len, bin_type = struct.unpack_from("<II", raw, bin_start)
     if bin_type != 0x004E4942:
         return old_size, old_size
-    bin_data = bytearray(raw[bin_start + 8 : bin_start + 8 + bin_len])
+    bin_data = bytearray(raw[bin_start + 8:bin_start + 8 + bin_len])
 
     images = gltf.get("images", [])
     buffer_views = gltf.get("bufferViews", [])
@@ -64,7 +64,7 @@ def _compress_glb(path: Path) -> tuple[int, int]:
         bv = buffer_views[bv_idx]
         offset = bv.get("byteOffset", 0)
         length = bv["byteLength"]
-        chunk = bytes(bin_data[offset : offset + length])
+        chunk = bytes(bin_data[offset:offset + length])
 
         # 4-byte alignment padding
         while len(new_bin) % 4:
@@ -73,11 +73,13 @@ def _compress_glb(path: Path) -> tuple[int, int]:
         if bv_idx in img_bv:
             mime = img_bv[bv_idx]
             try:
-                pil = Image.open(io.BytesIO(chunk))
+                pil: Image.Image = Image.open(io.BytesIO(chunk))
                 if pil.width > MAX_SIZE or pil.height > MAX_SIZE:
                     mode = "RGBA" if mime == "image/png" else "RGB"
                     pil = pil.convert(mode)
-                    pil.thumbnail((MAX_SIZE, MAX_SIZE), Image.LANCZOS)
+                    pil.thumbnail(
+                        (MAX_SIZE, MAX_SIZE), Image.Resampling.LANCZOS
+                    )
                     out = io.BytesIO()
                     if mime == "image/png":
                         pil.save(out, format="PNG", optimize=True)
@@ -119,7 +121,7 @@ def _compress_glb(path: Path) -> tuple[int, int]:
     return old_size, len(out_buf)
 
 
-# ── Texture helpers ───────────────────────────────────────────────────────────
+# ── Texture helpers ──────────────────────────────────────────────────────────
 
 def _compress_texture(path: Path) -> tuple[int, int]:
     """Resize a JPG/PNG texture file. Returns (old_bytes, new_bytes)."""
@@ -128,7 +130,7 @@ def _compress_texture(path: Path) -> tuple[int, int]:
         img = Image.open(path)
         if img.width <= MAX_SIZE and img.height <= MAX_SIZE:
             return old_size, old_size
-        img.thumbnail((MAX_SIZE, MAX_SIZE), Image.LANCZOS)
+        img.thumbnail((MAX_SIZE, MAX_SIZE), Image.Resampling.LANCZOS)
         ext = path.suffix.lower()
         if ext == ".png":
             img.save(path, format="PNG", optimize=True)
@@ -140,7 +142,7 @@ def _compress_texture(path: Path) -> tuple[int, int]:
     return old_size, path.stat().st_size
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     total_saved = 0
@@ -163,7 +165,10 @@ def main() -> None:
         saved = old - new
         total_saved += saved
         status = f"-{saved // 1024:>6} KB" if saved > 0 else "  unchanged"
-        print(f"  {p.name:<40} {old // 1024:>6} KB → {new // 1024:>6} KB  {status}")
+        print(
+            f"  {p.name:<40} {old // 1024:>6} KB"
+            f" → {new // 1024:>6} KB  {status}"
+        )
 
     print(f"\nProcessing {len(tex_files)} texture files…")
     for p in tex_files:
@@ -171,9 +176,15 @@ def main() -> None:
         saved = old - new
         total_saved += saved
         status = f"-{saved // 1024:>6} KB" if saved > 0 else "  unchanged"
-        print(f"  {p.name:<40} {old // 1024:>6} KB → {new // 1024:>6} KB  {status}")
+        print(
+            f"  {p.name:<40} {old // 1024:>6} KB"
+            f" → {new // 1024:>6} KB  {status}"
+        )
 
-    print(f"\nTotal saved: {total_saved // 1024 // 1024} MB  ({total_saved // 1024} KB)")
+    print(
+        f"\nTotal saved: {total_saved // 1024 // 1024} MB"
+        f"  ({total_saved // 1024} KB)"
+    )
 
 
 if __name__ == "__main__":

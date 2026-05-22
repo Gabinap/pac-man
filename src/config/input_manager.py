@@ -70,7 +70,7 @@ class InputManager:
                 self.engine.session.player.empower()
 
     def _handle_gameplay_mouse_click(self, key: str) -> None:
-        """Screen-shake on left click in the main menu (not on a button, not FPS)."""
+        """Screen-shake on left click in the main menu (not on a button)."""
         if key != "left mouse down":
             return
         if self.engine.router.current != C.EGameView.MENU:

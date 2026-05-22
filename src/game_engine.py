@@ -212,7 +212,7 @@ class GameEngine(Entity):
             else:
                 img.enabled = False
 
-    def _on_model_loaded(self, model) -> None:
+    def _on_model_loaded(self, model: object) -> None:
         self.is_model_loading = False
 
     def preloading_assets(self) -> None:

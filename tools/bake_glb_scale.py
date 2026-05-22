@@ -23,7 +23,7 @@ are all preserved. Rotations, scales (other than N's), and skin weights are
 untouched.
 
 Usage:
-    uv run python scripts/bake_glb_scale.py \
+    uv run python tools/bake_glb_scale.py \
         assets/models/crockie_vgdc.glb Crockie_rig_deform [--out PATH]
 
 Run again on a baked file: idempotent (no nodes with non-unit scale → no-op).
@@ -48,6 +48,7 @@ GLTF_FLOAT = 5126
 
 
 def _read_glb(path: Path) -> tuple[Gltf, bytes]:
+    """Read a GLB file and return its JSON and binary chunks."""
     raw = path.read_bytes()
     magic, _version, total = struct.unpack_from("<III", raw, 0)
     if magic != GLB_MAGIC:
@@ -69,6 +70,7 @@ def _read_glb(path: Path) -> tuple[Gltf, bytes]:
 
 
 def _write_glb(path: Path, gltf: Gltf, bin_data: bytes) -> None:
+    """Write a GLB file from JSON and binary chunks."""
     json_bytes = json.dumps(gltf, separators=(",", ":")).encode("utf-8")
     json_pad = (-len(json_bytes)) % 4
     json_bytes += b" " * json_pad
@@ -118,6 +120,7 @@ def _read_floats(
     components: int,
     stride: int,
 ) -> list[list[float]]:
+    """Read float values from binary data at the given offset."""
     out: list[list[float]] = []
     for i in range(count):
         p = offset + i * stride
@@ -131,6 +134,7 @@ def _write_floats(
     values: list[list[float]],
     stride: int,
 ) -> None:
+    """Write float values into binary data at the given offset."""
     components = len(values[0])
     for i, v in enumerate(values):
         p = offset + i * stride
@@ -138,6 +142,7 @@ def _write_floats(
 
 
 def _find_node_by_name(gltf: Gltf, name: str) -> int:
+    """Return index of the node with the given name, or exit."""
     for i, n in enumerate(gltf["nodes"]):
         if n.get("name") == name:
             return i
@@ -158,6 +163,7 @@ def _collect_descendants(gltf: Gltf, root_idx: int) -> set[int]:
 
 
 def _scale_node_translation(node: Gltf, s: float) -> None:
+    """Scale the translation component of a node by s."""
     if "matrix" in node:
         m = node["matrix"]
         m[12] *= s
@@ -168,7 +174,24 @@ def _scale_node_translation(node: Gltf, s: float) -> None:
         node["translation"] = [t[0] * s, t[1] * s, t[2] * s]
 
 
+def _scale_position_accessor(
+    gltf: Gltf, bin_data: bytearray, acc_idx: int, s: float
+) -> None:
+    """Scale all positions in a VEC3 float accessor by s."""
+    off, n, comp, stride = _accessor_view(gltf, bin_data, acc_idx)
+    assert comp == 3, f"POSITION accessor {acc_idx} not VEC3"
+    vals = _read_floats(bin_data, off, n, comp, stride)
+    vals = [[v[0] * s, v[1] * s, v[2] * s] for v in vals]
+    _write_floats(bin_data, off, vals, stride)
+    acc = gltf["accessors"][acc_idx]
+    if "min" in acc:
+        acc["min"] = [v * s for v in acc["min"]]
+    if "max" in acc:
+        acc["max"] = [v * s for v in acc["max"]]
+
+
 def bake(input_path: Path, node_name: str, output_path: Path) -> None:
+    """Bake the scale of node_name into its descendants and write the GLB."""
     gltf, bin_blob = _read_glb(input_path)
     bin_data = bytearray(bin_blob)
 
@@ -229,9 +252,9 @@ def bake(input_path: Path, node_name: str, output_path: Path) -> None:
     mesh_pos_acc_done: set[int] = set()
     meshes_used: set[int] = set()
     for nid in descendants:
-        n = gltf["nodes"][nid]
-        if "mesh" in n:
-            meshes_used.add(n["mesh"])
+        nd = gltf["nodes"][nid]
+        if "mesh" in nd:
+            meshes_used.add(nd["mesh"])
     for mesh_idx in meshes_used:
         mesh = gltf["meshes"][mesh_idx]
         for prim in mesh["primitives"]:
@@ -250,9 +273,9 @@ def bake(input_path: Path, node_name: str, output_path: Path) -> None:
     # descendant nodes.
     skins_used: set[int] = set()
     for nid in descendants:
-        n = gltf["nodes"][nid]
-        if "skin" in n:
-            skins_used.add(n["skin"])
+        nd = gltf["nodes"][nid]
+        if "skin" in nd:
+            skins_used.add(nd["skin"])
     ibm_acc_done: set[int] = set()
     for skin_idx in skins_used:
         skin = gltf["skins"][skin_idx]
@@ -278,22 +301,8 @@ def bake(input_path: Path, node_name: str, output_path: Path) -> None:
     print(f"wrote {output_path}")
 
 
-def _scale_position_accessor(
-    gltf: Gltf, bin_data: bytearray, acc_idx: int, s: float
-) -> None:
-    off, n, comp, stride = _accessor_view(gltf, bin_data, acc_idx)
-    assert comp == 3, f"POSITION accessor {acc_idx} not VEC3"
-    vals = _read_floats(bin_data, off, n, comp, stride)
-    vals = [[v[0] * s, v[1] * s, v[2] * s] for v in vals]
-    _write_floats(bin_data, off, vals, stride)
-    acc = gltf["accessors"][acc_idx]
-    if "min" in acc:
-        acc["min"] = [v * s for v in acc["min"]]
-    if "max" in acc:
-        acc["max"] = [v * s for v in acc["max"]]
-
-
 def main() -> int:
+    """Parse arguments and run the bake operation."""
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("input", type=Path)
     p.add_argument("node_name")

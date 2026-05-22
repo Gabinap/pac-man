@@ -1,3 +1,4 @@
+from typing import Any, Union
 from panda3d.core import TransparencyAttrib
 from ursina import Button, Text, color, Entity, Quad
 import src.config.constants as C
@@ -52,7 +53,7 @@ def make_button(
     x: float = 0,
     w: float | None = None,
     h: float | None = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> Button:
     bw = w if w is not None else BTN_W
     bh = h if h is not None else BTN_H
@@ -92,7 +93,7 @@ def make_button(
 
 def make_panel(
     parent: Entity, x: float, y: float, w: float, h: float
-) -> tuple:
+) -> tuple[Entity, Entity]:
     pnl_aspect = w / h if h > 0 else 1.0
     brd_aspect = (
         (w + PANEL_BORDER_PAD) / (h + PANEL_BORDER_PAD) if h > 0 else 1.0
@@ -161,8 +162,8 @@ def make_outlined_text(
     outline: object,
     thickness: float = 0.004,
     return_outlines: bool = False,
-    **kwargs,
-):
+    **kwargs: Any,
+) -> Union[Text, tuple[Text, list[Text]]]:
     offsets = [
         (-1, 0),
         (1, 0),
@@ -196,7 +197,7 @@ def make_outlined_text(
     return main
 
 
-def update_menu_highlight(elements: list, selected_index: int) -> None:
+def update_menu_highlight(elements: list[Any], selected_index: int) -> None:
     from ursina import InputField
 
     for i, current in enumerate(elements):
@@ -215,7 +216,9 @@ def update_menu_highlight(elements: list, selected_index: int) -> None:
             current.color = GLASS_SELECTED if i == selected_index else GLASS
 
 
-def handle_menu_input(key: str, elements: list, selected_index: int) -> int:
+def handle_menu_input(
+    key: str, elements: list[Any], selected_index: int
+) -> int:
 
     if key in ("down arrow", "tab"):
         selected_index = (selected_index + 1) % len(elements)

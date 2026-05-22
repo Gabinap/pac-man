@@ -16,7 +16,7 @@ install:
 	@$(MAKE) patch
 
 patch:
-	@$(UV) run python scripts/apply_patches.py
+	@$(UV) run python tools/apply_patches.py
 	@$(MAKE) clean-model-cache
 
 clean-model-cache:

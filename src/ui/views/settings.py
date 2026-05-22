@@ -1,6 +1,6 @@
 from typing import Callable
 
-from ursina import Text
+from ursina import Button, Text
 
 from src.config.controls import ControlsConfig
 from src.ui.views.base import BaseView
@@ -78,7 +78,7 @@ class SettingsView(BaseView):
         self._sound_on: bool = True
         self._volume: int = 70
 
-        self._key_buttons: dict[str, object] = {}
+        self._key_buttons: dict[str, Button] = {}
         self._build_ui()
 
     # ── Build ──────────────────────────────────────────────────────────────

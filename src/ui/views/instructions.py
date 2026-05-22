@@ -1,23 +1,16 @@
-from typing import Any, Callable, Dict
+from typing import Callable
 
 from ursina import Text
 
 from src.ui.views.base import BaseView
 from src.config.game_config import GameConfig
 from src.utils.views_utils import (
-    BORDER,
-    EMPTY_SCORE_COLOR,
-    GLASS,
-    GLASS_EXIT_SELECTED,
-    GLASS_HOVER,
-    GLASS_SELECTED,
     SCORE_ENTRY_COLOR,
     SCORES_TITLE_COLOR,
     SUBTITLE_COLOR,
     TEXT_COLOR,
     TITLE_COLOR,
     TITLE_OUTLINE,
-    handle_menu_input,
     make_button,
     make_panel,
     update_menu_highlight,

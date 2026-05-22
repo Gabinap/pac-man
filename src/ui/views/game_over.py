@@ -1,6 +1,6 @@
 """End-of-run screen: name input, score submission, replay/menu buttons."""
 
-from typing import Callable
+from typing import Callable, cast
 import string
 
 from ursina import Text, InputField, application
@@ -47,17 +47,20 @@ class GameOverView(BaseView):
 
         make_panel(self, x=0, y=0.0, w=0.60, h=0.82)
 
-        self.title, self.title_outlines = make_outlined_text(
-            self,
-            "GAME OVER",
-            y=0.30,
-            scale=4.5,
-            fill=LOSE_COLOR,
-            outline=BORDER,
-            thickness=0.005,
-            z=-1,
-            ignore_paused=True,
-            return_outlines=True,
+        self.title, self.title_outlines = cast(
+            tuple[Text, list[Text]],
+            make_outlined_text(
+                self,
+                "GAME OVER",
+                y=0.30,
+                scale=4.5,
+                fill=LOSE_COLOR,
+                outline=BORDER,
+                thickness=0.005,
+                z=-1,
+                ignore_paused=True,
+                return_outlines=True,
+            ),
         )
 
         make_section_divider(self, y=0.17, label="SCORE")

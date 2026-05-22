@@ -20,7 +20,7 @@ class NextLevelView(BaseView):
         self,
         menu_callback: Callable[[], None],
         level_callback: Callable[[], int],
-        go_next_level_callback,
+        go_next_level_callback: Callable[[], None],
     ) -> None:
         super().__init__()
 

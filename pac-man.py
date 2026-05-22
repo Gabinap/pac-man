@@ -14,7 +14,7 @@ import logging
 import traceback
 from pathlib import Path
 
-from src.parser.parser import load_config
+from src.config.parser import load_config
 from src.game_engine import GameEngine
 
 _DATA_DIR = Path("data")

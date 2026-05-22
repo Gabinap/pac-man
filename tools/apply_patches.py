@@ -199,6 +199,7 @@ PATCHES: list[tuple[str, str]] = [
 
 
 def main() -> int:
+    """Apply all patches to the gltf converter and report results."""
     converter = _find_converter()
     if converter is None:
         print("Skipping patches: gltf/_converter.py not found in any venv")

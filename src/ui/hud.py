@@ -1,5 +1,6 @@
 """HUD overlay: split into left and right columns to keep the map clear."""
 
+from typing import Any
 from ursina import Text, time, camera, Entity, curve, invoke
 import src.config.constants as C
 from src.utils.views_utils import (
@@ -21,7 +22,7 @@ class HUD:
     def __init__(self, view_mode: C.EViewMode) -> None:
         self._view_mode = view_mode
 
-        self._bg_panels: list = [
+        self._bg_panels: list[Any] = [
             *make_panel(camera.ui, x=-0.7, y=0.285, w=0.4, h=0.42),
             *make_panel(camera.ui, x=0.72, y=0.38, w=0.31, h=0.22),
         ]
@@ -65,7 +66,7 @@ class HUD:
         )
 
     @staticmethod
-    def _right(text: str, y: float, scale: float = 1.5, **kwargs) -> Text:
+    def _right(text: str, y: float, scale: float = 1.5, **kwargs: Any) -> Text:
         kwargs.setdefault("color", TEXT_COLOR)
         return Text(
             text=text, origin=(0.5, 0), position=(_R, y), scale=scale, **kwargs
@@ -81,7 +82,7 @@ class HUD:
             entity.enabled = False
         self.visible = False
 
-    def _all_entities(self) -> list:
+    def _all_entities(self) -> list[Any]:
         return [
             *self._bg_panels,
             self._level_text,

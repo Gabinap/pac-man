@@ -1,6 +1,5 @@
 from typing import Callable, Optional
 from ursina import Entity, Text, destroy, invoke
-import src.config.constants as C
 from src.utils.views_utils import ERROR_COLOR, SCORES_TITLE_COLOR
 
 

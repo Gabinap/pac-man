@@ -4,6 +4,7 @@ from typing import Callable
 
 from ursina import Text, application, Entity, destroy
 
+import src.config.constants as C
 from src.ui.views.base import BaseView
 from src.utils.highscores import Highscores
 from src.config.game_config import GameConfig
@@ -24,7 +25,6 @@ from src.utils.views_utils import (
 
 _PODIUM_COLORS = (SCORES_TITLE_COLOR, SUBTITLE_COLOR, TITLE_COLOR)
 _PODIUM_SCALES = (1.15, 0.95, 0.9)
-import src.config.constants as C
 
 
 class MainMenuView(BaseView):
