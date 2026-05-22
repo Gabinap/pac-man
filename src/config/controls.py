@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -10,3 +10,6 @@ class ControlsConfig:
     pause: str = "space"
     toggle_hud: str = "h"
     toggle_fps: str = "f"
+    menu_moves: list[str] = field(
+        default_factory=lambda: ["down arrow", "tab", "up arrow"]
+    )

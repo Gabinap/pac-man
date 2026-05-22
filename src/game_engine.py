@@ -12,6 +12,7 @@ from src.ui.router import ViewRouter
 from src.config.input_manager import InputManager
 from src.config.camera_effects import CameraEffectsManager
 from src.gameplay.session import GameSession
+from src.config.audio_manager import AudioManager
 import time
 
 
@@ -33,7 +34,8 @@ class GameEngine(Entity):
         self.session = GameSession(engine=self)
         self.router = ViewRouter(engine=self)
         self.input_manager = InputManager(engine=self)
-
+        self.audio_manager = AudioManager()
+        self.audio_manager.play_ambient_music()
         window.color = WINDOW_BG
         window.exit_button.enabled = False
 
@@ -158,6 +160,9 @@ class GameEngine(Entity):
         self.session.apply_difficulty_to_player()
 
     def input(self, key: str) -> None:
+        if self.game_state != C.EGameState.RUNNING:
+            if key in self.controls.menu_moves:
+                self.audio_manager.play_sound("button-sound.wav")
 
         if key == self.controls.pause:
             if self.router.current == C.EGameView.MENU and (
