@@ -5,6 +5,7 @@ import src.config.constants as C
 from src.config.game_config import GameConfig
 from src.config.controls import ControlsConfig
 from src.utils.highscores import Highscores
+from src.utils.views_utils import TEXT_COLOR, WINDOW_BG
 from src.ui.hud import HUD
 import random
 from src.ui.router import ViewRouter
@@ -33,7 +34,7 @@ class GameEngine(Entity):
         self.router = ViewRouter(engine=self)
         self.input_manager = InputManager(engine=self)
 
-        window.color = color.rgb32(30, 45, 50)
+        window.color = WINDOW_BG
         window.exit_button.enabled = False
 
         self.assets_to_load = self._get_assets_to_load()
@@ -68,7 +69,7 @@ class GameEngine(Entity):
             origin=(0, 0),
             position=(0, -0.3),
             scale=1.2,
-            color=color.white,
+            color=TEXT_COLOR,
         )
         list_progress_image: list[Entity] = []
         for i in range(3):

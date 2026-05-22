@@ -21,6 +21,9 @@ from src.utils.views_utils import (
     make_panel,
     update_menu_highlight,
 )
+
+_PODIUM_COLORS = (SCORES_TITLE_COLOR, SUBTITLE_COLOR, TITLE_COLOR)
+_PODIUM_SCALES = (1.15, 0.95, 0.9)
 import src.config.constants as C
 
 
@@ -140,18 +143,26 @@ class MainMenuView(BaseView):
             )
             return
 
+        y = start_y
         for i, (name, score) in enumerate(scores_list[:10]):
+            if i < 3:
+                entry_color = _PODIUM_COLORS[i]
+                entry_scale = _PODIUM_SCALES[i]
+            else:
+                entry_color = SCORE_ENTRY_COLOR
+                entry_scale = 0.8
             self._score_entries.append(
                 Text(
-                    f"{i+1}. {name} - {score}",
+                    f"{i+1}.  {name}  —  {score}",
                     parent=self,
                     origin=(-0.5, 0),
                     x=-0.8,
-                    y=start_y - (i * 0.08),
-                    scale=0.8,
-                    color=SCORE_ENTRY_COLOR,
+                    y=y,
+                    scale=entry_scale,
+                    color=entry_color,
                 )
             )
+            y -= 0.038 + entry_scale * 0.038
 
     def input(self, key: str) -> None:
         if not self.enabled:

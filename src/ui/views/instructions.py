@@ -2,10 +2,11 @@
 
 from typing import Callable
 
-from ursina import Text, color
+from ursina import Text
 
 from src.ui.views.base import BaseView
 from src.utils.views_utils import (
+    TITLE_COLOR,
     handle_menu_input,
     make_button,
     update_menu_highlight,
@@ -24,7 +25,7 @@ class InstructionsView(BaseView):
             origin=(0, 0),
             y=0.35,
             scale=3,
-            color=color.yellow,
+            color=TITLE_COLOR,
             parent=self,
         )
 

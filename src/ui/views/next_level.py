@@ -2,10 +2,12 @@
 
 from typing import Callable
 
-from ursina import Text, color
+from ursina import Text
 
 from src.ui.views.base import BaseView
 from src.utils.views_utils import (
+    SCORES_TITLE_COLOR,
+    SUBTITLE_COLOR,
     handle_menu_input,
     make_button,
     update_menu_highlight,
@@ -30,7 +32,7 @@ class NextLevelView(BaseView):
             origin=(0, 0),
             y=0.35,
             scale=3,
-            color=color.azure,
+            color=SUBTITLE_COLOR,
             parent=self,
         )
         self.level_text = Text(
@@ -38,7 +40,7 @@ class NextLevelView(BaseView):
             origin=(0, 0),
             y=0.25,
             scale=3,
-            color=color.gold,
+            color=SCORES_TITLE_COLOR,
             parent=self,
         )
         self.next_btn = make_button(self, "Next", y=-0.3)

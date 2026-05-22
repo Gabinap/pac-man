@@ -26,7 +26,7 @@ class InputManager:
     def handle_input(self, key: str) -> None:
         self._update_cheat_buffer(key)
         self._handle_cheat_keys(key)
-        self._handle_menu_mouse_click(key)
+        self._handle_gameplay_mouse_click(key)
 
     def _update_cheat_buffer(self, key: str) -> None:
         if len(key) != 1 or not key.isalpha():
@@ -69,17 +69,14 @@ class InputManager:
             if hasattr(self.engine.session.player, "empower"):
                 self.engine.session.player.empower()
 
-    def _handle_menu_mouse_click(self, key: str) -> None:
-        """Screen-shake on click in the main-menu void (not on a button)."""
+    def _handle_gameplay_mouse_click(self, key: str) -> None:
+        """Screen-shake on left click in the main menu (not on a button, not FPS)."""
         if key != "left mouse down":
             return
-        if (
-            self.engine.router.current != C.EGameView.MENU
-            or self.engine.camera_effects.fps_mode
-        ):
+        if self.engine.router.current != C.EGameView.MENU:
+            return
+        if self.engine.camera_effects.fps_mode:
             return
         if isinstance(mouse.hovered_entity, Button):
             return
-
-        if hasattr(self.engine, "_shake_screen"):
-            self.engine._shake_screen()
+        self.engine._shake_screen()

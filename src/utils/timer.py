@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 from ursina import Entity, Text, destroy, invoke
 import src.config.constants as C
+from src.utils.views_utils import ERROR_COLOR, SCORES_TITLE_COLOR
 
 
 class Timer(Entity):
@@ -18,6 +19,7 @@ class Timer(Entity):
             origin=(0.5, 0),
             position=(0.85, 0.31),
             scale=2,
+            color=SCORES_TITLE_COLOR,
         )
         self._update_text()
         self.hide()
@@ -55,9 +57,13 @@ class Timer(Entity):
 
     def _update_text(self) -> None:
         self.text_entity.text = f"Time: {self.duration}"
+        self.text_entity.color = (
+            ERROR_COLOR if self.duration <= 10 else SCORES_TITLE_COLOR
+        )
 
     def stop(self) -> None:
         self.is_running = False
+        self.hide()
 
     def destroy_timer(self) -> None:
         self.stop()

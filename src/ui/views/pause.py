@@ -2,10 +2,12 @@
 
 from typing import Callable
 
-from ursina import Text, color
+from ursina import Text
 
 from src.ui.views.base import BaseView
 from src.utils.views_utils import (
+    DIM_TEXT_COLOR,
+    TITLE_COLOR,
     handle_menu_input,
     make_button,
     make_panel,
@@ -32,7 +34,7 @@ class PauseView(BaseView):
             scale=5,
             origin=(0, 0),
             y=0.2,
-            color=color.white,
+            color=TITLE_COLOR,
             z=-1,
             ignore_paused=True,
         )
@@ -42,7 +44,7 @@ class PauseView(BaseView):
             scale=1.5,
             origin=(0, 0),
             y=0.07,
-            color=color.light_gray,
+            color=DIM_TEXT_COLOR,
             z=-1,
             ignore_paused=True,
         )

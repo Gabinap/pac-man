@@ -44,7 +44,7 @@ _CONTROL_DEFS: list[tuple[str, str]] = [
 ]
 
 _KEY_BTN_W = 0.20
-_KEY_BTN_H = 0.075
+_KEY_BTN_H = 0.073
 
 
 def _display_key(key: str) -> str:
@@ -106,11 +106,11 @@ class SettingsView(BaseView):
         self._btn_volume.on_click = self._cycle_volume
 
         # ── Controls ──
-        make_panel(self, x=0, y=-0.17, w=0.70, h=0.68)
+        make_panel(self, x=0, y=-0.17, w=0.70, h=0.65)
         make_section_divider(self, y=0.11, label="CONTROLS")
 
         for i, (attr, label) in enumerate(_CONTROL_DEFS):
-            row_y = 0.03 - i * 0.072
+            row_y = 0.03 - i * 0.08
             Text(
                 text=label,
                 origin=(-0.5, 0),
@@ -121,13 +121,15 @@ class SettingsView(BaseView):
                 parent=self,
             )
             btn = make_button(
-                self, self._key_label(attr), y=row_y, x=0.22,
+                self, self._key_label(attr), y=row_y, x=0.20,
                 w=_KEY_BTN_W, h=_KEY_BTN_H,
             )
             btn.on_click = lambda a=attr: self._start_capture(a)
             self._key_buttons[attr] = btn
 
-        self.btn_back = make_button(self, "Back", y=-0.46)
+        self.btn_back = make_button(
+            self, "Back", x=0.82, y=-0.46, w=_KEY_BTN_W, h=_KEY_BTN_H
+            )
         self.btn_back.on_click = self._on_back
 
         self.buttons = [

@@ -116,6 +116,6 @@ class CameraEffectsManager:
             decay = 1 - elapsed[0] / dur
             camera.x = base_x + random.uniform(-mag, mag) * decay
             camera.z = base_z + random.uniform(-mag, mag) * decay
-            invoke(step, delay=period)
+            invoke(step, delay=period, ignore_paused=True)
 
         step()

@@ -1,8 +1,13 @@
 """HUD overlay: split into left and right columns to keep the map clear."""
 
-from ursina import Text, time, camera, Entity, color, curve, invoke
+from ursina import Text, time, camera, Entity, curve, invoke
 import src.config.constants as C
-from src.utils.views_utils import make_panel
+from src.utils.views_utils import (
+    EMPOWERED_BAR_COLOR,
+    SCORES_TITLE_COLOR,
+    TEXT_COLOR,
+    make_panel,
+)
 
 _L = -0.85  # left column x anchor
 _R = 0.85  # right column x anchor
@@ -17,8 +22,8 @@ class HUD:
         self._view_mode = view_mode
 
         self._bg_panels: list = [
-            *make_panel(camera.ui, x=-0.645, y=0.285, w=0.44, h=0.42),
-            *make_panel(camera.ui, x=0.672, y=0.415, w=0.42, h=0.175),
+            *make_panel(camera.ui, x=-0.7, y=0.285, w=0.4, h=0.42),
+            *make_panel(camera.ui, x=0.72, y=0.38, w=0.31, h=0.22),
         ]
 
         self._level_text = self._left("Lv.1", 0.45, scale=2)
@@ -30,12 +35,12 @@ class HUD:
         self._fps_text = self._right("FPS: 0", 0.45, scale=2)
         self._score_text = self._right("Score: 0", 0.38, scale=2)
         self._empowered_bar_text = self._right(
-            "Empowered", 0.20, scale=1, enabled=False
+            "Empowered", 0.20, scale=1, enabled=False, color=SCORES_TITLE_COLOR
         )
         self._empowered_bar = Entity(
             model="quad",
             parent=camera.ui,
-            color=color.yellow,
+            color=EMPOWERED_BAR_COLOR,
             origin=(0.5, 0),
             position=(_R, 0.15),
             scale=(
@@ -56,10 +61,12 @@ class HUD:
             origin=(-0.5, 0),
             position=(_L, y),
             scale=scale,
+            color=TEXT_COLOR,
         )
 
     @staticmethod
     def _right(text: str, y: float, scale: float = 1.5, **kwargs) -> Text:
+        kwargs.setdefault("color", TEXT_COLOR)
         return Text(
             text=text, origin=(0.5, 0), position=(_R, y), scale=scale, **kwargs
         )

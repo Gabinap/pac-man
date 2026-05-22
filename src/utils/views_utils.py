@@ -2,22 +2,36 @@ from panda3d.core import TransparencyAttrib
 from ursina import Button, Text, color, Entity, Quad
 import src.config.constants as C
 
-GLASS = color.rgba32(150, 180, 160, 105)
-GLASS_HOVER = color.rgba32(180, 205, 220, 140)
-GLASS_SELECTED = color.rgba32(220, 175, 80, 170)
-GLASS_EXIT_SELECTED = color.rgba32(165, 70, 75, 180)
-BORDER = color.rgba32(240, 220, 185, 130)
-TEXT_COLOR = color.rgba32(250, 240, 220, 255)
+# Wes Anderson-inspired palette, saturated edition: vivid sage /
+# powder blue / rich mustard / deep burgundy / dusty rose / cream
+# over a forest-navy backdrop. Alphas are tuned high so the colors
+# read as themselves rather than washing into the dark background.
+WINDOW_BG = color.rgb32(30, 45, 50)
 
-TITLE_COLOR = color.rgba32(230, 150, 170, 255)
-TITLE_OUTLINE = color.rgba32(95, 35, 60, 255)
-SUBTITLE_COLOR = color.rgba32(180, 205, 220, 255)
-SCORES_TITLE_COLOR = color.rgba32(225, 180, 80, 255)
-SCORE_ENTRY_COLOR = color.rgba32(245, 235, 215, 255)
-EMPTY_SCORE_COLOR = color.rgba32(150, 160, 145, 255)
+GLASS = color.rgba32(155, 195, 165, 200)             # vivid sage
+GLASS_HOVER = color.rgba32(165, 210, 230, 220)       # vivid powder blue
+GLASS_SELECTED = color.rgba32(235, 175, 60, 230)     # rich mustard
+GLASS_EXIT_SELECTED = color.rgba32(180, 65, 75, 230)  # deep burgundy
+BORDER = color.rgba32(245, 225, 185, 220)            # vivid cream
+TEXT_COLOR = color.rgba32(252, 240, 215, 255)        # cream
+DIM_TEXT_COLOR = color.rgba32(205, 190, 160, 255)    # muted cream
 
-PANEL_COLOR = color.rgba32(30, 45, 50, 150)
-PANEL_BORDER = color.rgba32(225, 200, 160, 120)
+TITLE_COLOR = color.rgba32(240, 130, 165, 255)       # rich dusty rose
+TITLE_OUTLINE = color.rgba32(95, 25, 55, 255)        # deep wine
+SUBTITLE_COLOR = color.rgba32(155, 205, 230, 255)    # vivid powder blue
+SCORES_TITLE_COLOR = color.rgba32(235, 180, 60, 255)  # rich mustard
+SCORE_ENTRY_COLOR = color.rgba32(252, 240, 215, 255)  # cream
+EMPTY_SCORE_COLOR = color.rgba32(165, 175, 155, 255)  # muted sage
+
+PANEL_COLOR = color.rgba32(25, 38, 45, 210)
+PANEL_BORDER = color.rgba32(245, 225, 185, 200)
+
+ACCENT_COLOR = color.rgba32(235, 175, 60, 255)        # rich mustard
+SUCCESS_COLOR = color.rgba32(130, 185, 125, 255)      # vivid sage green
+ERROR_COLOR = color.rgba32(220, 110, 105, 255)        # dusty rose-red
+WIN_COLOR = color.rgba32(235, 180, 60, 255)           # rich mustard
+LOSE_COLOR = color.rgba32(180, 65, 75, 255)           # deep burgundy
+EMPOWERED_BAR_COLOR = color.rgba32(245, 195, 65, 255)  # bright saffron
 
 BTN_W, BTN_H = 0.42, 0.085
 BTN_SCALE = (BTN_W, BTN_H)
@@ -146,8 +160,9 @@ def make_outlined_text(
     fill: object,
     outline: object,
     thickness: float = 0.004,
+    return_outlines: bool = False,
     **kwargs,
-) -> Text:
+):
     offsets = [
         (-1, 0),
         (1, 0),
@@ -162,17 +177,23 @@ def make_outlined_text(
     text_args = {"origin": (0, 0), "parent": parent}
     text_args.update(kwargs)
 
+    outline_texts: list[Text] = []
     for dx, dy in offsets:
-        Text(
-            text,
-            x=text_args.get("x", 0) + dx * thickness,
-            y=y + dy * thickness,
-            z=text_args.get("z", 0) - 0.001,
-            scale=scale,
-            color=outline,
-            **{k: v for k, v in text_args.items() if k not in ["x", "z"]},
+        outline_texts.append(
+            Text(
+                text,
+                x=text_args.get("x", 0) + dx * thickness,
+                y=y + dy * thickness,
+                z=text_args.get("z", 0) - 0.001,
+                scale=scale,
+                color=outline,
+                **{k: v for k, v in text_args.items() if k not in ["x", "z"]},
+            )
         )
-    return Text(text, y=y, scale=scale, color=fill, **text_args)
+    main = Text(text, y=y, scale=scale, color=fill, **text_args)
+    if return_outlines:
+        return main, outline_texts
+    return main
 
 
 def update_menu_highlight(elements: list, selected_index: int) -> None:
