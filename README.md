@@ -17,3 +17,6 @@
 
 ## Ali space:
 - mettre du contenue dans instructions
+- well done:
+    - Appuyer sur p pendant le next level view pour changer de lvl
+    - mettre tout le jeu a pause lors de la view next level

@@ -67,6 +67,7 @@ class ViewRouter:
         self.current = target
 
         if target == C.EGameView.GAME_OVER:
+            self.engine.game_state = C.EGameState.GAME_OVER
             application.paused = True
             if self.engine.hud:
                 self.engine.hud.hide()
@@ -74,15 +75,18 @@ class ViewRouter:
                 self.engine.session.timer.stop()
 
         elif target == C.EGameView.PAUSE:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
 
         elif target == C.EGameView.MENU:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
             if self.engine.hud:
                 self.engine.hud.hide()
             if self.engine.session.timer:
                 self.engine.session.timer.stop()
         elif target == C.EGameView.NEXT_LEVEL:
+            self.engine.game_state = C.EGameState.PAUSE
             application.paused = True
 
         new_view = self._views[target]
@@ -100,6 +104,7 @@ class ViewRouter:
 
         if self.engine.session.timer:
             self.engine.session.timer.launch_timer()
+        self.engine.game_state = C.EGameState.RUNNING
 
         self.exit_current()
         application.paused = False
