@@ -2,6 +2,7 @@ from typing import Dict, Any, TYPE_CHECKING
 from ursina import application
 
 import src.config.constants as C
+from src.gameplay.entities.player import PlayerState
 from src.ui.views.base import BaseView
 from src.ui.views.main_menu import MainMenuView
 from src.ui.views.instructions import InstructionsView
@@ -104,6 +105,8 @@ class ViewRouter:
 
         if self.engine.session.timer:
             self.engine.session.timer.launch_timer()
+
+        self.engine.hud._hide_empowered_bar()
         self.engine.game_state = C.EGameState.RUNNING
 
         self.exit_current()
