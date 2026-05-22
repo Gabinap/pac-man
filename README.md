@@ -5,6 +5,7 @@
 ## Gab space:
 - ghosts
     - meilleures routines
+- space fonctionne plus en mainvue
 
 - norm
 - pep 257 (avec tous les comm en anglais)

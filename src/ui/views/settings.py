@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from ursina import Button, Text
 
@@ -14,6 +14,9 @@ from src.utils.views_utils import (
     make_section_divider,
     update_menu_highlight,
 )
+
+if TYPE_CHECKING:
+    from src.game_engine import GameEngine
 
 _SECTION_COLOR = SCORES_TITLE_COLOR
 _LABEL_COLOR = SCORE_ENTRY_COLOR
@@ -34,11 +37,11 @@ _KEY_DISPLAY: dict[str, str] = {
 }
 
 _CONTROL_DEFS: list[tuple[str, str]] = [
-    ("move_up",    "Move Up"),
-    ("move_down",  "Move Down"),
-    ("move_left",  "Move Left"),
+    ("move_up", "Move Up"),
+    ("move_down", "Move Down"),
+    ("move_left", "Move Left"),
     ("move_right", "Move Right"),
-    ("pause",      "Pause / Start"),
+    ("pause", "Pause / Start"),
     ("toggle_hud", "Toggle HUD"),
     ("toggle_fps", "Toggle FPS"),
 ]
@@ -68,17 +71,19 @@ class SettingsView(BaseView):
         self,
         controls: ControlsConfig,
         back_callback: Callable[[], None],
+        engine: "GameEngine",
     ) -> None:
         super().__init__()
-
+        self.engine = engine
         self._controls = controls
         self.back_callback = back_callback
         self._awaiting_key_for: str | None = None
 
-        self._sound_on: bool = True
-        self._volume: int = 70
+        self._volume: int = int(self.engine.audio_manager.global_volume * 100)
 
-        self._key_buttons: dict[str, Button] = {}
+        self._key_buttons: dict[str, object] = {}
+        self._ignore_next_input = True
+
         self._build_ui()
 
     # ── Build ──────────────────────────────────────────────────────────────
@@ -121,15 +126,19 @@ class SettingsView(BaseView):
                 parent=self,
             )
             btn = make_button(
-                self, self._key_label(attr), y=row_y, x=0.20,
-                w=_KEY_BTN_W, h=_KEY_BTN_H,
+                self,
+                self._key_label(attr),
+                y=row_y,
+                x=0.20,
+                w=_KEY_BTN_W,
+                h=_KEY_BTN_H,
             )
             btn.on_click = lambda a=attr: self._start_capture(a)
             self._key_buttons[attr] = btn
 
         self.btn_back = make_button(
             self, "Back", x=0.82, y=-0.46, w=_KEY_BTN_W, h=_KEY_BTN_H
-            )
+        )
         self.btn_back.on_click = self._on_back
 
         self.buttons = [
@@ -147,18 +156,22 @@ class SettingsView(BaseView):
         return f"[{_display_key(getattr(self._controls, attr))}]"
 
     def _sound_label(self) -> str:
-        return f"Sound: {'ON' if self._sound_on else 'OFF'}"
+        return f"Sound: {'ON' if not self.engine.audio_manager.is_muted else 'OFF'}"
 
     def _volume_label(self) -> str:
         return f"Vol: {self._volume}%"
 
     def _toggle_sound(self) -> None:
-        self._sound_on = not self._sound_on
+        self.engine.audio_manager.toggle_mute()
         self._btn_sound.text = self._sound_label()
 
     def _cycle_volume(self) -> None:
         self._volume = (self._volume % 100) + 10
         self._btn_volume.text = self._volume_label()
+
+        self.engine.audio_manager.set_volume(self._volume)
+
+        self.engine.audio_manager.play_sound("ui_blip.wav")
 
     def _start_capture(self, attr: str) -> None:
         if self._awaiting_key_for is not None:
@@ -184,7 +197,10 @@ class SettingsView(BaseView):
     def input(self, key: str) -> None:
         if not self.enabled:
             return
-
+        if self._ignore_next_input:
+            self._ignore_next_input = False
+            if key in ("enter", "space", "left mouse down"):
+                return
         if self._awaiting_key_for is not None:
             if key == "escape":
                 self._cancel_capture()
@@ -207,3 +223,10 @@ class SettingsView(BaseView):
     def _on_back(self) -> None:
         self._cancel_capture()
         self.back_callback()
+
+    def on_enable(self) -> None:
+        self._ignore_next_input = True
+
+        if self.buttons:
+            self.selected_index = 0
+            self.update_highlight()

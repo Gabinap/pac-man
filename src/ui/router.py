@@ -37,6 +37,7 @@ class ViewRouter:
         self._views[C.EGameView.SETTINGS] = SettingsView(
             controls=self.engine.controls,
             back_callback=lambda: self.switch_view(C.EGameView.MENU),
+            engine=self.engine,
         )
         self._views[C.EGameView.INSTRUCTIONS] = InstructionsView(
             back_callback=lambda: self.switch_view(C.EGameView.MENU),

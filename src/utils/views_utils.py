@@ -9,17 +9,17 @@ import src.config.constants as C
 # read as themselves rather than washing into the dark background.
 WINDOW_BG = color.rgb32(30, 45, 50)
 
-GLASS = color.rgba32(155, 195, 165, 200)             # vivid sage
-GLASS_HOVER = color.rgba32(165, 210, 230, 220)       # vivid powder blue
-GLASS_SELECTED = color.rgba32(235, 175, 60, 230)     # rich mustard
+GLASS = color.rgba32(155, 195, 165, 200)  # vivid sage
+GLASS_HOVER = color.rgba32(165, 210, 230, 220)  # vivid powder blue
+GLASS_SELECTED = color.rgba32(235, 175, 60, 230)  # rich mustard
 GLASS_EXIT_SELECTED = color.rgba32(180, 65, 75, 230)  # deep burgundy
-BORDER = color.rgba32(245, 225, 185, 220)            # vivid cream
-TEXT_COLOR = color.rgba32(252, 240, 215, 255)        # cream
-DIM_TEXT_COLOR = color.rgba32(205, 190, 160, 255)    # muted cream
+BORDER = color.rgba32(245, 225, 185, 220)  # vivid cream
+TEXT_COLOR = color.rgba32(252, 240, 215, 255)  # cream
+DIM_TEXT_COLOR = color.rgba32(205, 190, 160, 255)  # muted cream
 
-TITLE_COLOR = color.rgba32(240, 130, 165, 255)       # rich dusty rose
-TITLE_OUTLINE = color.rgba32(95, 25, 55, 255)        # deep wine
-SUBTITLE_COLOR = color.rgba32(155, 205, 230, 255)    # vivid powder blue
+TITLE_COLOR = color.rgba32(240, 130, 165, 255)  # rich dusty rose
+TITLE_OUTLINE = color.rgba32(95, 25, 55, 255)  # deep wine
+SUBTITLE_COLOR = color.rgba32(155, 205, 230, 255)  # vivid powder blue
 SCORES_TITLE_COLOR = color.rgba32(235, 180, 60, 255)  # rich mustard
 SCORE_ENTRY_COLOR = color.rgba32(252, 240, 215, 255)  # cream
 EMPTY_SCORE_COLOR = color.rgba32(165, 175, 155, 255)  # muted sage
@@ -27,11 +27,11 @@ EMPTY_SCORE_COLOR = color.rgba32(165, 175, 155, 255)  # muted sage
 PANEL_COLOR = color.rgba32(25, 38, 45, 210)
 PANEL_BORDER = color.rgba32(245, 225, 185, 200)
 
-ACCENT_COLOR = color.rgba32(235, 175, 60, 255)        # rich mustard
-SUCCESS_COLOR = color.rgba32(130, 185, 125, 255)      # vivid sage green
-ERROR_COLOR = color.rgba32(220, 110, 105, 255)        # dusty rose-red
-WIN_COLOR = color.rgba32(235, 180, 60, 255)           # rich mustard
-LOSE_COLOR = color.rgba32(180, 65, 75, 255)           # deep burgundy
+ACCENT_COLOR = color.rgba32(235, 175, 60, 255)  # rich mustard
+SUCCESS_COLOR = color.rgba32(130, 185, 125, 255)  # vivid sage green
+ERROR_COLOR = color.rgba32(220, 110, 105, 255)  # dusty rose-red
+WIN_COLOR = color.rgba32(235, 180, 60, 255)  # rich mustard
+LOSE_COLOR = color.rgba32(180, 65, 75, 255)  # deep burgundy
 EMPOWERED_BAR_COLOR = color.rgba32(245, 195, 65, 255)  # bright saffron
 
 BTN_W, BTN_H = 0.42, 0.085
