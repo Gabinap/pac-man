@@ -20,7 +20,11 @@ class Ghost(AnimatedEntity):
     ) -> None:
         assert maze is not None
         spec = random.choice([s for s in C.MODEL_SPECS if s.supported])
-        super().__init__(spec=spec, maze=maze, speed=C.GHOST_SPEED_NORMAL)
+        super().__init__(
+            spec=spec,
+            maze=maze,
+            speed=C.GHOST_SPEED_NORMAL * spec.speed_multiplier,
+        )
         self.x, self.z = x, z
         self.spawn_x = x
         self.spawn_z = z

@@ -166,10 +166,7 @@ class GameEngine(Entity):
                 self.audio_manager.play_sound("button-sound.wav")
 
         if key == self.controls.pause:
-            if self.router.current == C.EGameView.MENU and (
-                self.game_state == C.EGameState.NOT_STARTED
-                or self.game_state == C.EGameState.GAME_OVER
-            ):
+            if self.router.current == C.EGameView.MENU:
                 self.start_game()
                 return
             if (

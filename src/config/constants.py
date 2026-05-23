@@ -92,7 +92,7 @@ GHOST_SPEED_DEAD: float = 6.0  # returning to spawn after being eaten
 # Durations in seconds
 CHEAT_SPEED_MULTIPLIER: float = 4.0
 
-FRIGHTENED_DURATION: float = 8.0  # frightened state after a super-pacgum
+FRIGHTENED_DURATION: float = 6.0  # frightened state after a super-pacgum
 GHOST_RESPAWN_DELAY: float = 3.0  # pause at spawn before re-entering maze
 PLAYER_RESPAWN_DELAY: float = 2.0  # freeze after death before respawn
 PLAYER_INVINCIBILITY_DURATION: float = 2.0  # invincibility after respawn
@@ -122,6 +122,7 @@ class ModelSpec(NamedTuple):
     anim_walk_rate: float = 1.0
     anim_attack_rate: float = 1.0
     supported: bool = True
+    speed_multiplier: float = 1.0
 
 
 # Animations sorted: ['Default_g', 'Idle_g', 'Lunge_g', 'Run1_g', 'Run2_g']
@@ -133,6 +134,7 @@ _CROCKIE = ModelSpec(
     anim_idle=1,
     anim_walk=(3, 4),  # Run1_g, Run2_g
     anim_attack=2,  # Lunge_g
+    speed_multiplier=1.3,
 )
 
 # Animations: ['Moving Idle', 'Tail Swipe']
@@ -147,6 +149,7 @@ _GROBBO = ModelSpec(
     anim_idle_rate=0.05,
     anim_walk_rate=0.6,
     anim_attack_rate=4.0,
+    speed_multiplier=0.75,
 )
 
 # Animations: ['BatFlying', 'BatSleeping', 'BatRest']
@@ -162,6 +165,7 @@ _HALLOWEEN_BAT = ModelSpec(
     anim_idle_rate=0.5,
     anim_walk_rate=1,
     anim_attack_rate=2.0,
+    speed_multiplier=1.2,
 )
 
 # Animations: ['Armature.001Armature.002Action.002']
@@ -185,7 +189,7 @@ _TUNA_FISH = ModelSpec(
     anim_idle=0,
     anim_walk=0,
     anim_attack=0,
-    attack_scale=0.9,
+    attack_scale=1,
 )
 
 # Animations sorted: ['Attack1', 'Attack_Jump', 'Attack_Stabs',
@@ -200,6 +204,7 @@ _CALIBUR = ModelSpec(
     anim_attack=(0, 2),  # Attack1, Stabs
     attack_scale=0.35,
     anim_idle_rate=2.0,
+    speed_multiplier=0.85,
 )
 
 # Animations sorted: ['skeleton-skeleton|attack', 'skeleton-skeleton|idle',

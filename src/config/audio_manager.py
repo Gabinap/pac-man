@@ -43,7 +43,7 @@ class AudioManager:
         self.global_volume = volume_percent / 100.0
 
         if self.current_music:
-            self.current_music.volume = self.global_volume  # type: ignore
+            self.current_music.volume = self.global_volume
 
     def play_sound(self, sound_path: str) -> None:
         if self.is_muted:

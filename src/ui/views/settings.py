@@ -1,6 +1,6 @@
 from typing import Callable, TYPE_CHECKING
 
-from ursina import Button, Text
+from ursina import Text, Button
 
 from src.config.controls import ControlsConfig
 from src.ui.views.base import BaseView
@@ -81,7 +81,7 @@ class SettingsView(BaseView):
 
         self._volume: int = int(self.engine.audio_manager.global_volume * 100)
 
-        self._key_buttons: dict[str, object] = {}
+        self._key_buttons: dict[str, Button] = {}
         self._ignore_next_input = True
 
         self._build_ui()
@@ -156,7 +156,9 @@ class SettingsView(BaseView):
         return f"[{_display_key(getattr(self._controls, attr))}]"
 
     def _sound_label(self) -> str:
-        return f"Sound: {'ON' if not self.engine.audio_manager.is_muted else 'OFF'}"
+        return f"Sound: {
+            'ON' if not self.engine.audio_manager.is_muted else 'OFF'
+            }"
 
     def _volume_label(self) -> str:
         return f"Vol: {self._volume}%"

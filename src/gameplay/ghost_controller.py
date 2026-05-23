@@ -1,29 +1,45 @@
 """Ghost AI and collision detection with the player.
 
-Implements the four classic Pac-Man targeting strategies (Blinky/Pinky/
-Inky/Clyde) and propagates game state transitions to every ghost.
+Ghosts target a random cell within a ring around the player; ring
+size grows with ghost count. Each ghost picks a new target once it
+arrives. Flees to its home corner while the player is empowered.
 """
 
-from enum import Enum, auto
-from typing import TYPE_CHECKING, Callable
+import random
 from collections import deque
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import src.config.constants as C
 from src.gameplay.entities import Ghost, Player, PlayerState
 from src.gameplay.maze import Maze
-from src.utils.utils import grid_to_world, world_to_grid
+from src.utils.utils import grid_to_world
 
 if TYPE_CHECKING:
     from src.game_engine import GameEngine
 
 
-class GhostState(Enum):
-    HUNT = auto()
-    FRIGHTENED = auto()
-
-
 class GhostController:
     """Spawn, route, and collide all ghosts against the player."""
+
+    _RING_8: list[tuple[int, int]] = [
+        (dx, dy)
+        for dx in range(-1, 2)
+        for dy in range(-1, 2)
+        if dx or dy
+    ]
+    _RING_12: list[tuple[int, int]] = [
+        (dx, dy)
+        for dx in range(-2, 3)
+        for dy in range(-2, 3)
+        if 0 < abs(dx) + abs(dy) <= 2
+    ]
+    _RING_16: list[tuple[int, int]] = [
+        (dx, dy)
+        for dx in range(-2, 3)
+        for dy in range(-2, 3)
+        if max(abs(dx), abs(dy)) == 2
+    ]
 
     def __init__(
         self,
@@ -34,6 +50,7 @@ class GhostController:
         add_score: Callable[[int], None],
         ghost_count: int = C.GHOST_COUNT,
     ) -> None:
+        """Initialize ghosts, path caches, and score callback."""
         self.engine = engine
         self._game_state = game_state
         self.player = player
@@ -46,6 +63,11 @@ class GhostController:
             (self.maze.width - 1, self.maze.height - 1),
         ]
         self.ghosts: list[Ghost] = self._init_ghosts()
+        n = len(self.ghosts)
+        self._ghost_paths: list[list[tuple[int, int]]] = [
+            [] for _ in range(n)
+        ]
+        self._ghost_targets: list[tuple[int, int] | None] = [None] * n
         self.ghosts_killed = 0
         self._add_score = add_score
 
@@ -54,15 +76,19 @@ class GhostController:
 
     @property
     def game_state(self) -> C.EGameState:
+        """Current game state shared across all ghosts."""
         return self._game_state
 
     @game_state.setter
     def game_state(self, value: C.EGameState) -> None:
+        """Propagate new state to every ghost and trigger animations."""
         self._game_state = value
         for ghost in self.ghosts:
             ghost.game_state = value
             if value == C.EGameState.RUNNING:
                 ghost.walk()
+            elif value == C.EGameState.PAUSE:
+                ghost.idle()
             elif value == C.EGameState.GAME_OVER:
                 attack_idx = ghost.spec.anim_attack
                 if isinstance(attack_idx, tuple):
@@ -73,6 +99,7 @@ class GhostController:
                     ghost.idle()
 
     def _init_ghosts(self) -> list[Ghost]:
+        """Spawn one ghost per corner, cycling if ghost_count > 4."""
         ghosts: list[Ghost] = []
 
         for i in range(self._ghost_count):
@@ -84,107 +111,119 @@ class GhostController:
             )
 
             ghost_entity = Ghost(i, x=world_x, z=world_z, maze=self.maze)
-            # Ghost.__init__ inherits game_state=NOT_STARTED via AnimatedEntity
-            # regardless of actual state. On level 1 this is fine
-            # (start_game flips RUNNING via the setter, which calls walk()),
-            # but on level 2+ init_level does not touch engine.game_state, so
-            # the setter never fires, ghost.update() forces idle every frame.
-            # Propagate it explicitly here.
+            # Ghost.__init__ sets game_state=NOT_STARTED regardless of actual
+            # state. On level 2+ the setter never fires; propagate explicitly.
             ghost_entity.game_state = self._game_state
             ghosts.append(ghost_entity)
 
         return ghosts
 
     def update_ghosts(self) -> None:
+        """Update path, collision, and movement for every active ghost."""
         if self.game_state != C.EGameState.RUNNING:
             return
 
-        for ghost in self.ghosts:
+        for i, ghost in enumerate(self.ghosts):
             if ghost.is_stunned:
+                self._ghost_targets[i] = None
                 continue
-
-            target_x, target_z = self._get_target_for_ghost(ghost)
             ghost.update_grid_position()
-
-            ghost_grid = (ghost.pos_gridx, ghost.pos_gridy)
-            target_grid = (target_x, target_z)
-
-            if not hasattr(ghost, "_bfs_path"):
-                ghost._bfs_path = []
-                ghost._last_target = None
-
-            if ghost._last_target != target_grid or (
-                not ghost._bfs_path and ghost_grid != target_grid
-            ):
-                ghost._last_target = target_grid
-                ghost._bfs_path = self._bfs_find_path(ghost_grid, target_grid)
-                if ghost._bfs_path:
-                    ghost._bfs_path.pop(0)
-
-            if ghost._bfs_path and ghost_grid == ghost._bfs_path[0]:
-                ghost._bfs_path.pop(0)
-
-            if ghost._bfs_path:
-                next_x, next_y = ghost._bfs_path[0]
-            else:
-                next_x, next_y = target_x, target_z
-
-            if self.check_collision_with_player(ghost):
-                can_eat = (
-                    self.player.state == PlayerState.EMPOWERED
-                    or self.player.cheat_mode
-                )
-                if can_eat:
-                    if not ghost.is_stunned:
-                        self.player.attack()
-                        ghost.stun()
-                        self.ghosts_killed += 1
-                        self._add_score(self.engine.config.points_per_ghost)
-                        if self.engine and self.engine.hud:
-                            self.engine.hud.update_ghosts_killed(
-                                self.ghosts_killed
-                            )
-                elif (
-                    self.player.state != PlayerState.UNTOUCHABLE
-                    and self.player.state != PlayerState.STUNNED
-                ):
-                    self.handle_attack(ghost, self.player)
+            next_x, next_y = self._update_ghost_path(ghost, i)
+            self._handle_ghost_collision(ghost)
             if not ghost.is_attacking and not ghost.is_stunned:
                 ghost.update_ai(next_x, next_y)
 
-    def _get_target_for_ghost(self, ghost: Ghost) -> tuple[int, int]:
+    def _update_ghost_path(
+        self, ghost: Ghost, i: int
+    ) -> tuple[int, int]:
+        """Assign a new target when reached; return the next grid cell."""
+        ghost_grid = (ghost.pos_gridx, ghost.pos_gridy)
+
         if self.player.state == PlayerState.EMPOWERED:
-            return self._calculate_flee_target()
-        if ghost.ghost_index == 1:
-            return self._calculate_pinky_target()
-        if ghost.ghost_index == 2:
-            return self._calculate_inky_target(self.ghosts[0])
-        if ghost.ghost_index == 3:
-            return self._calculate_clyde_target(ghost)
+            flee = self._calculate_flee_target(ghost)
+            if self._ghost_targets[i] != flee:
+                self._ghost_targets[i] = flee
+                self._ghost_paths[i] = self._bfs_find_path(ghost_grid, flee)
+                if self._ghost_paths[i]:
+                    self._ghost_paths[i].pop(0)
+        elif (
+            self._ghost_targets[i] is None
+            or ghost_grid == self._ghost_targets[i]
+        ):
+            target = self._pick_random_ring_target()
+            self._ghost_targets[i] = target
+            self._ghost_paths[i] = self._bfs_find_path(ghost_grid, target)
+            if self._ghost_paths[i]:
+                self._ghost_paths[i].pop(0)
 
-        return (self.player.pos_gridx, self.player.pos_gridy)
+        if self._ghost_paths[i] and ghost_grid == self._ghost_paths[i][0]:
+            self._ghost_paths[i].pop(0)
 
-    def _calculate_flee_target(self) -> tuple[int, int]:
-        max_dist: int = -1
-        best_corner = (0, 0)
-        for corner_x, corner_y in self.start_grid_indices:
-            dist = ((corner_x - self.player.pos_gridx) ** 2) + (
-                (corner_y - self.player.pos_gridy) ** 2
+        if self._ghost_paths[i]:
+            return self._ghost_paths[i][0]
+        return self._ghost_targets[i] or ghost_grid
+
+    def _pick_random_ring_target(self) -> tuple[int, int]:
+        """Return a random walkable cell from the ring around the player."""
+        n = len(self.ghosts)
+        if n < 5:
+            offsets = self._RING_8
+        elif n < 8:
+            offsets = self._RING_12
+        else:
+            offsets = self._RING_16
+
+        px, py = self.player.pos_gridx, self.player.pos_gridy
+        candidates = [
+            (px + dx, py + dy)
+            for dx, dy in offsets
+            if (
+                0 <= px + dx < self.maze.width
+                and 0 <= py + dy < self.maze.height
+                and self.maze.grid[py + dy][px + dx] != 15
             )
-            if dist > max_dist:
-                max_dist = dist
-                best_corner = (corner_x, corner_y)
-        return best_corner
+        ]
+        if not candidates:
+            return (px, py)
+        return random.choice(candidates)
+
+    def _handle_ghost_collision(self, ghost: Ghost) -> None:
+        """Apply eat or attack logic when ghost overlaps the player."""
+        if not self.check_collision_with_player(ghost):
+            return
+
+        can_eat = (
+            self.player.state == PlayerState.EMPOWERED
+            or self.player.cheat_mode
+        )
+        if can_eat:
+            if not ghost.is_stunned:
+                self.player.attack()
+                ghost.stun()
+                self.ghosts_killed += 1
+                self._add_score(self.engine.config.points_per_ghost)
+                if self.engine and self.engine.hud:
+                    self.engine.hud.update_ghosts_killed(self.ghosts_killed)
+        elif (
+            self.player.state != PlayerState.UNTOUCHABLE
+            and self.player.state != PlayerState.STUNNED
+        ):
+            self.handle_attack(ghost, self.player)
+
+    def _calculate_flee_target(self, ghost: Ghost) -> tuple[int, int]:
+        """Return the ghost's home corner as its flee destination."""
+        corner_idx = ghost.ghost_index % len(self.start_grid_indices)
+        return self.start_grid_indices[corner_idx]
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
-        px, pz = self.player.x, self.player.z
-        gx, gz = ghost.x, ghost.z
-
-        distance_player_ghost = abs(px - gx) + abs(pz - gz)
-
-        return distance_player_ghost < C.PICKUP_DISTANCE
+        """Return True if ghost is within pickup distance of the player."""
+        distance = (
+            abs(self.player.x - ghost.x) + abs(self.player.z - ghost.z)
+        )
+        return distance < C.PICKUP_DISTANCE
 
     def handle_attack(self, attacker: Ghost, target: Player) -> None:
+        """Trigger attacker's attack animation and stun the target."""
         duration = attacker.attack()
         if not target.infinite_lives:
             target.health -= 1
@@ -195,84 +234,36 @@ class GhostController:
     def _bfs_find_path(
         self, start: tuple[int, int], target: tuple[int, int]
     ) -> list[tuple[int, int]]:
-        """Calcule le chemin le plus court sur la grille à l'aide d'un BFS."""
+        """Return the shortest walkable path from start to target."""
         if start == target:
             return [start]
 
-        queue = deque([[start]])
-        visited = {start}
-
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {
+            start: None
+        }
+        queue: deque[tuple[int, int]] = deque([start])
         dirs = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
 
         while queue:
-            path = queue.popleft()
-            cx, cy = path[-1]
+            cx, cy = queue.popleft()
 
             if (cx, cy) == target:
+                path: list[tuple[int, int]] = []
+                node: tuple[int, int] | None = (cx, cy)
+                while node is not None:
+                    path.append(node)
+                    node = parent[node]
+                path.reverse()
                 return path
 
             cell_value = self.maze.grid[cy][cx]
             for dx, dy, wall_flag in dirs:
                 if cell_value & wall_flag:
                     continue
-
                 nx, ny = cx + dx, cy + dy
                 if 0 <= nx < self.maze.width and 0 <= ny < self.maze.height:
-                    if (nx, ny) not in visited:
-                        visited.add((nx, ny))
-                        queue.append(path + [(nx, ny)])
+                    if (nx, ny) not in parent:
+                        parent[(nx, ny)] = (cx, cy)
+                        queue.append((nx, ny))
 
         return []
-
-    def _calculate_pinky_target(self) -> tuple[int, int]:
-        p_grid_x, p_grid_y = world_to_grid(
-            self.player.x, self.player.z, self.maze.width, self.maze.height
-        )
-        raw_x = p_grid_x + (4 * self.player.grid_direction[0])
-        raw_y = p_grid_y + (4 * self.player.grid_direction[1])
-        target_x = max(0, min(raw_x, self.maze.width - 1))
-        target_y = max(0, min(raw_y, self.maze.height - 1))
-        return (target_x, target_y)
-
-    def _calculate_inky_target(self, blinky: Ghost) -> tuple[int, int]:
-        p_grid_x, p_grid_y = world_to_grid(
-            self.player.x, self.player.z, self.maze.width, self.maze.height
-        )
-        b_grid_x, b_grid_y = world_to_grid(
-            blinky.x, blinky.z, self.maze.width, self.maze.height
-        )
-
-        pivot_x = p_grid_x + (2 * self.player.grid_direction[0])
-        pivot_y = p_grid_y + (2 * self.player.grid_direction[1])
-
-        vector_x = pivot_x - b_grid_x
-        vector_y = pivot_y - b_grid_y
-
-        raw_x = b_grid_x + (2 * vector_x)
-        raw_y = b_grid_y + (2 * vector_y)
-
-        target_x = max(0, min(raw_x, self.maze.width - 1))
-        target_y = max(0, min(raw_y, self.maze.height - 1))
-
-        return (target_x, target_y)
-
-    def _calculate_clyde_target(self, clyde: Ghost) -> tuple[int, int]:
-        p_grid_x, p_grid_y = world_to_grid(
-            self.player.x, self.player.z, self.maze.width, self.maze.height
-        )
-        c_grid_x, c_grid_y = world_to_grid(
-            clyde.x, clyde.z, self.maze.width, self.maze.height
-        )
-
-        square_distance = (p_grid_x - c_grid_x) ** 2 + (
-            p_grid_y - c_grid_y
-        ) ** 2
-
-        if square_distance > 15:
-            raw_x, raw_y = p_grid_x, p_grid_y
-        else:
-            raw_x, raw_y = 0, self.maze.height - 1
-        target_x = max(0, min(raw_x, self.maze.width - 1))
-        target_y = max(0, min(raw_y, self.maze.height - 1))
-
-        return (target_x, target_y)
