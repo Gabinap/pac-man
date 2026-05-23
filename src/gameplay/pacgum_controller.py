@@ -44,10 +44,10 @@ class PacgumController:
 
         self._w, self._h = self.maze.width, self.maze.height
         self._candidates = [
-            (1, 1),
-            (self._w - 2, 1),
-            (1, self._h - 2),
-            (self._w - 2, self._h - 2),
+            (0, 0),
+            (self._w - 1, 0),
+            (0, self._h - 1),
+            (self._w - 1, self._h - 1),
         ]
         self._spawn(ambiance)
 
