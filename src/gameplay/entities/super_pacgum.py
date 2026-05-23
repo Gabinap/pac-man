@@ -6,7 +6,12 @@ if TYPE_CHECKING:
     from src.gameplay.maze import Maze
 
 
+"""Super-pacgum entity: larger scale and triggers the frightened state."""
+
+
 class SuperPacgum(Pacgum):
+    """Oversized pacgum that empowers the player when collected."""
+
     SCALE_MULTIPLIER: float = C.SUPER_PACGUM_SCALE_MULTIPLIER
 
     def __init__(
@@ -17,5 +22,6 @@ class SuperPacgum(Pacgum):
         maze: "Maze",
         points: int,
     ) -> None:
+        """Place the super-pacgum and flag it as a power-up."""
         super().__init__(spec, grid_x, grid_y, maze, points)
         self.is_super = True

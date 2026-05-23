@@ -1,3 +1,5 @@
+"""Shared UI constants, colour palette, and view-building helpers."""
+
 from typing import Any, Union
 from panda3d.core import TransparencyAttrib
 from ursina import Button, Text, color, Entity, Quad
@@ -55,6 +57,7 @@ def make_button(
     h: float | None = None,
     **kwargs: Any,
 ) -> Button:
+    """Create a glassmorphism rounded button with a border entity."""
     bw = w if w is not None else BTN_W
     bh = h if h is not None else BTN_H
     btn_aspect = bw / bh
@@ -94,6 +97,7 @@ def make_button(
 def make_panel(
     parent: Entity, x: float, y: float, w: float, h: float
 ) -> tuple[Entity, Entity]:
+    """Create a rounded glassmorphism panel with a border; return both."""
     pnl_aspect = w / h if h > 0 else 1.0
     brd_aspect = (
         (w + PANEL_BORDER_PAD) / (h + PANEL_BORDER_PAD) if h > 0 else 1.0
@@ -164,6 +168,7 @@ def make_outlined_text(
     return_outlines: bool = False,
     **kwargs: Any,
 ) -> Union[Text, tuple[Text, list[Text]]]:
+    """Render text with an 8-offset outline for a drop-shadow effect."""
     offsets = [
         (-1, 0),
         (1, 0),
@@ -198,6 +203,7 @@ def make_outlined_text(
 
 
 def update_menu_highlight(elements: list[Any], selected_index: int) -> None:
+    """Apply selection colours to the element at selected_index."""
     from ursina import InputField
 
     for i, current in enumerate(elements):
@@ -219,7 +225,7 @@ def update_menu_highlight(elements: list[Any], selected_index: int) -> None:
 def handle_menu_input(
     key: str, elements: list[Any], selected_index: int
 ) -> int:
-
+    """Process arrow/tab/enter navigation and return the new selected index."""
     if key in ("down arrow", "tab"):
         selected_index = (selected_index + 1) % len(elements)
     elif key in ("up arrow", "shift+tab"):

@@ -1,3 +1,5 @@
+"""Instructions view: game rules, controls, and scoring summary."""
+
 from typing import Callable
 
 from ursina import Text
@@ -143,9 +145,11 @@ class InstructionsView(BaseView):
         self.update_highlight()
 
     def update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused element."""
         update_menu_highlight(self.elements, self.selected_index)
 
     def input(self, key: str) -> None:
+        """Handle back-navigation keys for this view."""
         if not self.enabled:
             return
 

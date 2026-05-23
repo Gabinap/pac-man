@@ -17,16 +17,19 @@ class Highscores:
     """Load, sort and persist player highscores from a JSON file."""
 
     def __init__(self, config: GameConfig) -> None:
+        """Initialize the manager with the config holding the file path."""
         self.config = config
         self._cache: list[tuple[str, int]] | None = None
 
     def get_top_scores(self) -> list[tuple[str, int]]:
+        """Return the sorted highscores list; load from disk on first call."""
         if self._cache is not None:
             return self._cache
         self._cache = self._load_from_disk()
         return self._cache
 
     def _load_from_disk(self) -> list[tuple[str, int]]:
+        """Read, validate, sort, and return scores from the JSON file."""
         try:
             with open(self.config.highscore_filename, "r") as file:
                 parsed_json = json.load(file)
@@ -65,6 +68,7 @@ class Highscores:
         return valid
 
     def add_score(self, player_name: str, score: int) -> str:
+        """Append, sort, cap at 10, persist to disk, return a message."""
         scores = list(self.get_top_scores())
         scores.append((player_name, score))
         scores.sort(key=lambda item: item[1], reverse=True)

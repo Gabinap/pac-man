@@ -35,6 +35,7 @@ class GameOverView(BaseView):
         replay_callback: Callable[[], None],
         get_is_win: Callable[[], bool],
     ) -> None:
+        """Build the game-over panel with score, name input, and buttons."""
         super().__init__()
         self.scores_manager = scores_manager
         self.score_callback = score_callback
@@ -128,6 +129,7 @@ class GameOverView(BaseView):
         self.selected_index = 0
 
     def on_enter(self) -> None:
+        """Refresh the title, score, and input field when the view is shown."""
         if self.get_is_win():
             title_text = "SUCCESS"
             fill = WIN_COLOR
@@ -151,6 +153,7 @@ class GameOverView(BaseView):
         self.update_highlight()
 
     def _on_register(self) -> None:
+        """Validate the name and submit the score to the highscores manager."""
         if self.has_submitted:
             return
         player_name = self.name_input.text.strip()
@@ -165,9 +168,11 @@ class GameOverView(BaseView):
             self.has_submitted = True
 
     def update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused element."""
         update_menu_highlight(self.elements, self.selected_index)
 
     def input(self, key: str) -> None:
+        """Handle Escape and navigation keys for this view."""
         if not self.enabled:
             return
 

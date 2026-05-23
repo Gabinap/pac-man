@@ -14,6 +14,8 @@ _BOUNDS_CACHE: dict[str, tuple[float, float, float]] = {}
 
 
 class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
+    """3D collectible that spins in place and awards points on pickup."""
+
     SCALE_MULTIPLIER: float = 1.0
     SPIN_SPEED: float = 90.0  # degrees per second
 
@@ -25,6 +27,7 @@ class Pacgum(Entity):  # type: ignore[misc, unused-ignore]
         maze: "Maze",
         points: int,
     ) -> None:
+        """Place the pacgum at (grid_x, grid_y) and fix its materials."""
         world_x, world_z = grid_to_world(
             grid_x, grid_y, maze.width, maze.height
         )

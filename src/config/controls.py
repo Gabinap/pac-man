@@ -1,8 +1,11 @@
+"""Key binding configuration for player controls."""
+
 from dataclasses import dataclass, field
 
 
 @dataclass
 class ControlsConfig:
+    """Default keyboard bindings for all player actions."""
     move_up: str = "w"
     move_down: str = "s"
     move_left: str = "a"

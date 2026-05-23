@@ -1,3 +1,5 @@
+"""Game session: level lifecycle, score accounting, and entity ownership."""
+
 import random
 from typing import TYPE_CHECKING
 
@@ -18,6 +20,7 @@ class GameSession:
     """Dynamic state of a running game: levels, score, 3D entities."""
 
     def __init__(self, engine: "GameEngine") -> None:
+        """Initialize an empty session; entities are created in init_level."""
         self.engine = engine
         self.score: int = 0
         self.current_level_index: int = 0
@@ -31,6 +34,7 @@ class GameSession:
         self.timer: Timer | None = None
 
     def timer_over_action(self) -> None:
+        """Trigger GAME_OVER when the level timer expires."""
         self.engine.game_state = C.EGameState.GAME_OVER
         self.engine.router.switch_view(C.EGameView.GAME_OVER)
 
@@ -129,6 +133,7 @@ class GameSession:
         self.game_initialized = False
 
     def add_score(self, points: int) -> None:
+        """Add points to the running score and refresh the HUD."""
         self.score += points
         self.engine.hud.update_score(self.score)
 
@@ -160,6 +165,7 @@ class GameSession:
             self.engine.hud.update_health(self.get_health())
 
     def get_health(self) -> int:
+        """Return the player's health, or -1 for infinite lives."""
         if self.player is None:
             return 0
         if getattr(self.player, "infinite_lives", False) or getattr(
@@ -169,14 +175,17 @@ class GameSession:
         return self.player.health
 
     def get_level(self) -> int:
+        """Return the 1-based current level number."""
         return self.current_level_index + 1
 
     def get_pacgum_count(self) -> int:
+        """Return the number of remaining regular pacgums."""
         if self.pacgum_controller is None:
             return 0
         return sum(1 for p in self.pacgum_controller.pacgums if not p.is_super)
 
     def get_super_count(self) -> int:
+        """Return the number of remaining super-pacgums."""
         if self.pacgum_controller is None:
             return 0
         return sum(1 for p in self.pacgum_controller.pacgums if p.is_super)

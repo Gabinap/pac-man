@@ -23,6 +23,7 @@ class PauseView(BaseView):
         resume_callback: Callable[[], None],
         menu_callback: Callable[[], None],
     ) -> None:
+        """Build the pause overlay with Resume and Main menu buttons."""
         super().__init__()
         self.resume_callback = resume_callback
 
@@ -61,13 +62,16 @@ class PauseView(BaseView):
         self._update_highlight()
 
     def _update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused button."""
         update_menu_highlight(self.buttons, self.selected_index)
 
     def on_enter(self) -> None:
+        """Reset selection to the first button when the pause overlay opens."""
         self.selected_index = 0
         self._update_highlight()
 
     def input(self, key: str) -> None:
+        """Handle navigation keys while the pause overlay is active."""
         if not self.enabled:
             return
         # 'space' → resume is handled centrally in GameEngine.input.

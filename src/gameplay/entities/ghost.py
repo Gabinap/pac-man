@@ -1,3 +1,5 @@
+"""Ghost entity: model selection, stun/revive cycle, and per-cell AI."""
+
 import random
 from typing import TYPE_CHECKING
 from ursina import invoke
@@ -11,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class Ghost(AnimatedEntity):
+    """Enemy that follows BFS paths and stuns the player on contact."""
+
     def __init__(
         self,
         index: int = 0,
@@ -18,6 +22,7 @@ class Ghost(AnimatedEntity):
         z: float = 0,
         maze: "Maze | None" = None,
     ) -> None:
+        """Spawn the ghost with a random supported model at (x, z)."""
         assert maze is not None
         spec = random.choice([s for s in C.MODEL_SPECS if s.supported])
         super().__init__(
@@ -33,6 +38,7 @@ class Ghost(AnimatedEntity):
         self.walk()
 
     def stun(self, duration: float = C.GHOST_RESPAWN_DELAY) -> None:
+        """Teleport to spawn, start blinking, and schedule revive."""
         self.is_stunned = True
 
         self.x = self.spawn_x
@@ -46,6 +52,7 @@ class Ghost(AnimatedEntity):
 
     @_skip_if_destroyed
     def _end_ghost_stun(self) -> None:
+        """End the stun state and resume walking."""
         self.is_stunned = False
         self.visible = True
         self.walk()
@@ -53,6 +60,7 @@ class Ghost(AnimatedEntity):
     def _compute_best_dir(
         self, target_x: int, target_y: int, cell_value: int
     ) -> tuple[int, int]:
+        """Return the open direction closest to the target cell."""
         directions = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
         possible_paths = []
         for dx, dy, wall_flag in directions:
@@ -81,6 +89,7 @@ class Ghost(AnimatedEntity):
         return best_dir
 
     def update_ai(self, target_x: int, target_y: int) -> None:
+        """Move toward target, re-deciding direction at cell centres."""
         self.update_grid_position()
         center_x, center_z = grid_to_world(
             self.pos_gridx, self.pos_gridy, self.maze.width, self.maze.height

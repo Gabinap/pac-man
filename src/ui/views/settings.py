@@ -1,3 +1,5 @@
+"""Settings view: key rebinding and sound volume controls."""
+
 from typing import Callable, TYPE_CHECKING
 
 from ursina import Text, Button
@@ -51,10 +53,12 @@ _KEY_BTN_H = 0.073
 
 
 def _display_key(key: str) -> str:
+    """Return a human-readable label for a raw key string."""
     return _KEY_DISPLAY.get(key, key.upper())
 
 
 def _is_bindable(key: str) -> bool:
+    """Return True if the key is allowed as a control binding."""
     if key == "escape":
         return False
     if key.endswith(" up"):
@@ -67,12 +71,15 @@ def _is_bindable(key: str) -> bool:
 
 
 class SettingsView(BaseView):
+    """Game settings screen: sound toggles and per-action key rebinding."""
+
     def __init__(
         self,
         controls: ControlsConfig,
         back_callback: Callable[[], None],
         engine: "GameEngine",
     ) -> None:
+        """Build the settings UI with sound and controls sections."""
         super().__init__()
         self.engine = engine
         self._controls = controls
@@ -89,6 +96,7 @@ class SettingsView(BaseView):
     # ── Build ──────────────────────────────────────────────────────────────
 
     def _build_ui(self) -> None:
+        """Instantiate all UI elements for the settings screen."""
         Text(
             text="Settings",
             origin=(0, 0),
@@ -153,21 +161,26 @@ class SettingsView(BaseView):
     # ── Helpers ────────────────────────────────────────────────────────────
 
     def _key_label(self, attr: str) -> str:
+        """Return a formatted key label for a control attribute."""
         return f"[{_display_key(getattr(self._controls, attr))}]"
 
     def _sound_label(self) -> str:
+        """Return the current mute state as an ON/OFF label."""
         return f"Sound: {
             'ON' if not self.engine.audio_manager.is_muted else 'OFF'
             }"
 
     def _volume_label(self) -> str:
+        """Return the current volume as a percentage label."""
         return f"Vol: {self._volume}%"
 
     def _toggle_sound(self) -> None:
+        """Toggle mute and refresh the sound button label."""
         self.engine.audio_manager.toggle_mute()
         self._btn_sound.text = self._sound_label()
 
     def _cycle_volume(self) -> None:
+        """Increment the volume by 10 % (wrapping at 100) and apply it."""
         self._volume = (self._volume % 100) + 10
         self._btn_volume.text = self._volume_label()
 
@@ -176,12 +189,14 @@ class SettingsView(BaseView):
         self.engine.audio_manager.play_sound("ui_blip.wav")
 
     def _start_capture(self, attr: str) -> None:
+        """Wait for a key press to rebind the given control attribute."""
         if self._awaiting_key_for is not None:
             return
         self._awaiting_key_for = attr
         self._key_buttons[attr].text = "Press key..."
 
     def _cancel_capture(self) -> None:
+        """Cancel an in-progress key capture and restore the button label."""
         if self._awaiting_key_for is None:
             return
         attr = self._awaiting_key_for
@@ -191,12 +206,15 @@ class SettingsView(BaseView):
     # ── Events ─────────────────────────────────────────────────────────────
 
     def on_exit(self) -> None:
+        """Cancel any pending key capture when the view is closed."""
         self._cancel_capture()
 
     def update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused button."""
         update_menu_highlight(self.buttons, self.selected_index)
 
     def input(self, key: str) -> None:
+        """Handle navigation and key-capture events for this view."""
         if not self.enabled:
             return
         if self._ignore_next_input:
@@ -223,10 +241,12 @@ class SettingsView(BaseView):
         self.update_highlight()
 
     def _on_back(self) -> None:
+        """Cancel any capture and invoke the back callback."""
         self._cancel_capture()
         self.back_callback()
 
     def on_enable(self) -> None:
+        """Reset the input guard and highlight on view entry."""
         self._ignore_next_input = True
 
         if self.buttons:

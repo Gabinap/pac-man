@@ -1,3 +1,5 @@
+"""Base animated entity: GLB loading, grid movement, and animation helpers."""
+
 import random
 from collections.abc import Callable
 from functools import wraps
@@ -17,6 +19,7 @@ ursina_time: Any = _ursina_time
 
 
 def _skip_if_destroyed(method: Callable[..., Any]) -> Callable[..., Any]:
+    """Wrap a method to silently no-op if the entity has been destroyed."""
     @wraps(method)
     def wrapped(self: Entity, *args: Any, **kwargs: Any) -> Any:
         if self.is_empty():
@@ -27,6 +30,7 @@ def _skip_if_destroyed(method: Callable[..., Any]) -> Callable[..., Any]:
 
 
 def _pick_anim(spec: int | tuple[int, ...]) -> int:
+    """Return a random index from a tuple spec, or the int directly."""
     return random.choice(spec) if isinstance(spec, tuple) else spec
 
 
@@ -44,6 +48,7 @@ class AnimatedEntity(Entity):
     def __init__(
         self, spec: C.ModelSpec, maze: "Maze", speed: float = 0.0
     ) -> None:
+        """Load the GLB model, attach actors, and initialize movement state."""
         super().__init__()
         self.spec = spec
         _loader: Any = application.base.loader
@@ -86,13 +91,16 @@ class AnimatedEntity(Entity):
 
     @property
     def grid_direction(self) -> tuple[int, int]:
+        """Return the current grid movement direction."""
         return self._grid_direction
 
     @grid_direction.setter
     def grid_direction(self, value: tuple[int, int]) -> None:
+        """Set the grid movement direction."""
         self._grid_direction = value
 
     def _rotate_toward(self, dir_x: int, dir_y: int) -> None:
+        """Animate a smooth rotation to face the given grid direction."""
         if getattr(self, "fps_mode", False):
             return
         if (dir_x, dir_y) == self._facing:
@@ -105,6 +113,7 @@ class AnimatedEntity(Entity):
             self.animate_rotation_y(self.rotation_y + delta, duration)
 
     def update_grid_position(self) -> None:
+        """Sync pos_gridx / pos_gridy with the current world position."""
         raw_x, raw_y = world_to_grid(
             self.x, self.z, self.maze.width, self.maze.height
         )
@@ -113,6 +122,7 @@ class AnimatedEntity(Entity):
         self.pos_gridy = max(0, min(raw_y, self.maze.height - 1))
 
     def move_in_direction(self, dir_x: int, dir_y: int) -> None:
+        """Advance one step in the given direction, respecting walls."""
         if dir_x == 0 and dir_y == 0:
             return
 
@@ -141,6 +151,7 @@ class AnimatedEntity(Entity):
                 self.z = max(self.z, center_z)
 
     def _fix_metallic(self) -> None:
+        """Zero out metallic values on all materials to fix PBR wash-out."""
         if self.spec.path in _METALLIC_FIXED:
             return
         for actor in self._actors:
@@ -152,6 +163,7 @@ class AnimatedEntity(Entity):
         _METALLIC_FIXED.add(self.spec.path)
 
     def _play_on_all(self, anim: str, rate: float, loop: bool = True) -> None:
+        """Play or loop an animation on every actor at the given rate."""
         if self._current_anim == anim:
             for actor in self._actors:
                 if anim in actor.get_anim_names():
@@ -167,14 +179,17 @@ class AnimatedEntity(Entity):
                     actor.play(anim)
 
     def idle(self) -> None:
+        """Play the idle animation loop."""
         anim = self._anims[_pick_anim(self.spec.anim_idle)]
         self._play_on_all(anim, self.spec.anim_idle_rate)
 
     def walk(self) -> None:
+        """Play the walk animation loop."""
         anim = self._anims[_pick_anim(self.spec.anim_walk)]
         self._play_on_all(anim, self.spec.anim_walk_rate)
 
     def _finish_oneshot(self, for_idle: bool = True) -> None:
+        """Clean up after a one-shot animation and return to idle or walk."""
         self._oneshot_seq = None
         self.is_attacking = False
         for actor in self._actors:
@@ -186,6 +201,7 @@ class AnimatedEntity(Entity):
             self.walk()
 
     def attack(self) -> float:
+        """Play the attack animation and return its duration in seconds."""
         if self._oneshot_seq:
             self._oneshot_seq.pause()
         self.is_attacking = True
@@ -219,16 +235,19 @@ class AnimatedEntity(Entity):
 
     @_skip_if_destroyed
     def _blink_loop(self, condition_callable: Callable[[], bool]) -> None:
+        """Toggle visibility on a 0.15 s interval while condition holds."""
         if condition_callable():
             self.visible: bool = not self.visible
             invoke(self._blink_loop, condition_callable, delay=0.15)
 
     @_skip_if_destroyed
     def _restore_scale(self, duration: float) -> None:
+        """Animate the entity back to its base scale."""
         seq: Any = self.animate_scale(self.spec.scale, duration)
         seq.ignore_paused = True
 
     def update(self) -> None:
+        """Hold the idle pose when the game is not running."""
         if self.game_state != C.EGameState.RUNNING:
             if not self._oneshot_seq:
                 self.idle()

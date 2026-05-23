@@ -1,4 +1,4 @@
-"""Instructions screen: static text and a back button."""
+"""Next-level screen: congratulates the player and offers to continue."""
 
 from typing import Callable
 
@@ -15,6 +15,7 @@ from src.utils.views_utils import (
 
 
 class NextLevelView(BaseView):
+    """Interstitial screen shown after completing a level."""
 
     def __init__(
         self,
@@ -22,6 +23,7 @@ class NextLevelView(BaseView):
         level_callback: Callable[[], int],
         go_next_level_callback: Callable[[], None],
     ) -> None:
+        """Build the level-complete panel with Next and Back buttons."""
         super().__init__()
 
         self.menu_callback = menu_callback
@@ -53,9 +55,11 @@ class NextLevelView(BaseView):
         self.update_highlight()
 
     def update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused element."""
         update_menu_highlight(self.elements, self.selected_index)
 
     def input(self, key: str) -> None:
+        """Handle navigation and shortcut keys for this view."""
         if not self.enabled:
             return
 
@@ -71,4 +75,5 @@ class NextLevelView(BaseView):
         self.update_highlight()
 
     def on_enter(self) -> None:
+        """Refresh the level number text when the view is activated."""
         self.level_text.text = f"Level {self.level_callback() - 1} completed"

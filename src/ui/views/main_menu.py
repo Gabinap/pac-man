@@ -40,6 +40,7 @@ class MainMenuView(BaseView):
         show_settings: Callable[[], None] = lambda: None,
         set_difficulty: Callable[[C.EDifficulty], None] = lambda _: None,
     ) -> None:
+        """Build the main menu with title, buttons, and highscores."""
         super().__init__()
 
         self.start_game = start_game
@@ -101,14 +102,17 @@ class MainMenuView(BaseView):
         self._render_highscores()
 
     def on_enter(self) -> None:
+        """Re-render the highscores so fresh entries appear immediately."""
         # Re-render dynamic scores each time the menu is shown, so a fresh
         # high score submitted from the game-over screen appears immediately.
         self._render_score_entries()
 
     def update_highlight(self) -> None:
+        """Apply selection highlight to the currently focused button."""
         update_menu_highlight(self.buttons, self.selected_index)
 
     def _render_highscores(self) -> None:
+        """Build the static highscores panel header and first score entries."""
         make_panel(self, x=-0.6, y=0.4, w=0.42, h=0.07)
         Text(
             "- BEST SCORES -",
@@ -122,6 +126,7 @@ class MainMenuView(BaseView):
         self._render_score_entries()
 
     def _render_score_entries(self) -> None:
+        """Destroy and recreate the score entry text objects from the cache."""
         for entry in self._score_entries:
             destroy(entry)
         self._score_entries.clear()
@@ -165,6 +170,7 @@ class MainMenuView(BaseView):
             y -= 0.038 + entry_scale * 0.038
 
     def input(self, key: str) -> None:
+        """Handle navigation key events for the main menu."""
         if not self.enabled:
             return
         # 'space' → start_game is handled centrally in GameEngine.input to
@@ -175,6 +181,7 @@ class MainMenuView(BaseView):
         self.update_highlight()
 
     def _difficulty_label(self) -> str:
+        """Return a formatted difficulty label including the life count."""
         if self.difficulty == C.EDifficulty.EASY:
             lives_str = "∞ lives"
         elif self.difficulty == C.EDifficulty.HARD:
@@ -184,6 +191,7 @@ class MainMenuView(BaseView):
         return f"Difficulty: {self.difficulty.value} ({lives_str})"
 
     def change_difficulty(self) -> None:
+        """Cycle to the next difficulty and propagate the change."""
         idx = DIFFICULTIES.index(self.difficulty)
         self.difficulty = DIFFICULTIES[(idx + 1) % len(DIFFICULTIES)]
         self._set_difficulty(self.difficulty)

@@ -1,3 +1,5 @@
+"""Keyboard input handling: cheat codes, cheat actions, and menu clicks."""
+
 from typing import TYPE_CHECKING
 from ursina import color, Entity, camera, mouse, Button
 import src.config.constants as C
@@ -10,6 +12,7 @@ class InputManager:
     """Cheat-code buffer, cheat key actions, and menu screen-shake on click."""
 
     def __init__(self, engine: 'GameEngine') -> None:
+        """Set up the cheat buffer and on-screen cheat indicator bar."""
         self.engine = engine
         self._key_buffer: str = ""
         self.cheat_mode: bool = False
@@ -24,11 +27,13 @@ class InputManager:
         )
 
     def handle_input(self, key: str) -> None:
+        """Route a key event to the cheat buffer and action handlers."""
         self._update_cheat_buffer(key)
         self._handle_cheat_keys(key)
         self._handle_gameplay_mouse_click(key)
 
     def _update_cheat_buffer(self, key: str) -> None:
+        """Append alphabetic keys to the rolling buffer and detect codes."""
         if len(key) != 1 or not key.isalpha():
             return
 
@@ -40,6 +45,7 @@ class InputManager:
             self.set_cheat_mode(False)
 
     def set_cheat_mode(self, enabled: bool) -> None:
+        """Enable or disable cheat mode and update the indicator bar."""
         if self.cheat_mode == enabled:
             return
 
@@ -52,6 +58,7 @@ class InputManager:
             self.engine.hud.update_health(self.engine.session.get_health())
 
     def _handle_cheat_keys(self, key: str) -> None:
+        """Execute cheat-only key actions (eat all pacgums, empower)."""
         if not self.cheat_mode:
             return
 

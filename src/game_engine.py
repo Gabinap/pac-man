@@ -1,3 +1,5 @@
+"""Top-level Ursina application: wires subsystems and runs the game loop."""
+
 from typing import Any
 from ursina import Entity, Ursina, window, color, application, Text, camera
 
@@ -17,7 +19,10 @@ import time
 
 
 class GameEngine(Entity):
+    """Root entity that owns every subsystem and drives the main loop."""
+
     def __init__(self, config: GameConfig) -> None:
+        """Initialize Ursina, subsystems, and begin asset preloading."""
         self.app: Any = Ursina(development_mode=False)
         super().__init__(ignore_paused=True)
         self.loading_image, self.loading_text, self.loading_progress_images = (
@@ -47,10 +52,12 @@ class GameEngine(Entity):
 
     @property
     def game_state(self) -> C.EGameState:
+        """Return the current game state."""
         return self._game_state
 
     @game_state.setter
     def game_state(self, value: C.EGameState) -> None:
+        """Set game state and propagate it to player and ghost controller."""
         self._game_state = value
         if self.session.player:
             self.session.player.game_state = value
@@ -58,6 +65,7 @@ class GameEngine(Entity):
             self.session.ghost_controller.game_state = value
 
     def create_loading_entities(self) -> tuple[Entity, Text, list[Entity]]:
+        """Build and return the loading screen, text, and progress dots."""
         random_loading_image_path = random.choice(C.LOADING_IMAGES_PATHS)
         loading_image = Entity(
             parent=camera.ui,
@@ -93,6 +101,7 @@ class GameEngine(Entity):
         return (loading_image, loading_text, list_progress_image)
 
     def _get_assets_to_load(self) -> list[str]:
+        """Return the list of asset paths to preload before the game starts."""
         paths = []
         for spec in C.MODEL_SPECS:
             if spec.supported:
@@ -109,6 +118,7 @@ class GameEngine(Entity):
         return paths
 
     def _post_load_init(self) -> None:
+        """Finalize startup after preloading: create HUD and open menu."""
         self.loading_text.disable()
         self.loading_image.disable()
         self.disable_progression_images()
@@ -117,10 +127,12 @@ class GameEngine(Entity):
         self.router.switch_view(C.EGameView.MENU)
 
     def disable_progression_images(self) -> None:
+        """Hide all loading progress dot entities."""
         for image in self.loading_progress_images:
             image.disable()
 
     def start_game(self) -> None:
+        """Start or restart a game session from the main menu."""
         self.router.disable_all()
 
         if self.game_state == C.EGameState.GAME_OVER:
@@ -138,11 +150,13 @@ class GameEngine(Entity):
         application.paused = False
 
     def resume_game(self) -> None:
+        """Resume from pause: exit the pause view and unpause the engine."""
         self.router.exit_current()
         self.game_state = C.EGameState.RUNNING
         application.paused = False
 
     def quit_to_menu(self) -> None:
+        """Tear down the current session and return to the main menu."""
         self.session.destroy_entities()
         self.session.score = 0
         self.hud._hide_empowered_bar()
@@ -154,13 +168,16 @@ class GameEngine(Entity):
         self.router.switch_view(C.EGameView.MENU)
 
     def _shake_screen(self) -> None:
+        """Delegate a camera shake to the camera effects manager."""
         self.camera_effects.shake_screen()
 
     def set_difficulty(self, difficulty: C.EDifficulty) -> None:
+        """Change the active difficulty and apply it to the current player."""
         self.difficulty = difficulty
         self.session.apply_difficulty_to_player()
 
     def input(self, key: str) -> None:
+        """Handle global key events: pause, HUD toggle, and input manager."""
         if self.game_state != C.EGameState.RUNNING:
             if key in self.controls.menu_moves:
                 self.audio_manager.play_sound("button-sound.wav")
@@ -199,6 +216,7 @@ class GameEngine(Entity):
         self.input_manager.handle_input(key)
 
     def update_loading_ui(self) -> None:
+        """Refresh the loading percentage text and animated progress dots."""
         loaded = self.total_assets - len(self.assets_to_load)
         progress = (
             int((loaded / self.total_assets) * 100)
@@ -216,9 +234,11 @@ class GameEngine(Entity):
                 img.enabled = False
 
     def _on_model_loaded(self, model: object) -> None:
+        """Mark the current model load as complete."""
         self.is_model_loading = False
 
     def preloading_assets(self) -> None:
+        """Load one asset per frame; finalize when the queue empties."""
         self.update_loading_ui()
         if self.is_model_loading:
             return
@@ -235,6 +255,7 @@ class GameEngine(Entity):
             self._post_load_init()
 
     def update(self) -> None:
+        """Drive the loop: preloading, death check, and subsystem ticks."""
         if self.is_loading:
             if self.frames_to_wait > 0:
                 self.frames_to_wait -= 1

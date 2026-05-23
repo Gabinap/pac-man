@@ -1,12 +1,17 @@
+"""Countdown timer with an optional timeout callback."""
+
 from typing import Callable, Optional
 from ursina import Entity, Text, destroy, invoke
 from src.utils.views_utils import ERROR_COLOR, SCORES_TITLE_COLOR
 
 
 class Timer(Entity):
+    """Countdown timer that fires a callback and colours red below 10 s."""
+
     def __init__(
         self, duration: int, on_timeout: Optional[Callable[[], None]] = None
     ) -> None:
+        """Set the timer duration and optional timeout callback."""
         super().__init__()
         self.initial_duration = duration
         self.duration = duration
@@ -24,13 +29,16 @@ class Timer(Entity):
         self.hide()
 
     def show(self) -> None:
+        """Make the timer text visible."""
         if self.initial_duration > 0:
             self.text_entity.enabled = True
 
     def hide(self) -> None:
+        """Hide the timer text."""
         self.text_entity.enabled = False
 
     def launch_timer(self) -> None:
+        """Reset and start the countdown from the initial duration."""
         if self.initial_duration == 0:
             self.text_entity.text = ""
             return
@@ -42,6 +50,7 @@ class Timer(Entity):
             self._tick()
 
     def _tick(self) -> None:
+        """Tick down one second, schedule next tick, or fire timeout."""
         if not self.is_running:
             return
 
@@ -55,16 +64,19 @@ class Timer(Entity):
                 self.on_timeout()
 
     def _update_text(self) -> None:
+        """Refresh the countdown text and colour it red below 10 s."""
         self.text_entity.text = f"Time: {self.duration}"
         self.text_entity.color = (
             ERROR_COLOR if self.duration <= 10 else SCORES_TITLE_COLOR
         )
 
     def stop(self) -> None:
+        """Stop the countdown and hide the display."""
         self.is_running = False
         self.hide()
 
     def destroy_timer(self) -> None:
+        """Stop the timer and destroy all Ursina entities."""
         self.stop()
         destroy(self.text_entity)
         destroy(self)

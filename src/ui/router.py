@@ -1,3 +1,5 @@
+"""View router: instantiates all views and handles transitions between them."""
+
 from typing import Dict, TYPE_CHECKING
 from ursina import application
 
@@ -15,7 +17,10 @@ if TYPE_CHECKING:
 
 
 class ViewRouter:
+    """Registry and controller for all game views."""
+
     def __init__(self, engine: "GameEngine") -> None:
+        """Build and register every view, wiring callbacks to the engine."""
         self.engine = engine
         self._views: Dict[C.EGameView, BaseView] = {}
         self.current: C.EGameView | None = None
@@ -23,6 +28,7 @@ class ViewRouter:
         self._register_views()
 
     def _register_views(self) -> None:
+        """Instantiate and register all views in the internal dictionary."""
         self._views[C.EGameView.MENU] = MainMenuView(
             self.engine.config,
             self.engine.scores_manager,
@@ -61,6 +67,7 @@ class ViewRouter:
         )
 
     def switch_view(self, target: C.EGameView) -> None:
+        """Exit the current view and activate the target view."""
         if self.current and self.current in self._views:
             old_view = self._views[self.current]
             old_view.on_exit()
@@ -96,6 +103,7 @@ class ViewRouter:
         new_view.on_enter()
 
     def go_to_next_level(self) -> None:
+        """Tear down the current level, build the next, and resume the game."""
         self.engine.session.destroy_entities()
         self.engine.session.init_level()
         self.engine.hud.update_level(self.engine.session.current_level_index)

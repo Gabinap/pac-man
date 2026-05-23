@@ -1,3 +1,5 @@
+"""Camera management: top-down, FPS, barrel distortion, and screen shake."""
+
 import random
 from typing import Any
 from ursina import camera, scene, mouse, invoke
@@ -8,6 +10,7 @@ class CameraEffectsManager:
     """View modes (Topdown / FPS), barrel distortion, and camera shake."""
 
     def __init__(self, engine: Any) -> None:
+        """Initialize camera state and install the barrel distortion shader."""
         self.engine = engine
         self.fps_mode: bool = False
         self._cam_pitch: float = 0.0
@@ -38,14 +41,17 @@ class CameraEffectsManager:
         self._barrel_quad.setShaderInput("strength", 0.0)
 
     def enable_barrel(self) -> None:
+        """Activate the barrel distortion effect."""
         if self._barrel_quad:
             self._barrel_quad.setShaderInput("strength", self._barrel_strength)
 
     def disable_barrel(self) -> None:
+        """Deactivate the barrel distortion effect."""
         if self._barrel_quad:
             self._barrel_quad.setShaderInput("strength", 0.0)
 
     def set_topdown(self) -> None:
+        """Switch to top-down orthographic view."""
         self.fps_mode = False
         player = self.engine.session.player
         if player:
@@ -67,6 +73,7 @@ class CameraEffectsManager:
         self.enable_barrel()
 
     def set_fps(self) -> None:
+        """Switch to first-person perspective and lock the mouse."""
         self.disable_barrel()
         player = self.engine.session.player
         if player is None:
@@ -79,6 +86,7 @@ class CameraEffectsManager:
         mouse.visible = False
 
     def toggle_fps(self) -> None:
+        """Toggle between top-down and FPS camera modes."""
         self.fps_mode = not self.fps_mode
         if self.fps_mode:
             self.set_fps()
@@ -88,6 +96,7 @@ class CameraEffectsManager:
     _FPS_SENSITIVITY: float = 40.0
 
     def update_fps_camera(self) -> None:
+        """Attach the FPS camera to the player and apply mouse look."""
         player = self.engine.session.player
         if player is None:
             return
@@ -101,6 +110,7 @@ class CameraEffectsManager:
     def shake_screen(
         self, mag: float = 0.3, dur: float = 0.25, period: float = 0.03
     ) -> None:
+        """Shake the camera by randomly offsetting it over a short duration."""
         if self._shake_active or self.fps_mode:
             return
         self._shake_active = True

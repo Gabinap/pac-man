@@ -1,3 +1,5 @@
+"""Public re-exports for all gameplay entity classes."""
+
 from .animated_entity import AnimatedEntity
 from .floor import Floor
 from .ghost import Ghost

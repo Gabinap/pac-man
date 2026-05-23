@@ -1,3 +1,5 @@
+"""Player entity: input handling, state machine, and animation triggers."""
+
 import random
 from enum import Enum, auto
 from typing import Any, TYPE_CHECKING
@@ -21,6 +23,8 @@ def _rotation_to_grid_dir(angle: float) -> tuple[int, int]:
 
 
 class PlayerState(Enum):
+    """Possible states of the player character."""
+
     NORMAL = auto()
     UNTOUCHABLE = auto()
     EMPOWERED = auto()
@@ -28,6 +32,8 @@ class PlayerState(Enum):
 
 
 class Player(AnimatedEntity):
+    """Player character with directional movement and a state machine."""
+
     _TAUNT_ANIM = "skeleton-skeleton|taunt"
     _TAUNT_INTERVAL = 5.0
     _TAUNT_CHANCE = 1 / 3
@@ -41,6 +47,7 @@ class Player(AnimatedEntity):
         lives: int | None = None,
         controls: ControlsConfig | None = None,
     ) -> None:
+        """Initialize lives, state, controls, and schedule the taunt timer."""
         super().__init__(spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED)
         self.game_state = game_state
         self.config = config
@@ -60,13 +67,16 @@ class Player(AnimatedEntity):
 
     @property
     def health(self) -> int:
+        """Return the current life count."""
         return self._health
 
     @health.setter
     def health(self, value: int) -> None:
+        """Set the life count."""
         self._health = value
 
     def empower(self) -> None:
+        """Enter EMPOWERED state: scale up and schedule the reversion."""
         if self._empower_seq:
             self._empower_seq.pause()
         self.state = PlayerState.EMPOWERED
@@ -77,6 +87,7 @@ class Player(AnimatedEntity):
 
     @_skip_if_destroyed
     def _end_empower(self) -> None:
+        """Shrink back and transition to NORMAL after EMPOWERED expires."""
         self._empower_seq = None
         self.animate_scale(self.spec.scale, duration=0.3)
 
@@ -87,6 +98,7 @@ class Player(AnimatedEntity):
         invoke(_make_vulnerable, delay=0.3)
 
     def be_stunned(self, duration: float) -> None:
+        """Enter STUNNED state for the given duration after a ghost hit."""
         if self._oneshot_seq:
             self._oneshot_seq.pause()
             self._oneshot_seq = None
@@ -99,6 +111,7 @@ class Player(AnimatedEntity):
 
     @_skip_if_destroyed
     def _end_stun(self) -> None:
+        """End stun, teleport to spawn, and blink while UNTOUCHABLE."""
         self.animate_scale(self.spec.scale, 0.2)
         self.state = PlayerState.UNTOUCHABLE
         self.x = self.spawn_x
@@ -111,6 +124,7 @@ class Player(AnimatedEntity):
 
     @_skip_if_destroyed
     def _restore_scale(self, duration: float) -> None:
+        """Animate the scale back to the correct size for the current state."""
         target = (
             self.spec.scale * 2
             if self.state == PlayerState.EMPOWERED
@@ -121,10 +135,12 @@ class Player(AnimatedEntity):
 
     @_skip_if_destroyed
     def _reset_player_state(self) -> None:
+        """Make the player visible and return to NORMAL state."""
         self.visible = True
         self.state = PlayerState.NORMAL
 
     def spawn(self) -> None:
+        """Play the spawn animation, or fall back to idle if unavailable."""
         spawn_anim = "skeleton-skeleton|spawn"
         if spawn_anim in self.actor.get_anim_names():
             if self._oneshot_seq:
@@ -140,6 +156,7 @@ class Player(AnimatedEntity):
             self.idle()
 
     def _maybe_taunt(self) -> None:
+        """Randomly trigger the taunt animation when truly idle."""
         idle_name = self._anims[_pick_anim(self.spec.anim_idle)]
         is_truly_idle = (
             self.game_state == C.EGameState.RUNNING
@@ -151,6 +168,7 @@ class Player(AnimatedEntity):
         invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
 
     def _play_taunt(self) -> None:
+        """Play the taunt one-shot animation."""
         if self._oneshot_seq:
             self._oneshot_seq.pause()
         self._play_on_all(self._TAUNT_ANIM, 1.0, loop=False)
@@ -159,6 +177,7 @@ class Player(AnimatedEntity):
         self._oneshot_seq = invoke(self._finish_oneshot, delay=duration)
 
     def update(self) -> None:
+        """Process movement input and drive walk/idle animations each frame."""
         if self.game_state != C.EGameState.RUNNING:
             if not self._oneshot_seq:
                 self.idle()

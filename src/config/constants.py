@@ -11,12 +11,16 @@ from typing import NamedTuple
 
 
 class EViewMode(Enum):
+    """Camera perspective modes available in the game."""
+
     TOPDOWN = auto()
     FPS = auto()
     THIRD_PERSON = auto()
 
 
 class EGameView(Enum):
+    """Identifiers for each navigable UI view."""
+
     MENU = "menu"
     INSTRUCTIONS = "instructions"
     GAME_OVER = "game_over"
@@ -26,12 +30,16 @@ class EGameView(Enum):
 
 
 class EDifficulty(Enum):
+    """Player-selectable difficulty levels."""
+
     EASY = "easy"
     MEDIUM = "medium"
     HARD = "hard"
 
 
 class EGameState(Enum):
+    """Runtime states of the game loop."""
+
     NOT_STARTED = auto()
     RUNNING = auto()
     PAUSE = auto()
@@ -39,6 +47,8 @@ class EGameState(Enum):
 
 
 class PacgumSpec(NamedTuple):
+    """Asset and transform data for a pacgum model."""
+
     path: str
     scale: float = 0.2
     hover_y: float = 0.4
@@ -50,6 +60,8 @@ SUPER_PACGUM_SCALE_MULTIPLIER: float = 2.25
 
 
 class Ambiance(NamedTuple):
+    """Texture and pacgum assets that define one visual theme."""
+
     wall: str
     floor: str
     pattern: str
@@ -110,6 +122,8 @@ ROTATION_DURATION_PER_90: float = 0.15  # turn time for a 90° rotation
 # anim_idle/walk/attack: an int (single animation) or a tuple of ints (a
 # random one is picked at each transition into that state).
 class ModelSpec(NamedTuple):
+    """Asset path, animation indices, and transform data for a model."""
+
     path: str
     anim_idle: int | tuple[int, ...]
     anim_walk: int | tuple[int, ...]

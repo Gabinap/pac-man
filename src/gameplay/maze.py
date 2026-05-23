@@ -25,6 +25,7 @@ def _face(
     uv_w: float = 1.0,
     uv_h: float = 1.0,
 ) -> None:
+    """Append one quad face (4 verts, 2 tris) to the mesh accumulators."""
     b = len(verts)
     verts.extend(corners)
     if uvs is not None:
@@ -41,6 +42,7 @@ def _add_wall(
     s_x: float,
     s_z: float,
 ) -> None:
+    """Append a full box (top + 4 sides) for a wall segment at (wx, wz)."""
     hx, hz = s_x / 2, s_z / 2
     y0, y1 = 0.0, 1.0
     # top
@@ -122,6 +124,7 @@ def _add_pattern(
     px: float,
     pz: float,
 ) -> None:
+    """Append a solid-block box (pattern texture) at (px, pz)."""
     hx, hz = 0.5, 0.5
     y0, y1 = 0.0, 1.0
     # top
@@ -187,9 +190,12 @@ def _add_pattern(
 
 
 class Maze(Entity):  # type: ignore[misc, unused-ignore]
+    """3D maze entity built from a procedurally generated bitmask grid."""
+
     def __init__(
         self, level: LevelConfig, seed: int, ambiance: Ambiance
     ) -> None:
+        """Generate the grid and build the wall/pattern/floor geometry."""
         super().__init__()
         gen = MazeGenerator(
             size=(level.width, level.height), perfect=False, seed=seed
@@ -199,6 +205,7 @@ class Maze(Entity):  # type: ignore[misc, unused-ignore]
         self._build(ambiance)
 
     def _build(self, ambiance: Ambiance) -> None:
+        """Assemble walls, pattern blocks, and floor from the grid bitmask."""
         grid = self.grid
         h, w = len(grid), len(grid[0])
 
