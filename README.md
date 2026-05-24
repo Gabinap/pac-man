@@ -19,7 +19,7 @@
 ![flake8](https://img.shields.io/badge/Lint-flake8%20%2B%20mypy-4CAF50?style=for-the-badge)
 ![42](https://img.shields.io/badge/42-Project-000000?style=for-the-badge)
 
-**Waka-waka.** A full 3-D reimagining of the 1980 arcade classic — 10 levels, 7 ambiances, ghosts that actually chase you, and a cheat code only evaluators deserve.
+**Waka-waka.** A full 3-D reimagining of the 1980 arcade classic — 10 levels, 7 ambiances, ghosts that actually chase you.
 
 </div>
 
@@ -59,11 +59,11 @@ make clean     # remove caches
 | Action | Key |
 |---|---|
 | Move | `↑ ↓ ← →` or `W A S D` |
-| Pause | `Escape` |
+| Pause | `Space` |
 | FPS toggle | `F` (configurable in Settings) |
 | Cheat mode | *type the secret sequence* |
 
-Cheat commands (once unlocked): `I` invincibility · `G` freeze ghosts · `N` next level · `L` +1 life · `Shift`+move speed boost.
+Cheat commands (once unlocked): `P` skip a level · `Shift`+move speed boost · infinites lives.
 
 ---
 
@@ -74,7 +74,7 @@ Cheat commands (once unlocked): `I` invincibility · `G` freeze ghosts · `N` ne
 - [The Pac-Man Dossier — ghost AI (Jamey Pittman)](https://www.gamedeveloper.com/design/the-pac-man-dossier)
 - [mazegenerator A-Maze-ing package](https://github.com/42-AI/A-Maze-ing) — assigned external maze generator
 
-**AI usage — Claude (Anthropic):** code scaffolding (`AnimatedEntity`, bitmask-to-mesh pipeline), refactoring (splitting game loop into subsystems), PEP 257 docstrings across all 38 source files, project management documents, and debugging GLB rendering artifacts. All output was reviewed and understood by both team members before commit.
+**AI usage — Claude (Anthropic):** code scaffolding (`AnimatedEntity`, bitmask-to-mesh pipeline), refactoring helper (brainstorming), PEP 257 docstrings across all source files and project management documents.
 
 ---
 
@@ -195,7 +195,7 @@ pac-man.py                  ← entry point: arg parse, config load, crash handl
 | [`pm/risk_analysis.md`](pm/risk_analysis.md) | 8 resolved risks + 4 active |
 | [`pm/acceptance_tests.md`](pm/acceptance_tests.md) | 60+ manual tests across 13 sections |
 
-**Team:** Gabin (`gagulhon`) — engine architecture, gameplay, norm. Ali (`aluslu`) — UI/UX, HUD, audio, entity polish.
+**Team:** Gabin (`gagulhon`) — UI/UX, engine architecture, gameplay, norm. Ali (`aluslu`) — HUD, audio, entity polish, gameplay.
 
 ---
 
