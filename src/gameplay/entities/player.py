@@ -7,7 +7,6 @@ from ursina import held_keys, invoke, mouse
 import time
 import src.config.constants as C
 from src.config.controls import ControlsConfig
-from src.config.game_config import GameConfig
 from .animated_entity import AnimatedEntity, _pick_anim, _skip_if_destroyed
 
 if TYPE_CHECKING:
