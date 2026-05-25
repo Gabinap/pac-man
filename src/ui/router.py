@@ -82,6 +82,12 @@ class ViewRouter:
                 self.engine.hud.hide()
             if self.engine.session.timer:
                 self.engine.session.timer.stop()
+            self.engine.audio_manager.stop_walk_sound()
+            self.engine.audio_manager.stop_ambient_music()
+            if self.engine.session.is_win:
+                self.engine.audio_manager.play_sound("win.mp3")
+            else:
+                self.engine.audio_manager.play_sound("lose.wav")
 
         elif target == C.EGameView.PAUSE:
             self.engine.game_state = C.EGameState.PAUSE

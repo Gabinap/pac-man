@@ -23,10 +23,7 @@ class GhostController:
     """Spawn, route, and collide all ghosts against the player."""
 
     _RING_8: list[tuple[int, int]] = [
-        (dx, dy)
-        for dx in range(-1, 2)
-        for dy in range(-1, 2)
-        if dx or dy
+        (dx, dy) for dx in range(-1, 2) for dy in range(-1, 2) if dx or dy
     ]
     _RING_12: list[tuple[int, int]] = [
         (dx, dy)
@@ -64,9 +61,7 @@ class GhostController:
         ]
         self.ghosts: list[Ghost] = self._init_ghosts()
         n = len(self.ghosts)
-        self._ghost_paths: list[list[tuple[int, int]]] = [
-            [] for _ in range(n)
-        ]
+        self._ghost_paths: list[list[tuple[int, int]]] = [[] for _ in range(n)]
         self._ghost_targets: list[tuple[int, int] | None] = [None] * n
         self.ghosts_killed = 0
         self._add_score = add_score
@@ -133,9 +128,7 @@ class GhostController:
             if not ghost.is_attacking and not ghost.is_stunned:
                 ghost.update_ai(next_x, next_y)
 
-    def _update_ghost_path(
-        self, ghost: Ghost, i: int
-    ) -> tuple[int, int]:
+    def _update_ghost_path(self, ghost: Ghost, i: int) -> tuple[int, int]:
         """Assign a new target when reached; return the next grid cell."""
         ghost_grid = (ghost.pos_gridx, ghost.pos_gridy)
 
@@ -198,6 +191,7 @@ class GhostController:
         )
         if can_eat:
             if not ghost.is_stunned:
+                self.engine.audio_manager.play_sound("punch.wav")
                 self.player.attack()
                 ghost.stun()
                 self.ghosts_killed += 1
@@ -217,13 +211,12 @@ class GhostController:
 
     def check_collision_with_player(self, ghost: Ghost) -> bool:
         """Return True if ghost is within pickup distance of the player."""
-        distance = (
-            abs(self.player.x - ghost.x) + abs(self.player.z - ghost.z)
-        )
+        distance = abs(self.player.x - ghost.x) + abs(self.player.z - ghost.z)
         return distance < C.PICKUP_DISTANCE
 
     def handle_attack(self, attacker: Ghost, target: Player) -> None:
         """Trigger attacker's attack animation and stun the target."""
+        self.engine.audio_manager.play_sound("ghost_attack.wav")
         duration = attacker.attack()
         if not target.infinite_lives:
             target.health -= 1
@@ -238,9 +231,7 @@ class GhostController:
         if start == target:
             return [start]
 
-        parent: dict[tuple[int, int], tuple[int, int] | None] = {
-            start: None
-        }
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
         queue: deque[tuple[int, int]] = deque([start])
         dirs = [(0, -1, 1), (-1, 0, 8), (0, 1, 4), (1, 0, 2)]
 
