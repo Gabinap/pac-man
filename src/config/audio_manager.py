@@ -21,6 +21,7 @@ class AudioManager:
 
         self.current_music: Audio | None = None
         self.current_sound: Audio | None = None
+        self.walk_sound: Audio | None = None
 
     def toggle_mute(self) -> None:
         """Toggle global mute on or off."""
@@ -48,6 +49,11 @@ class AudioManager:
             ignore_paused=True,
         )
 
+    def stop_ambient_music(self) -> None:
+        if self.current_music is not None:
+            self.current_music.stop()
+            self.current_music = None
+
     def set_volume(self, volume_percent: int) -> None:
         """Set the global volume from a 0–100 integer percentage."""
         self.global_volume = volume_percent / 100.0
@@ -59,8 +65,6 @@ class AudioManager:
         """Play a one-shot sound effect at the current global volume."""
         if self.is_muted:
             return
-        if self.current_sound:
-            self.current_sound.stop()
         self.current_sound = Audio(
             f"assets/sounds/{sound_path}",
             autoplay=True,
@@ -68,9 +72,24 @@ class AudioManager:
             volume=self.global_volume,
         )
 
-    def stop_sound(self) -> None:
-        if self.current_sound:
-            self.current_sound.stop()
+    def play_walk_sound(self, sound_path: str) -> None:
+        """Play the walking sound on its dedicated channel."""
+        if self.is_muted:
+            return
+        if self.walk_sound:
+            self.walk_sound.stop()
+        self.walk_sound = Audio(
+            f"assets/sounds/{sound_path}",
+            autoplay=True,
+            ignore_paused=True,
+            volume=self.global_volume,
+        )
+
+    def stop_walk_sound(self) -> None:
+        """Stop only the walking sound."""
+        if self.walk_sound:
+            self.walk_sound.stop()
+            self.walk_sound = None
 
     def play_random_ghost(self) -> None:
         """Play a random ghost sound effect."""

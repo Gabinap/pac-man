@@ -233,14 +233,14 @@ class Player(AnimatedEntity):
         if moving:
             if time.time() - self.last_walk_sound_time > 0.4:
                 if self.engine and self.engine.audio_manager:
-                    self.engine.audio_manager.play_sound("walk.wav")
+                    self.engine.audio_manager.play_walk_sound("walk.wav")
                 self.last_walk_sound_time = time.time()
             if self._oneshot_seq and not self.is_attacking:
                 self._oneshot_seq.pause()
                 self._oneshot_seq = None
         else:
             if self.engine.audio_manager:
-                self.engine.audio_manager.stop_sound()
+                self.engine.audio_manager.stop_walk_sound()
         if not self.is_attacking:
             if moving:
                 self.walk()
