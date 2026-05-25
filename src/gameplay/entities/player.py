@@ -4,7 +4,7 @@ import random
 from enum import Enum, auto
 from typing import Any, TYPE_CHECKING
 from ursina import held_keys, invoke, mouse
-
+import time
 import src.config.constants as C
 from src.config.controls import ControlsConfig
 from src.config.game_config import GameConfig
@@ -12,6 +12,7 @@ from .animated_entity import AnimatedEntity, _pick_anim, _skip_if_destroyed
 
 if TYPE_CHECKING:
     from src.gameplay.maze import Maze
+    from src.game_engine import GameEngine
 
 
 _FPS_DIRS: tuple[tuple[int, int], ...] = ((0, 1), (-1, 0), (0, -1), (1, 0))
@@ -42,17 +43,17 @@ class Player(AnimatedEntity):
     def __init__(
         self,
         maze: "Maze",
-        config: GameConfig,
-        game_state: C.EGameState,
+        engine: "GameEngine",
         lives: int | None = None,
         controls: ControlsConfig | None = None,
     ) -> None:
         """Initialize lives, state, controls, and schedule the taunt timer."""
         super().__init__(spec=C.PLAYER_SPEC, maze=maze, speed=C.PLAYER_SPEED)
-        self.game_state = game_state
-        self.config = config
+        self.engine = engine
+        self.game_state = self.engine.game_state
+        self.config = self.engine.config
         self._controls = controls if controls is not None else ControlsConfig()
-        effective_lives = lives if lives is not None else config.lives
+        effective_lives = lives if lives is not None else self.config.lives
         self.infinite_lives: bool = effective_lives == 0
         self._health = effective_lives
         self.state = PlayerState.NORMAL
@@ -61,6 +62,7 @@ class Player(AnimatedEntity):
         self._empower_seq: Any = None
         self.spawn_x = self.x
         self.spawn_z = self.z
+        self.last_walk_sound_time = 0.0
         self.spawn()
         if self._TAUNT_ANIM in self.actor.get_anim_names():
             invoke(self._maybe_taunt, delay=self._TAUNT_INTERVAL)
@@ -229,9 +231,16 @@ class Player(AnimatedEntity):
                 moving = True
 
         if moving:
+            if time.time() - self.last_walk_sound_time > 0.4:
+                if self.engine and self.engine.audio_manager:
+                    self.engine.audio_manager.play_sound("walk.wav")
+                self.last_walk_sound_time = time.time()
             if self._oneshot_seq and not self.is_attacking:
                 self._oneshot_seq.pause()
                 self._oneshot_seq = None
+        else:
+            if self.engine.audio_manager:
+                self.engine.audio_manager.stop_sound()
         if not self.is_attacking:
             if moving:
                 self.walk()

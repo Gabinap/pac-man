@@ -148,11 +148,13 @@ class PacgumController:
             if self._picked_up(pacgum):
                 self.engine.session.add_score(pacgum.points)
                 if pacgum.is_super:
+                    self.engine.audio_manager.play_sound("pickup2.wav")
                     self.player.empower()
                     self.engine.hud.show_empowered_bar()
                     self.super_count -= 1
                     self.engine.hud.update_super_pacgums(self.super_count)
                 else:
+                    self.engine.audio_manager.play_sound("pickup.wav")
                     self.pacgum_count -= 1
                     self.engine.hud.update_pacgums(self.pacgum_count)
                 destroy(pacgum)

@@ -11,15 +11,12 @@ class AudioManager:
         """Initialize volumes, sound paths, and playback state."""
         self.is_muted: bool = False
         self.global_volume: float = 0.7
+        self.music_ratio: float = 0.4
         self.current_ambiance_path: str = "assets/sounds/ambiances/begin.mp3"
 
         self.ghosts_sounds: list[str] = [
             "assets/sounds/ghost_moan.wav",
             "assets/sounds/ghost_attack.wav",
-        ]
-        self.player_sounds: list[str] = [
-            "assets/sounds/player_walk.wav",
-            "assets/sounds/player_hit.wav",
         ]
 
         self.current_music: Audio | None = None
@@ -40,11 +37,14 @@ class AudioManager:
         if path:
             self.current_ambiance_path = path
 
+        music_vol = (
+            0.0 if self.is_muted else (self.global_volume * self.music_ratio)
+        )
         self.current_music = Audio(
             self.current_ambiance_path,
             loop=True,
             autoplay=True,
-            volume=0.0 if self.is_muted else self.global_volume,
+            volume=music_vol,
             ignore_paused=True,
         )
 
@@ -53,7 +53,7 @@ class AudioManager:
         self.global_volume = volume_percent / 100.0
 
         if self.current_music:
-            self.current_music.volume = self.global_volume
+            self.current_music.volume = self.global_volume * self.music_ratio
 
     def play_sound(self, sound_path: str) -> None:
         """Play a one-shot sound effect at the current global volume."""
@@ -67,6 +67,10 @@ class AudioManager:
             ignore_paused=True,
             volume=self.global_volume,
         )
+
+    def stop_sound(self) -> None:
+        if self.current_sound:
+            self.current_sound.stop()
 
     def play_random_ghost(self) -> None:
         """Play a random ghost sound effect."""

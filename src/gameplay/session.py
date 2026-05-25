@@ -82,8 +82,7 @@ class GameSession:
 
         self.player = Player(
             self.maze,
-            self.engine.config,
-            self.engine.game_state,
+            engine=self.engine,
             lives=self.lives_for_current_difficulty(),
             controls=self.engine.controls,
         )

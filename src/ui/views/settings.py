@@ -181,12 +181,13 @@ class SettingsView(BaseView):
 
     def _cycle_volume(self) -> None:
         """Increment the volume by 10 % (wrapping at 100) and apply it."""
+        if self.engine.audio_manager.is_muted:
+            self.engine.audio_manager.is_muted = False
+            self._btn_sound.text = self._sound_label()
         self._volume = (self._volume % 100) + 10
         self._btn_volume.text = self._volume_label()
 
         self.engine.audio_manager.set_volume(self._volume)
-
-        self.engine.audio_manager.play_sound("ui_blip.wav")
 
     def _start_capture(self, attr: str) -> None:
         """Wait for a key press to rebind the given control attribute."""
