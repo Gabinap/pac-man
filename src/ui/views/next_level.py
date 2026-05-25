@@ -63,10 +63,10 @@ class NextLevelView(BaseView):
         if not self.enabled:
             return
 
-        if key in ("backspace", "escape", "space"):
+        if key in ("backspace", "escape"):
             self.menu_callback()
             return
-        if key == "p":
+        if key in ("p", "space"):
             self.go_next_level_callback()
 
         self.selected_index = handle_menu_input(
