@@ -41,11 +41,26 @@ class GameSession:
     def init_level(self) -> None:
         """Build geometry and entities for the current level."""
         level = self.engine.config.levels[self.current_level_index]
-        ambiance = (
-            C.AMBIANCES[level.ambiance]
+        ambiance_key = (
+            level.ambiance
             if level.ambiance is not None
-            else random.choice(list(C.AMBIANCES.values()))
+            else random.choice(list(C.AMBIANCES.keys()))
         )
+        ambiance = C.AMBIANCES[ambiance_key]
+        music_map = {
+            "dungeon": "dungeon.mp3",
+            "manor": "manor.mp3",
+            "forest": "forest.mp3",
+            "ruins": "ruins.mp3",
+            "beach": "beach.mp3",
+            "classic": "classic.mp3",
+            "meme": "meme.mp3",
+        }
+        track_name = music_map.get(ambiance_key, "begin.mp3")
+        if self.engine.audio_manager:
+            self.engine.audio_manager.play_ambient_music(
+                f"assets/sounds/ambiances/{track_name}"
+            )
         ghost_count = (
             level.ghost_count
             if level.ghost_count is not None

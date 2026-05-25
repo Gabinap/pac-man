@@ -11,9 +11,7 @@ class AudioManager:
         """Initialize volumes, sound paths, and playback state."""
         self.is_muted: bool = False
         self.global_volume: float = 0.7
-        self.ambiance_music = (
-            "assets/sounds/ambiances/yongbi-desert-metin2.mp3"
-        )
+        self.current_ambiance_path: str = "assets/sounds/ambiances/begin.mp3"
 
         self.ghosts_sounds: list[str] = [
             "assets/sounds/ghost_moan.wav",
@@ -34,16 +32,20 @@ class AudioManager:
         if self.current_music:
             self.current_music.volume = 0 if self.is_muted else 1
 
-    def play_ambient_music(self) -> None:
-        """Start or restart the looping ambient music track."""
+    def play_ambient_music(self, path: str | None = None) -> None:
+
         if self.current_music is not None:
             self.current_music.stop()
+
+        if path:
+            self.current_ambiance_path = path
+
         self.current_music = Audio(
-            self.ambiance_music,
+            self.current_ambiance_path,
             loop=True,
             autoplay=True,
             volume=0.0 if self.is_muted else self.global_volume,
-            ignore_pause=True,
+            ignore_paused=True,
         )
 
     def set_volume(self, volume_percent: int) -> None:
