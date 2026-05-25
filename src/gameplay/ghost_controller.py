@@ -216,6 +216,7 @@ class GhostController:
 
     def handle_attack(self, attacker: Ghost, target: Player) -> None:
         """Trigger attacker's attack animation and stun the target."""
+        self.engine.audio_manager.play_sound("ghost_attack.wav")
         duration = attacker.attack()
         if not target.infinite_lives:
             target.health -= 1
