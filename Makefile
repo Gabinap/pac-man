@@ -19,6 +19,9 @@ patch:
 	@$(UV) run python tools/apply_patches.py
 	@$(MAKE) --no-print-directory clean-model-cache
 
+convert-assets:
+	@$(UV) run python tools/convert_assets.py
+
 clean-model-cache:
 	@rm -f ~/.cache/panda3d/*.bam ~/.cache/panda3d/index-*.boo 2>/dev/null || true
 
@@ -29,6 +32,10 @@ ifeq (run, $(firstword $(MAKECMDGOALS)))
     $(eval $(_EXTRA):;@true)
   endif
 endif
+build:
+	@$(UV) pip install setuptools pip --quiet
+	@$(UV) run python setup.py build_apps
+
 run:
 	@rm -f ~/.cache/panda3d/ophanim_angel.boo \
 	~/.cache/panda3d/tuna_fish.boo \
@@ -61,4 +68,4 @@ clean:
 	rm -rf .vscode
 	find . -type d -name output -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: install patch clean-model-cache run debug lint lint-strict clean
+.PHONY: install patch clean-model-cache convert-assets build run debug lint lint-strict clean

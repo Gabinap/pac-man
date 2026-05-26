@@ -1,0 +1,12 @@
+panda3d
+panda3d-gltf
+panda3d-simplepbr
+ursina
+pygltflib
+pillow
+dataclasses-json
+screeninfo
+pyperclip
+deprecated
+typing-extensions
+./mazegenerator-2.0.1-py3-none-any.whl

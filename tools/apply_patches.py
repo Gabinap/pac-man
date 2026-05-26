@@ -1,26 +1,46 @@
 """Apply patches to third-party packages after uv sync.
 
-Run via `make patch` (called automatically by `make install`).
+Run via `make patch` (called automatically by `make install` and `make build`).
 Idempotent: re-running is a no-op if patches are already applied.
+
+Patches the .venv installed packages, which are used by `make run` and by
+build_apps to convert GLB→BAM assets during the build step.
+
+Note: ursina's font_setter crash in compiled binaries is fixed via a runtime
+monkeypatch in pac-man.py (_patch_ursina_text), not here, because build_apps
+re-downloads wheels from PyPI (rejecting local modifications based on hash).
 """
 
 from pathlib import Path
 import sys
 
 
-def _find_converter() -> Path | None:
+def _find_site_packages() -> list[Path]:
+    roots: list[Path] = []
     for base in (".venv/lib", "venv/lib"):
         root = Path(base)
         if not root.exists():
             continue
         for py in root.iterdir():
-            candidate = py / "site-packages/gltf/_converter.py"
-            if candidate.exists():
-                return candidate
+            sp = py / "site-packages"
+            if sp.exists():
+                roots.append(sp)
+    return roots
+
+
+def _find_file(rel: str) -> Path | None:
+    for sp in _find_site_packages():
+        candidate = sp / rel
+        if candidate.exists():
+            return candidate
     return None
 
 
-PATCHES: list[tuple[str, str]] = [
+# ---------------------------------------------------------------------------
+# gltf/_converter.py patches
+# ---------------------------------------------------------------------------
+
+GLTF_PATCHES: list[tuple[str, str]] = [
     # Bug 1: multiple skins sharing the same skeleton root → previous skinid is
     # overwritten in self.skeletons, losing characters. Fix: store a list.
     # Patches below jump directly from the upstream form to the *final* form
@@ -90,21 +110,6 @@ PATCHES: list[tuple[str, str]] = [
         "\n"
         "        self.skeletons.setdefault(root_nodeid, []).append(skinid)",
     ),
-    # Bug 4: animation deforms the mesh when the skinned mesh node sits under
-    # parent transforms with non-unit scale (e.g. FBX → GLTF exports with
-    # scale=100 on the armature/mesh node). The original code pre-multiplies
-    # vertices by inverse(W_mesh) then relies on the scene graph to reapply
-    # W_mesh at render. At bind pose this cancels out, but during animation
-    # the skin transform `joint_world_now * inverse(joint_world_bind)` ends
-    # up conjugated by W_mesh: `W_mesh * skin * inverse(W_mesh)`. For a pure
-    # rotation that's harmless (rotations are preserved by rotation-conjuga-
-    # tion), but for non-unit scale the conjugation **multiplies the joint
-    # translation components by the scale factor**, amplifying them and
-    # blowing the mesh up. Fix: detect a non-unit scale in the chain and, in
-    # that case only, reparent the geom directly under the Character so the
-    # scale chain never reaches it. Pure-rotation chains keep the original
-    # pre-mul behaviour (Grobbo-style models depend on the rotation being
-    # cancelled out at render to land in the right orientation).
     # Bug 4a: original (unpatched) form — pre-mul vertices by inverse(W_mesh).
     (
         "            # Set the transform of the skinned node to the inverse"  # noqa: E501
@@ -130,8 +135,7 @@ PATCHES: list[tuple[str, str]] = [
         "                gvd.transform_vertices("
         "net_xform.get_inverse().get_mat())",
     ),
-    # Bug 4b: upgrade from the previous unconditional-reparent fix (which
-    # broke pure-rotation models like Grobbo) to the conditional version.
+    # Bug 4b: upgrade from the previous unconditional-reparent fix.
     (
         "            # Bypass the mesh node's parent transform chain"
         " (which often\n"
@@ -156,29 +160,14 @@ PATCHES: list[tuple[str, str]] = [
         "                gvd.transform_vertices("
         "net_xform.get_inverse().get_mat())",
     ),
-    # Bug 5: multiple skins sharing the same LCA (Sketchfab/FAB exports with
-    # separate meshes for body / eyes / weapon). After Bug 1, build_characters
-    # creates one CharInfo per skinid, but build_character internally hardcodes
-    # `skinid = self.skeletons[nodeid][0]`, so all CharInfos were clones of
-    # skin[0]. The body of the fix (threading skinid through the for-loop, the
-    # `if skinid is None` fallback inside build_character, and reparenting all
-    # extra characters in add_node) is folded into the Bug 1 patches above so
-    # the script's old/new substring checks remain stable. Only the function
-    # signature patch is independent and stays here.
+    # Bug 5: function signature to thread skinid through the for-loop.
     (
         "    def build_character(self, charinfo: CharInfo, nodeid,"
         " gltf_data, recurse=True):",
         "    def build_character(self, charinfo: CharInfo, nodeid,"
         " gltf_data, recurse=True, skinid=None):",
     ),
-    # Fix 5c: attach skinned meshes under their character's nodepath (not the
-    # generic scene node). Without this, multi-skin GLBs end up with every
-    # skinned mesh at the scene-node level next to multiple CharInfo siblings,
-    # and Panda3D's joint resolution picks the wrong character → wrong scale /
-    # orientation and joint-bind errors at animation load. This patch was
-    # removed in e9c068c ("fix: texture by deleting .boo files in panda3d
-    # cache") under the assumption that the cache deletion alone was enough,
-    # but the real-world effect on cloned envs is broken renders. Restored.
+    # Fix 5c: attach skinned meshes under their character's nodepath.
     (
         "                else:\n"
         "                    np.attach_new_node(mesh)\n"
@@ -197,19 +186,57 @@ PATCHES: list[tuple[str, str]] = [
     ),
 ]
 
+# ---------------------------------------------------------------------------
+# ursina/text.py patches  (venv only — for `make run` cleanliness)
+# ---------------------------------------------------------------------------
 
-def main() -> int:
-    """Apply all patches to the gltf converter and report results."""
-    converter = _find_converter()
-    if converter is None:
-        print("Skipping patches: gltf/_converter.py not found in any venv")
-        return 0
+URSINA_TEXT_PATCHES: list[tuple[str, str]] = [
+    # Bug: font_setter crashes with AttributeError when _search_for_file
+    # returns None. The runtime monkeypatch in pac-man.py fixes this in the
+    # compiled binary; this venv patch fixes the same issue for `make run`
+    # without relying on the try/except wrapper.
+    (
+        "        if not font_file_path:\n"
+        "            print_warning('missing font:', value)\n"
+        "\n"
+        "        # font = FontPool.load_font(str(font_file_path))\n"
+        "        # since FontPool can't import fonts from path on Windows,"
+        " add the directory to the \"model path\" and load by name\n"
+        "        from panda3d.core import getModelPath\n"
+        "        _model_path = getModelPath()\n"
+        "        _model_path.append_path("
+        "str(font_file_path.parent.resolve()))\n"
+        "        font = FontPool.load_font(font_file_path.name)",
+        "        if not font_file_path:\n"
+        "            font = FontPool.load_font(value)\n"
+        "            if not font:\n"
+        "                print_warning('missing font:', value)\n"
+        "                return\n"
+        "        else:\n"
+        "            # since FontPool can't import fonts from path on"
+        " Windows, add the directory to the \"model path\" and load by"
+        " name\n"
+        "            from panda3d.core import getModelPath\n"
+        "            _model_path = getModelPath()\n"
+        "            _model_path.append_path("
+        "str(font_file_path.parent.resolve()))\n"
+        "            font = FontPool.load_font(font_file_path.name)",
+    ),
+]
 
-    text = converter.read_text()
+
+# ---------------------------------------------------------------------------
+# Generic patch runner
+# ---------------------------------------------------------------------------
+
+def _apply(
+    label: str, path: Path, patches: list[tuple[str, str]]
+) -> tuple[int, int]:
+    """Apply patches to a plain file. Returns (applied, missing) counts."""
+    text = path.read_text()
     applied = 0
     missing = 0
-
-    for old, new in PATCHES:
+    for old, new in patches:
         if new in text:
             pass
         elif old in text:
@@ -217,17 +244,40 @@ def main() -> int:
             applied += 1
         else:
             hint = old[:60].replace("\n", "\\n")
-            print(f"WARNING: patch not found (may need update): {hint!r}")
+            print(
+                f"WARNING [{label}]: patch not found"
+                f" (may need update): {hint!r}"
+            )
             missing += 1
-
-    converter.write_text(text)
+    path.write_text(text)
     if applied or missing:
         print(
-            f"panda3d-gltf patches: {applied} applied, "
-            f"{len(PATCHES) - applied - missing} already present, "
+            f"{label} patches: {applied} applied, "
+            f"{len(patches) - applied - missing} already present, "
             f"{missing} missing"
         )
-    return 1 if missing else 0
+    return applied, missing
+
+
+def main() -> int:
+    """Apply all patches and report results."""
+    total_missing = 0
+
+    converter = _find_file("gltf/_converter.py")
+    if converter is None:
+        print("Skipping gltf patches: gltf/_converter.py not found")
+    else:
+        _, m = _apply("panda3d-gltf", converter, GLTF_PATCHES)
+        total_missing += m
+
+    ursina_text = _find_file("ursina/text.py")
+    if ursina_text is None:
+        print("Skipping ursina patches: ursina/text.py not found in any venv")
+    else:
+        _, m = _apply("ursina/text.py", ursina_text, URSINA_TEXT_PATCHES)
+        total_missing += m
+
+    return 1 if total_missing else 0
 
 
 if __name__ == "__main__":

@@ -15,8 +15,7 @@ class AudioManager:
         self.current_ambiance_path: str = "assets/sounds/ambiances/begin.mp3"
 
         self.ghosts_sounds: list[str] = [
-            "assets/sounds/ghost_moan.wav",
-            "assets/sounds/ghost_attack.wav",
+            "ghost_attack.wav",
         ]
 
         self.current_music: Audio | None = None

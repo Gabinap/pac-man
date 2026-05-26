@@ -16,6 +16,7 @@ import warnings
 import contextlib
 import os
 from pathlib import Path
+from typing import Any
 
 warnings.filterwarnings("ignore")
 
@@ -67,6 +68,79 @@ def _parse_args() -> str:
     return sys.argv[1]
 
 
+def _patch_ursina_text() -> None:
+    """Guard ursina's font_setter against None font paths in compiled bins.
+
+    In a panda3d compiled binary the CWD changes to the binary directory
+    while sys.argv[0] still holds the original relative path, so ursina's
+    _search_for_file returns None for every font lookup.  The upstream code
+    then crashes on None.parent.  This wraps the setter to fall back to
+    panda3d's own FontPool (which uses the VFS model path, already pointing
+    at the binary's fonts/ directory) when the file-system search fails.
+    """
+    import ursina.text as _ut
+    from panda3d.core import FontPool
+
+    _orig_setter = _ut.Text.font.fset
+
+    def _safe_setter(self: Any, value: str) -> None:
+        try:
+            _orig_setter(self, value)
+        except AttributeError:
+            font = FontPool.load_font(value)
+            if font:
+                self._font = font
+                font.clear()
+                font.setPixelsPerUnit(self.resolution)
+                font.setLineHeight(self.line_height)
+                if self.text:
+                    self.text = self.raw_text
+
+    _ut.Text.font = property(_ut.Text.font.fget, _safe_setter)
+
+
+def _register_gltf_loader() -> None:
+    """Register panda3d-gltf's loader with Panda3D's C++ loader registry.
+
+    In a frozen panda3d binary the [panda3d.loaders] entry-point discovery
+    that normally runs at panda3d init time cannot read dist-info metadata,
+    so GltfLoader is never registered and .glb files are unrecognised.
+    Calling register_type() here replicates what the entry-point mechanism
+    would do in a normal Python environment.
+    """
+    try:
+        from panda3d.core import LoaderFileTypeRegistry
+        from gltf._loader import GltfLoader
+        LoaderFileTypeRegistry.get_global_ptr().register_type(GltfLoader)
+    except Exception:
+        pass
+
+
+def _fix_binary_paths() -> None:
+    """Fix asset/font lookup for compiled panda3d binaries.
+
+    In a compiled binary, sys.argv[0] is a relative path (e.g.
+    ./build/manylinux2014_x86_64/pac-man), so application.asset_folder
+    and the model path are relative too.  When ursina's load_model globs
+    for a file and passes the result to panda3d's loader, panda3d prepends
+    the (absolute) model-path entries to the relative file path and produces
+    a doubled path that doesn't exist.
+
+    Fix 1: resolve application.asset_folder to an absolute path so every
+            subsequent glob and loadModel call uses absolute paths.
+    Fix 2: add the binary's fonts/ subdirectory to the model path so
+            FontPool.load_font can find the fonts bundled by build_apps.
+    """
+    from ursina import application as _app
+    from panda3d.core import getModelPath
+    binary_dir = Path(sys.argv[0]).resolve().parent
+    _app.asset_folder = binary_dir
+    for sub in ("fonts", "assets/fonts"):
+        d = binary_dir / sub
+        if d.exists():
+            getModelPath().append_path(str(d))
+
+
 def main() -> None:
     """Run the full game lifecycle: config → menu → game loop → cleanup."""
     global _renderer
@@ -77,6 +151,9 @@ def main() -> None:
     from ursina import window
 
     window.show_ursina_splash = False
+    _register_gltf_loader()
+    _fix_binary_paths()
+    _patch_ursina_text()
     config = load_config(_parse_args())
     with open(os.devnull, "w") as devnull, \
             contextlib.redirect_stdout(devnull):
