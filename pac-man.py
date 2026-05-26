@@ -130,6 +130,9 @@ def _fix_binary_paths() -> None:
             subsequent glob and loadModel call uses absolute paths.
     Fix 2: add the binary's fonts/ subdirectory to the model path so
             FontPool.load_font can find the fonts bundled by build_apps.
+    Fix 3: redirect ursina's internal data folders to the staged copies
+            bundled under _ursina_stage/ so built-in meshes and textures
+            (quad, cube, etc.) are found in the frozen binary.
     """
     from ursina import application as _app
     from panda3d.core import getModelPath
@@ -139,6 +142,14 @@ def _fix_binary_paths() -> None:
         d = binary_dir / sub
         if d.exists():
             getModelPath().append_path(str(d))
+    stage = binary_dir / "_ursina_stage"
+    if stage.exists():
+        _app.internal_models_compressed_folder = stage / "models_compressed"
+        _app.internal_textures_folder = stage / "textures"
+        _app.internal_fonts_folder = stage / "fonts"
+        fonts_dir = stage / "fonts"
+        if fonts_dir.exists():
+            getModelPath().append_path(str(fonts_dir))
 
 
 def main() -> None:

@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import sys
 import zipfile
@@ -45,6 +46,9 @@ def _patch_gltf_wheel(whl_path: str) -> None:
 try:
     from direct.dist.commands import build_apps as _BuildAppsCmd
 
+    _URSINA_DATA_SUBDIRS = ("models_compressed", "textures", "fonts")
+    _URSINA_STAGE = Path("_ursina_stage")
+
     class build_apps(_BuildAppsCmd):
         def download_wheels(self, platform: str) -> list[str]:
             paths = super().download_wheels(platform)
@@ -52,6 +56,30 @@ try:
                 if "panda3d_gltf" in os.path.basename(p):
                     _patch_gltf_wheel(p)
             return paths
+
+        def run(self) -> None:
+            staged = self._stage_ursina_data()
+            try:
+                super().run()
+            finally:
+                if staged and _URSINA_STAGE.exists():
+                    shutil.rmtree(_URSINA_STAGE)
+
+        def _stage_ursina_data(self) -> bool:
+            spec = importlib.util.find_spec("ursina")
+            if spec is None or spec.origin is None:
+                print("build_apps: ursina not found — skipping data staging")
+                return False
+            ursina_dir = Path(spec.origin).parent
+            if _URSINA_STAGE.exists():
+                shutil.rmtree(_URSINA_STAGE)
+            for subdir in _URSINA_DATA_SUBDIRS:
+                src = ursina_dir / subdir
+                if src.exists():
+                    shutil.copytree(src, _URSINA_STAGE / subdir)
+            self.include_patterns = list(self.include_patterns) + ["_ursina_stage/**"]
+            print(f"  staged ursina data from {ursina_dir}")
+            return True
 
     _cmdclass: dict = {"build_apps": build_apps}
 except ImportError:
