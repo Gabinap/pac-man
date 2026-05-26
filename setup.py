@@ -51,7 +51,7 @@ try:
 
     class build_apps(_BuildAppsCmd):
         def download_wheels(self, platform: str) -> list[str]:
-            paths = super().download_wheels(platform)
+            paths: list[str] = super().download_wheels(platform)
             for p in paths:
                 if "panda3d_gltf" in os.path.basename(p):
                     _patch_gltf_wheel(p)
@@ -77,7 +77,10 @@ try:
                 src = ursina_dir / subdir
                 if src.exists():
                     shutil.copytree(src, _URSINA_STAGE / subdir)
-            self.include_patterns = list(self.include_patterns) + ["_ursina_stage/**"]
+            patterns: list[str] = list(
+                self.include_patterns  # type: ignore[has-type]
+            )
+            self.include_patterns = patterns + ["_ursina_stage/**"]
             print(f"  staged ursina data from {ursina_dir}")
             return True
 
@@ -108,6 +111,7 @@ setup(
                 "pm/**",
                 "tools/**",
                 ".venv/**",
+                "assets/**/*.bam",
             ],
             "platforms": [
                 "manylinux2014_x86_64",

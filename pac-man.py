@@ -150,6 +150,10 @@ def _fix_binary_paths() -> None:
         fonts_dir = stage / "fonts"
         if fonts_dir.exists():
             getModelPath().append_path(str(fonts_dir))
+        from panda3d.core import loadPrcFileData as _lpfd
+        cache_dir = Path.home() / ".cache" / "pac-man" / "model_cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        _lpfd("", f"model-cache-dir {cache_dir}")
 
 
 def main() -> None:
