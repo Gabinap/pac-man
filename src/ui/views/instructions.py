@@ -60,7 +60,6 @@ class InstructionsView(BaseView):
         pts_pacgum = game_config.points_per_pacgum
         pts_super = game_config.points_per_super_pacgum
         pts_ghost = game_config.points_per_ghost
-        print(game_config)
 
         # --- CONTROLS ---
         Text(

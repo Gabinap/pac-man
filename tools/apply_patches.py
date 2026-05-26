@@ -221,11 +221,12 @@ def main() -> int:
             missing += 1
 
     converter.write_text(text)
-    print(
-        f"panda3d-gltf patches: {applied} applied, "
-        f"{len(PATCHES) - applied - missing} already present, "
-        f"{missing} missing"
-    )
+    if applied or missing:
+        print(
+            f"panda3d-gltf patches: {applied} applied, "
+            f"{len(PATCHES) - applied - missing} already present, "
+            f"{missing} missing"
+        )
     return 1 if missing else 0
 
 

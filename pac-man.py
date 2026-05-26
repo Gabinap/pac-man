@@ -12,10 +12,15 @@ Usage:
 import sys
 import logging
 import traceback
+import warnings
+import contextlib
+import os
 from pathlib import Path
 
-from src.config.parser import load_config
-from src.game_engine import GameEngine
+warnings.filterwarnings("ignore")
+
+from src.config.parser import load_config  # noqa: E402
+from src.game_engine import GameEngine  # noqa: E402
 
 _DATA_DIR = Path("data")
 _LOG_FILE = _DATA_DIR / "crash.log"
@@ -57,18 +62,25 @@ def _parse_args() -> str:
     """Return the config file path, or exit cleanly on bad usage."""
     if len(sys.argv) != 2:
         print("Usage: python3 pac-man.py <config.json>")
-        sys.exit(1)
+        if (Path("data") / "config.json").exists():
+            return "data/config.json"
     return sys.argv[1]
 
 
 def main() -> None:
     """Run the full game lifecycle: config → menu → game loop → cleanup."""
     global _renderer
+    from panda3d.core import loadPrcFileData
+    loadPrcFileData("", "notify-level error")
+    loadPrcFileData("", "notify-level-ffmpeg error")
+    loadPrcFileData("", "notify-level-pnmimage error")
     from ursina import window
 
     window.show_ursina_splash = False
     config = load_config(_parse_args())
-    _renderer = GameEngine(config)
+    with open(os.devnull, "w") as devnull, \
+            contextlib.redirect_stdout(devnull):
+        _renderer = GameEngine(config)
     _renderer.app.run()
 
 

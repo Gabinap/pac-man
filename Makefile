@@ -13,15 +13,14 @@ endif
 install:
 	$(UV) python install $(PYTHON_VERSION)
 	$(UV) sync --frozen
-	@$(MAKE) patch
+	@$(MAKE) --no-print-directory patch
 
 patch:
 	@$(UV) run python tools/apply_patches.py
-	@$(MAKE) clean-model-cache
+	@$(MAKE) --no-print-directory clean-model-cache
 
 clean-model-cache:
 	@rm -f ~/.cache/panda3d/*.bam ~/.cache/panda3d/index-*.boo 2>/dev/null || true
-	@echo "Panda3D model cache cleared"
 
 ifeq (run, $(firstword $(MAKECMDGOALS)))
   _EXTRA := $(wordlist 2, $(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
@@ -31,10 +30,10 @@ ifeq (run, $(firstword $(MAKECMDGOALS)))
   endif
 endif
 run:
-	rm -f ~/.cache/panda3d/ophanim_angel.boo \
+	@rm -f ~/.cache/panda3d/ophanim_angel.boo \
 	~/.cache/panda3d/tuna_fish.boo \
 	~/.cache/panda3d/index_name.txt 2>/dev/null
-	$(UV) run python pac-man.py $(RUN_ARGS)
+	@$(UV) run python pac-man.py $(RUN_ARGS)
 
 debug:
 	@echo "   Starting debugger..."
