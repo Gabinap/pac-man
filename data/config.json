@@ -7,7 +7,7 @@
     "highscore_filename": "data/highscores.json",
 
     // Number of lives the player starts with (1–19)
-    "lives": 3,
+    "lives": 10,
 
     // Points awarded for eating a regular pacgum
     "points_per_pacgum": 10,
@@ -32,11 +32,11 @@
         {"width": 7,  "height": 7,  "ambiance": "dungeon", "ghost_count": 3},
         {"width": 9,  "height": 9,  "ambiance": "manor"},
         {"width": 11, "height": 11, "ambiance": "forest",  "ghost_count": 5},
-        {"width": 11, "height": 11, "ambiance": "ruins",   "ghost_count": 6},
-        {"width": 13, "height": 13, "ambiance": "beach",   "ghost_count": 8},
-        {"width": 13, "height": 13, "ambiance": "meme",   "ghost_count": 10},
-        {"width": 15, "height": 15, "ambiance": "classic", "ghost_count": 12},
-        {"width": 17, "height": 17, "ghost_count": 14, "level_max_time": 120},
-        {"width": 19, "height": 19, "ghost_count": 16, "level_max_time": 120}
+        {"width": 11, "height": 11, "ambiance": "ruins",   "ghost_count": 6, "level_max_time": 120},
+        {"width": 13, "height": 13, "ambiance": "beach",   "ghost_count": 8, "level_max_time": 120},
+        {"width": 13, "height": 13, "ambiance": "meme",   "ghost_count": 10, "level_max_time": 150},
+        {"width": 15, "height": 15, "ambiance": "classic", "ghost_count": 12, "level_max_time": 150},
+        {"width": 17, "height": 17, "ghost_count": 14, "level_max_time": 120, "level_max_time": 180},
+        {"width": 19, "height": 19, "ghost_count": 16, "level_max_time": 120, "level_max_time": 180}
     ]
 }

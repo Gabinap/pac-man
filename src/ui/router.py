@@ -110,7 +110,7 @@ class ViewRouter:
 
     def go_to_next_level(self) -> None:
         """Tear down the current level, build the next, and resume the game."""
-        self.engine.session.destroy_entities()
+        self.engine.session.destroy_entities(carry_lives=True)
         self.engine.session.init_level()
         self.engine.hud.update_level(self.engine.session.current_level_index)
         was_fps = self.engine.camera_effects.fps_mode

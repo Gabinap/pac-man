@@ -26,6 +26,7 @@ class GameSession:
         self.current_level_index: int = 0
         self.is_win: bool = False
         self.game_initialized: bool = False
+        self._carried_lives: int | None = None
 
         self.maze: Maze | None = None
         self.player: Player | None = None
@@ -80,10 +81,16 @@ class GameSession:
 
         self.engine.camera_effects.set_topdown()
 
+        lives = (
+            self._carried_lives
+            if self._carried_lives is not None
+            else self.lives_for_current_difficulty()
+        )
+        self._carried_lives = None
         self.player = Player(
             self.maze,
             engine=self.engine,
-            lives=self.lives_for_current_difficulty(),
+            lives=lives,
             controls=self.engine.controls,
         )
         self.player.cheat_mode = self.engine.input_manager.cheat_mode
@@ -127,10 +134,15 @@ class GameSession:
         else:
             self.engine.router.switch_view(C.EGameView.NEXT_LEVEL)
 
-    def destroy_entities(self) -> None:
+    def destroy_entities(self, carry_lives: bool = False) -> None:
         """Release level-scoped entities before changing level or quitting."""
         if not self.game_initialized:
             return
+
+        if carry_lives and self.player:
+            self._carried_lives = self.player.health
+        else:
+            self._carried_lives = None
 
         if self.timer:
             self.timer.destroy_timer()
